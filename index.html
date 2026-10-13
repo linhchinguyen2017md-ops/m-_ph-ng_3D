@@ -6,39 +6,58 @@
     <title>Hệ Thống Đào Tạo & Vận Hành</title>
     <style>
         :root {
-            --primary-color: #0056b3;
-            --secondary-color: #f4f7f6;
+            --primary-color: #0d47a1; /* Xanh đậm chuyên nghiệp */
+            --primary-light: #1976d2;
             --text-color: #333;
-            --card-bg: #ffffff;
-            --hover-color: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.95); /* Trắng trong suốt */
+            --hover-color: #e3f2fd;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            color: var(--text-color);
+            /* Thêm hình nền chuyên nghiệp */
+            background: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* Lớp phủ mờ để làm nổi bật nội dung */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6); /* Phủ đen 60% */
+            z-index: -1;
         }
 
         header {
-            background-color: var(--primary-color);
             color: white;
-            padding: 2rem 0;
+            padding: 3rem 0;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--primary-light);
+            background: linear-gradient(to right, rgba(13, 71, 161, 0.8), rgba(25, 118, 210, 0.8));
         }
 
         header h1 {
             margin: 0;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         header p {
             margin: 10px 0 0 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
+            font-weight: 300;
         }
 
         .container {
@@ -47,38 +66,45 @@
             padding: 0 20px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            gap: 35px;
         }
 
         .card {
             background-color: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            padding: 25px;
-            transition: transform 0.3s ease;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            padding: 30px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            border-bottom: 5px solid var(--primary-light);
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid #edf2f7;
+            border-bottom: 2px solid #e0e0e0;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
 
         .card-header h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             color: var(--primary-color);
         }
 
         .icon {
-            font-size: 2rem;
+            font-size: 2.2rem;
             margin-right: 15px;
+            background: var(--primary-light);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .link-list {
@@ -93,14 +119,23 @@
 
         .link-list a {
             text-decoration: none;
-            color: var(--text-color);
-            font-size: 1.1rem;
-            display: block;
-            padding: 10px 15px;
+            color: #444;
+            font-size: 1.15rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
             background-color: #f8fafc;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s ease;
-            border-left: 4px solid transparent;
+            border-left: 4px solid #cbd5e1;
+        }
+
+        .link-list a::before {
+            content: '▹';
+            margin-right: 10px;
+            color: var(--primary-color);
+            font-weight: bold;
         }
 
         .link-list a:hover {
@@ -114,13 +149,16 @@
             color: #718096;
             font-style: italic;
             padding: 10px 15px;
+            text-align: center;
         }
 
         footer {
             text-align: center;
             padding: 20px;
-            color: #666;
+            color: white;
             margin-top: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -128,7 +166,7 @@
 
     <header>
         <h1>Hệ Thống Đào Tạo & Quản Lý Vận Hành</h1>
-        <p>Tài liệu mô tả thiết bị, hướng dẫn vận hành và xử lý sự cố</p>
+        <p>Tài liệu mô tả thiết bị, hướng dẫn vận hành an toàn và xử lý sự cố</p>
     </header>
 
     <div class="container">
@@ -171,7 +209,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2026 Hệ thống tài liệu nội bộ. Cập nhật mới nhất.</p>
+        <p>&copy; 2026 Hệ thống tài liệu nội bộ. Vận hành an toàn - Hiệu quả.</p>
     </footer>
 
 </body>
