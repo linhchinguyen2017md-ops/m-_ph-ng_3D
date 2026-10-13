@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#071321">
+<title>Mô phỏng 3D Thủy kích Tuabin & HMI (DCS) — Dark SCADA</title>
+<style>
+  :root{
+    --bg-0:#eef2f7;
+    --bg-1:#ffffff;
+    --bg-2:#f8fafc;
+    --panel:#ffffff;
+    --border:#cbd5e1;
+    --border-strong:#94a3b8;
+    --ok:#16a34a;
+    --warn:#d97706;
+    --danger:#dc2626;
+    --primary:#2563eb;
+    --primary-soft:#3b82f6;
+    --text:#0f172a;
+    --text-dim:#475569;
+    --muted:#94a3b8;
+    --shadow:0 4px 24px rgba(15,23,42,0.08);
+    --shadow-lg:0 12px 40px rgba(15,23,42,0.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0;padding:0;height:100%;overflow:hidden;
+    background:linear-gradient(180deg, #eef2f7 0%, #e2e8f0 100%);
+    color:var(--text);
+    font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+    touch-action:none;
+  }
+  canvas{display:block;}
+
+  /* ============================================================
+     TOP BAR
+     ============================================================ */
+  #topbar{
+    position:fixed;top:0;left:0;right:0;
+    padding:10px 16px;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    z-index:30;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 1px 8px rgba(15,23,42,0.06);
+  }
+  #topbar .logo{
+    width:36px;height:36px;flex-shrink:0;
+    border-radius:10px;
+    background:linear-gradient(135deg, #2563eb, #3b82f6);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;
+    box-shadow:0 4px 12px rgba(37,99,235,0.28);
+  }
+  #topbar .title{flex:1;min-width:0;}
+  #topbar .title h1{
+    margin:0;font-size:13px;letter-spacing:0.8px;
+    text-transform:uppercase;color:var(--text);font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  #topbar .title .sub{
+    font-size:10.5px;color:var(--muted);
+    letter-spacing:0.3px;margin-top:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  #status-pill{
+    display:flex;align-items:center;gap:7px;
+    padding:6px 14px;border-radius:20px;
+    background:rgba(22,163,74,0.1);
+    border:1px solid var(--ok);
+    font-size:11px;font-weight:700;color:var(--ok);
+    letter-spacing:0.4px;text-transform:uppercase;
+    transition:all .3s;white-space:nowrap;flex-shrink:0;
+  }
+  #status-pill .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:currentColor;box-shadow:0 0 8px currentColor;flex-shrink:0;
+  }
+  #status-pill.warning{
+    background:rgba(217,119,6,0.1);border-color:var(--warn);color:var(--warn);
+  }
+  #status-pill.danger{
+    background:rgba(220,38,38,0.1);border-color:var(--danger);color:var(--danger);
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.55;}}
+  @media (max-width:600px){
+    #status-pill .text-full{display:none;}
+    #status-pill .text-short{display:inline;}
+  }
+  #status-pill .text-short{display:none;}
+
+  /* ============================================================
+     PANEL SYSTEM
+     ============================================================ */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .panel-head{
+    padding:10px 16px;
+    background:linear-gradient(180deg, #f8fafc, #f1f5f9);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;user-select:none;transition:background .2s;
+  }
+  .panel-head:hover{background:linear-gradient(180deg, #f1f5f9, #e2e8f0);}
+  .panel-head h3{
+    margin:0;font-size:11px;text-transform:uppercase;
+    letter-spacing:1.2px;color:var(--text-dim);font-weight:700;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-head h3::before{
+    content:"";width:3px;height:12px;border-radius:2px;
+    background:var(--primary);box-shadow:0 0 6px rgba(37,99,235,0.4);
+  }
+  .toggle-icon{
+    width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:11px;transition:transform .3s ease;flex-shrink:0;
+  }
+  .panel.collapsed .toggle-icon{transform:rotate(-90deg);}
+  .panel-body{
+    max-height:600px;overflow:hidden;
+    transition:max-height .35s ease, padding .35s ease, opacity .3s ease;
+    opacity:1;padding:14px 16px 16px;
+  }
+  .panel.collapsed .panel-body{
+    max-height:0;padding-top:0;padding-bottom:0;opacity:0;
+  }
+
+  /* ============================================================
+     LEFT: HMI PANEL
+     ============================================================ */
+  #hmi-panel{
+    position:fixed;top:72px;left:16px;width:330px;z-index:20;
+    max-height:calc(100vh - 90px);display:flex;flex-direction:column;
+  }
+  #hmi-panel .panel-body{
+    overflow-y:auto;max-height:calc(100vh - 200px);
+    scrollbar-width:thin;scrollbar-color:rgba(37,99,235,0.25) transparent;
+  }
+  #hmi-panel .panel-body::-webkit-scrollbar{width:5px;}
+  #hmi-panel .panel-body::-webkit-scrollbar-thumb{
+    background:rgba(37,99,235,0.25);border-radius:3px;
+  }
+
+  .param-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:7px;font-size:12.5px;
+    background:#f8fafc;padding:9px 12px;border-radius:7px;
+    border-left:3px solid var(--ok);
+    transition:all .25s ease;position:relative;
+  }
+  .param-row .label{color:var(--text-dim);font-weight:500;}
+  .param-row .val{
+    font-family:"Consolas","Courier New",monospace;
+    font-weight:700;color:var(--text);font-size:13px;
+  }
+  .param-row.warning{
+    border-left-color:var(--warn);background:#fffbeb;
+  }
+  .param-row.warning .val{color:var(--warn);}
+  .param-row.danger{
+    border-left-color:var(--danger);background:#fef2f2;
+    animation:pulseRow 1.2s infinite;
+  }
+  .param-row.danger .val{color:var(--danger);}
+  @keyframes pulseRow{
+    0%,100%{background:#fef2f2;}
+    50%{background:#fee2e2;}
+  }
+
+  #status-bar{
+    margin-top:12px;text-align:center;font-weight:700;
+    padding:10px;border-radius:8px;
+    background:rgba(22,163,74,0.08);color:var(--ok);
+    border:1px solid var(--ok);font-size:11px;
+    letter-spacing:0.6px;transition:all .3s;text-transform:uppercase;
+  }
+  #status-bar.warning{
+    background:rgba(217,119,6,0.08);color:var(--warn);border-color:var(--warn);
+  }
+  #status-bar.danger{
+    background:rgba(220,38,38,0.08);color:var(--danger);border-color:var(--danger);
+    animation:pulse 1s infinite;
+  }
+
+  /* ============================================================
+     CONTROL PANEL
+     ============================================================ */
+  #control-panel{
+    position:fixed;bottom:16px;right:16px;width:310px;z-index:20;
+    max-height:calc(100vh - 100px);display:flex;flex-direction:column;
+  }
+  #control-panel .panel-body{padding:12px 14px 14px;}
+  .controls{display:grid;grid-template-columns:1fr;gap:8px;}
+  button{
+    padding:12px 14px;border:none;border-radius:8px;
+    font-weight:700;cursor:pointer;transition:all .18s;
+    text-transform:uppercase;font-size:11px;letter-spacing:0.7px;
+    font-family:inherit;color:#fff;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    box-shadow:0 2px 8px rgba(15,23,42,0.12);
+  }
+  button .icon{font-size:15px;line-height:1;}
+  button:disabled{opacity:0.35;cursor:not-allowed;box-shadow:none;}
+  button:not(:disabled):hover{transform:translateY(-1px);filter:brightness(1.08);}
+  button:not(:disabled):active{transform:translateY(0);}
+  .btn-water  {background:linear-gradient(135deg, #ea580c, #f97316);}
+  .btn-trip   {background:linear-gradient(135deg, #dc2626, #ef4444);}
+  .btn-turning{background:linear-gradient(135deg, #7c3aed, #8b5cf6);}
+  .btn-reset  {background:linear-gradient(135deg, #475569, #64748b);}
+  .btn-camera {background:linear-gradient(135deg, #2563eb, #3b82f6);}
+
+  /* ============================================================
+     EVENT LOG
+     ============================================================ */
+  #log-panel{
+    position:fixed;bottom:16px;left:16px;width:320px;z-index:20;
+    max-height:250px;display:flex;flex-direction:column;
+  }
+  #log-panel .panel-body{
+    padding:10px 14px 12px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(37,99,235,0.25) transparent;
+  }
+  #log-panel .panel-body::-webkit-scrollbar{width:5px;}
+  #log-panel .panel-body::-webkit-scrollbar-thumb{
+    background:rgba(37,99,235,0.25);border-radius:3px;
+  }
+  .ev{
+    padding:5px 0 5px 14px;border-left:2px solid var(--border);
+    margin-bottom:2px;color:var(--text-dim);
+    position:relative;font-size:11.5px;line-height:1.55;
+    animation:slideIn .3s ease-out;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:none;}}
+  .ev::before{
+    content:"";position:absolute;left:-5px;top:10px;
+    width:7px;height:7px;border-radius:50%;background:currentColor;
+  }
+  .ev.info{color:#2563eb;border-left-color:#2563eb;}
+  .ev.ok{color:var(--ok);border-left-color:var(--ok);}
+  .ev.warn{color:var(--warn);border-left-color:var(--warn);}
+  .ev.bad{color:var(--danger);border-left-color:var(--danger);font-weight:600;}
+
+  /* ============================================================
+     HINT / LOADER
+     ============================================================ */
+  #hint{
+    position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+    color:var(--muted);font-size:11px;letter-spacing:0.4px;
+    pointer-events:none;z-index:5;white-space:nowrap;
+    background:rgba(255,255,255,0.8);
+    padding:6px 16px;border-radius:16px;
+    border:1px solid var(--border);backdrop-filter:blur(8px);
+  }
+  #loader{
+    position:fixed;inset:0;z-index:100;
+    background:linear-gradient(180deg, #eef2f7, #e2e8f0);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;transition:opacity .6s;
+  }
+  #loader.hide{opacity:0;pointer-events:none;}
+  .spin{
+    width:44px;height:44px;border-radius:50%;
+    border:3px solid rgba(37,99,235,0.15);
+    border-top-color:var(--primary);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loader p{color:var(--text-dim);font-size:12px;margin:0;letter-spacing:0.6px;}
+
+  /* ============================================================
+     MOBILE
+     ============================================================ */
+  @media (max-width:820px){
+    #hmi-panel{
+      top:64px;left:8px;right:8px;width:auto;
+      max-height:calc(100vh - 140px);
+    }
+    #hmi-panel .panel-body{max-height:calc(100vh - 220px);}
+    #hmi-panel.collapsed{max-height:44px;}
+    #control-panel{
+      bottom:8px;right:8px;left:8px;width:auto;
+      max-height:calc(100vh - 100px);
+    }
+    #control-panel.collapsed{
+      max-height:44px;left:auto;width:auto;right:8px;min-width:190px;
+    }
+    #log-panel{display:none;}
+    #hint{bottom:62px;font-size:10px;padding:5px 12px;}
+    #topbar{padding:8px 12px;}
+    #topbar .title h1{font-size:11.5px;}
+    #topbar .title .sub{font-size:9.5px;}
+    #topbar .logo{width:32px;height:32px;font-size:16px;}
+    #status-pill{padding:5px 10px;font-size:10px;}
+  }
+  @media (max-width:480px){
+    #hmi-panel .panel-body{padding:10px 10px 12px;}
+    .param-row{font-size:11.5px;padding:8px 10px;margin-bottom:6px;}
+    .param-row .val{font-size:12px;}
+    #status-bar{font-size:10px;padding:8px;}
+    button{font-size:10.5px;padding:11px;}
+  }
+  @media (hover:none) and (pointer:coarse){#hint{display:none;}}
+
+/* ===== DARK INDUSTRIAL SCADA OVERRIDES ===== */
+:root{
+  --bg-0:#071321;--bg-1:#0b1b2b;--bg-2:#10263a;--panel:#0d2032;
+  --border:#24435d;--border-strong:#3b607c;--ok:#35d07f;--warn:#ffb020;
+  --danger:#ff5364;--primary:#18a7d8;--primary-soft:#38bdf8;
+  --text:#e6f1fa;--text-dim:#a9c1d4;--muted:#7895ad;
+  --shadow:0 4px 24px rgba(0,0,0,.28);--shadow-lg:0 12px 40px rgba(0,0,0,.4);
+}
+html,body{background:linear-gradient(180deg,#071321 0%,#0b1b2b 100%);color:var(--text);}
+#topbar{background:rgba(7,19,33,.94);border-bottom-color:#24435d;box-shadow:0 1px 12px rgba(0,0,0,.35);}
+#topbar .title h1{color:#e6f1fa}
+#topbar .title .sub{color:#7895ad}
+.panel{background:#0d2032;border-color:#24435d;box-shadow:0 4px 24px rgba(0,0,0,.28)}
+.panel-head{background:linear-gradient(180deg,#122b40,#0d2032);border-bottom-color:#24435d}
+.panel-head:hover{background:linear-gradient(180deg,#18364e,#10263a)}
+.panel-head h3{color:#b8d0e3}
+.param-row{background:#10263a;border-left-color:var(--ok)}
+.param-row .label{color:#a9c1d4}.param-row .val{color:#e6f1fa}
+.param-row.warning{background:#382d18}.param-row.danger{background:#3b1e2a}
+.param-row.danger{animation:pulseRowDark 1.2s infinite}
+@keyframes pulseRowDark{0%,100%{background:#3b1e2a}50%{background:#51202b}}
+#status-bar{background:rgba(53,208,127,.08);color:#35d07f;border-color:#35d07f}
+#status-bar.warning{background:rgba(255,176,32,.08);color:#ffb020;border-color:#ffb020}
+#status-bar.danger{background:rgba(255,83,100,.08);color:#ff5364;border-color:#ff5364}
+#hint{color:#9bb4c9;background:rgba(7,19,33,.86);border-color:#24435d}
+#loader{background:linear-gradient(180deg,#071321,#0b1b2b)}
+#loader p{color:#a9c1d4}
+.ev{color:#a9c1d4;border-left-color:#24435d}
+.ev.info{color:#38bdf8;border-left-color:#38bdf8}
+.ev.ok{color:#35d07f;border-left-color:#35d07f}
+.ev.warn{color:#ffb020;border-left-color:#ffb020}
+.ev.bad{color:#ff5364;border-left-color:#ff5364}
+
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">⚙️</div>
+  <div class="title">
+    <h1>Thủy kích Tuabin · DCS</h1>
+    <div class="sub">Mô phỏng đào tạo vận hành · Giao diện SCADA công nghiệp</div>
+  </div>
+  <div id="status-pill">
+    <div class="dot"></div>
+    <span class="text-full" id="status-text">BÌNH THƯỜNG</span>
+    <span class="text-short" id="status-text-short">OK</span>
+  </div>
+</div>
+
+<div id="hmi-panel" class="panel">
+  <div class="panel-head" data-toggle="hmi-panel">
+    <h3>Giám sát thông số</h3>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="panel-body">
+    <div id="row-speed" class="param-row">
+      <span class="label">Tốc độ quay (v/p)</span>
+      <span class="val" id="val-speed">3000</span>
+    </div>
+    <div id="row-temp" class="param-row">
+      <span class="label">Nhiệt độ hơi mới (°C)</span>
+      <span class="val" id="val-temp">540</span>
+    </div>
+    <div id="row-vib" class="param-row">
+      <span class="label">Rung gối trục (mm/s)</span>
+      <span class="val" id="val-vib">2.20</span>
+    </div>
+    <div id="row-axial" class="param-row">
+      <span class="label">Độ di trục (mm)</span>
+      <span class="val" id="val-axial">0.15</span>
+    </div>
+    <div id="row-diff" class="param-row">
+      <span class="label">Chênh nhiệt vỏ T/D (°C)</span>
+      <span class="val" id="val-diff">2</span>
+    </div>
+    <div id="row-moist" class="param-row">
+      <span class="label">Độ ẩm hơi (%)</span>
+      <span class="val" id="val-moist">0.4</span>
+    </div>
+    <div id="status-bar">TRẠNG THÁI: BÌNH THƯỜNG</div>
+  </div>
+</div>
+
+<div id="log-panel" class="panel">
+  <div class="panel-head" data-toggle="log-panel">
+    <h3>Nhật ký sự kiện</h3>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="panel-body" id="logBody"></div>
+</div>
+
+<div id="control-panel" class="panel">
+  <div class="panel-head" data-toggle="control-panel">
+    <h3>Điều khiển</h3>
+    <div class="toggle-icon">▼</div>
+  </div>
+  <div class="panel-body">
+    <div class="controls">
+      <button class="btn-water" id="btnWater">
+        <span class="icon">💧</span><span class="btn-label">Kích hoạt thủy kích</span>
+      </button>
+      <button class="btn-trip" id="btnTrip">
+        <span class="icon">⛔</span><span class="btn-label">Dừng khẩn cấp</span>
+      </button>
+      <button class="btn-turning" id="btnTurning" disabled>
+        <span class="icon">🔄</span><span class="btn-label">Vần trục</span>
+      </button>
+      <button class="btn-reset" id="btnReset">
+        <span class="icon">↺</span><span class="btn-label">Khôi phục trạng thái</span>
+      </button>
+      <button class="btn-camera" id="btnCamera">
+        <span class="icon">🎥</span><span class="btn-label">Đổi góc nhìn</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="hint">Kéo để xoay · Lăn để zoom · Chuột phải để pan</div>
+
+<div id="loader">
+  <div class="spin"></div>
+  <p>Đang dựng mô hình tuabin…</p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ============================================================
+   1. SCENE / RENDERER / CAMERA — LIGHT THEME
+   ============================================================ */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x071321);
+scene.fog = new THREE.Fog(0x071321, 55, 140);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 500);
+const CAM_DEFAULT_POS = new THREE.Vector3(22, 14, 26);
+const CAM_DEFAULT_TGT = new THREE.Vector3(0, -0.5, 0);
+camera.position.copy(CAM_DEFAULT_POS);
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+} catch (err) {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.innerHTML = '<p style="max-width:520px;padding:24px;text-align:center;color:#ffb020">Không thể khởi tạo WebGL. Hãy cập nhật trình duyệt, bật tăng tốc phần cứng hoặc thử máy có hỗ trợ WebGL. Mô phỏng cần kết nối Internet để tải thư viện Three.js.</p>';
+  }
+  throw err;
+}
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 10;
+controls.maxDistance = 80;
+controls.maxPolarAngle = Math.PI * 0.82;
+controls.target.copy(CAM_DEFAULT_TGT);
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+/* ============================================================
+   2. LIGHTS — brighter for light theme
+   ============================================================ */
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 1.1));
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+keyLight.position.set(20, 30, 20);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 100;
+keyLight.shadow.camera.left   = -30;
+keyLight.shadow.camera.right  =  30;
+keyLight.shadow.camera.top    =  30;
+keyLight.shadow.camera.bottom = -30;
+keyLight.shadow.bias = -0.0005;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xc7d9f0, 0.9);
+fillLight.position.set(-18, 10, -14);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.7);
+rimLight.position.set(0, -8, 20);
+scene.add(rimLight);
+
+const warmLight = new THREE.PointLight(0xff8c42, 30, 28, 2);
+warmLight.position.set(-10, 6, 0);
+scene.add(warmLight);
+
+const coldLight = new THREE.PointLight(0x3b82f6, 0, 28, 2);
+coldLight.position.set(3, -5, 0);
+scene.add(coldLight);
+
+/* ============================================================
+   3. GROUND / GRID — light theme
+   ============================================================ */
+const grid = new THREE.GridHelper(100, 50, 0x1e5675, 0x163149);
+grid.position.y = -8.5;
+grid.material.transparent = true;
+grid.material.opacity = 0.7;
+scene.add(grid);
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(50, 64),
+  new THREE.MeshStandardMaterial({ color:0x0b1b2b, roughness:0.92, metalness:0.02 })
+);
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -8.55;
+floor.receiveShadow = true;
+scene.add(floor);
+
+/* ============================================================
+   4. MATERIALS — realistic steel / alloy
+   ============================================================ */
+const matSteel = new THREE.MeshStandardMaterial({
+  color:0xb0bec5, metalness:0.92, roughness:0.28
+});
+const matSteelDark = new THREE.MeshStandardMaterial({
+  color:0x78909c, metalness:0.88, roughness:0.35
+});
+const matDisc = new THREE.MeshStandardMaterial({
+  color:0x90a4ae, metalness:0.90, roughness:0.30
+});
+const matBladeHP = new THREE.MeshStandardMaterial({
+  color:0xcfd8dc, metalness:0.95, roughness:0.18
+});
+const matBladeLP = new THREE.MeshStandardMaterial({
+  color:0xdde5ea, metalness:0.95, roughness:0.16,
+  emissive:0x000000, emissiveIntensity:1
+});
+const matStator = new THREE.MeshStandardMaterial({
+  color:0xa0b0be, metalness:0.88, roughness:0.38
+});
+const matCasing = new THREE.MeshPhysicalMaterial({
+  color:0x8fa8c8,
+  metalness:0.55,
+  roughness:0.22,
+  transparent:true,
+  opacity:0.13,
+  side:THREE.DoubleSide,
+  transmission:0.3,
+  emissive:0x000000,
+  emissiveIntensity:1,
+  depthWrite:false
+});
+const matCasingSolid = new THREE.MeshStandardMaterial({
+  color:0x7a94b5, metalness:0.65, roughness:0.35
+});
+const matPipe = new THREE.MeshStandardMaterial({
+  color:0x78909c, metalness:0.85, roughness:0.35
+});
+const matPipeHot = new THREE.MeshStandardMaterial({
+  color:0x8d6e63, metalness:0.7, roughness:0.45
+});
+const matStripe = new THREE.MeshStandardMaterial({
+  color:0xff8c42, metalness:0.5, roughness:0.5,
+  emissive:0xff5000, emissiveIntensity:0.25
+});
+const matBearing = new THREE.MeshStandardMaterial({
+  color:0x607d8b, metalness:0.7, roughness:0.45
+});
+const matPedestal = new THREE.MeshStandardMaterial({
+  color:0x546e7a, metalness:0.6, roughness:0.55
+});
+const matBasePlate = new THREE.MeshStandardMaterial({
+  color:0x455a64, metalness:0.5, roughness:0.65
+});
+const matBolt = new THREE.MeshStandardMaterial({
+  color:0x90a4ae, metalness:0.9, roughness:0.3
+});
+const matFlange = new THREE.MeshStandardMaterial({
+  color:0x6d8298, metalness:0.82, roughness:0.38
+});
+
+/* ============================================================
+   5. BUILD REALISTIC TURBINE
+   ============================================================ */
+const turbineRoot = new THREE.Group();
+turbineRoot.position.y = 0;
+scene.add(turbineRoot);
+
+const STAGES     = 10;          // more stages = more realistic
+const SPACING    = 1.85;
+const X0         = -8.5;
+const SHAFT_R    = 0.50;
+const CASING_R   = 4.60;
+const CASING_LEN = 24.5;
+
+/* Blade lengths: HP small → LP large (realistic expansion) */
+const BLADE_LEN  = [0.60, 0.72, 0.88, 1.08, 1.32, 1.60, 1.95, 2.35, 2.80, 3.30];
+const DISC_R     = [0.95, 0.98, 1.02, 1.06, 1.10, 1.15, 1.20, 1.26, 1.32, 1.38];
+
+const rotorGroup = new THREE.Group();
+turbineRoot.add(rotorGroup);
+
+const stageGroups  = [];
+const lpMaterials  = [];
+
+/* --- Blade geometry: tapered airfoil-like shape --- */
+const bladeGeo = new THREE.BoxGeometry(0.08, 1.0, 0.42);
+/* Taper the tip */
+{
+  const pos = bladeGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++){
+    const y = pos.getY(i);
+    if (y > 0.4){
+      pos.setX(i, pos.getX(i) * 0.55);
+      pos.setZ(i, pos.getZ(i) * 0.65);
+    }
+  }
+  pos.needsUpdate = true;
+  bladeGeo.computeVertexNormals();
+}
+
+const dummy = new THREE.Object3D();
+
+function buildBladeRing(count, rootR, length, material, reverse){
+  const inst = new THREE.InstancedMesh(bladeGeo, material, count);
+  const R = rootR + length/2;
+  for (let k = 0; k < count; k++){
+    const a = (k / count) * Math.PI * 2 + (reverse ? Math.PI/count : 0);
+    dummy.position.set(0, Math.cos(a)*R, Math.sin(a)*R);
+    dummy.rotation.set(a, 0, 0);
+    dummy.scale.set(1, length, 1);
+    dummy.updateMatrix();
+    inst.setMatrixAt(k, dummy.matrix);
+  }
+  inst.instanceMatrix.needsUpdate = true;
+  inst.frustumCulled = false;
+  inst.castShadow = true;
+  return inst;
+}
+
+/* ---- Rotor stages with realistic discs ---- */
+for (let i = 0; i < STAGES; i++){
+  const g = new THREE.Group();
+  g.position.x = X0 + i * SPACING;
+
+  /* Shaft segment */
+  const shaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(SHAFT_R, SHAFT_R, SPACING + 0.4, 28),
+    matSteel
+  );
+  shaft.rotation.z = Math.PI/2;
+  shaft.castShadow = true;
+  g.add(shaft);
+
+  /* Rotation cue stripe */
+  const stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(SPACING + 0.3, 0.06, 0.06),
+    matStripe
+  );
+  stripe.position.set(0, SHAFT_R + 0.01, 0);
+  g.add(stripe);
+
+  /* Disc with realistic hub shape */
+  const discR = DISC_R[i];
+  const disc = new THREE.Mesh(
+    new THREE.CylinderGeometry(discR, discR, 0.28, 40),
+    matDisc
+  );
+  disc.rotation.z = Math.PI/2;
+  disc.castShadow = true;
+  disc.receiveShadow = true;
+  g.add(disc);
+
+  /* Disc rim (thin ring) */
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(discR - 0.06, 0.05, 8, 40),
+    matSteelDark
+  );
+  rim.rotation.y = Math.PI/2;
+  g.add(rim);
+
+  /* Balance holes visual (small dark dots around disc) */
+  for (let h = 0; h < 6; h++){
+    const angle = (h / 6) * Math.PI * 2;
+    const hole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.30, 8),
+      new THREE.MeshStandardMaterial({ color:0x37474f, metalness:0.5, roughness:0.7 })
+    );
+    hole.rotation.z = Math.PI/2;
+    hole.position.set(0, Math.cos(angle) * (discR * 0.62), Math.sin(angle) * (discR * 0.62));
+    g.add(hole);
+  }
+
+  /* Rotor blades */
+  const isLP = i >= 6;
+  const mat = isLP ? matBladeLP.clone() : matBladeHP;
+  if (isLP) lpMaterials.push(mat);
+  const bladeCount = Math.round(18 + i * 3.5);
+  const ring = buildBladeRing(bladeCount, discR, BLADE_LEN[i], mat, false);
+  g.add(ring);
+
+  rotorGroup.add(g);
+  stageGroups.push(g);
+}
+
+/* ---- Shaft end extensions ---- */
+[-1, 1].forEach(side => {
+  const endLen = side < 0 ? 3.2 : 3.8;
+  const end = new THREE.Mesh(
+    new THREE.CylinderGeometry(SHAFT_R * 0.68, SHAFT_R * 0.68, endLen, 24),
+    matSteel
+  );
+  end.rotation.z = Math.PI/2;
+  end.position.x = side < 0
+    ? X0 - SPACING/2 - endLen/2
+    : X0 + (STAGES-1)*SPACING + SPACING/2 + endLen/2;
+  end.castShadow = true;
+  rotorGroup.add(end);
+
+  /* Coupling flange at drive end */
+  if (side > 0){
+    const coupling = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.95, 0.95, 0.35, 32),
+      matFlange
+    );
+    coupling.rotation.z = Math.PI/2;
+    coupling.position.x = end.position.x + endLen/2 + 0.18;
+    coupling.castShadow = true;
+    rotorGroup.add(coupling);
+
+    /* Coupling bolts */
+    for (let b = 0; b < 8; b++){
+      const a = (b / 8) * Math.PI * 2;
+      const bolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.07, 0.42, 8),
+        matBolt
+      );
+      bolt.rotation.z = Math.PI/2;
+      bolt.position.set(
+        coupling.position.x,
+        Math.cos(a) * 0.72,
+        Math.sin(a) * 0.72
+      );
+      rotorGroup.add(bolt);
+    }
+  }
+});
+
+/* ---- Static stator rings with realistic diaphragms ---- */
+const statorGroup = new THREE.Group();
+turbineRoot.add(statorGroup);
+
+for (let i = 0; i < STAGES - 1; i++){
+  const g = new THREE.Group();
+  const x = X0 + i * SPACING + SPACING/2;
+  g.position.x = x;
+
+  /* Diaphragm ring (outer) */
+  const outerR = 2.2 + i * 0.16;
+  const dia = new THREE.Mesh(
+    new THREE.CylinderGeometry(outerR, outerR, 0.45, 40, 1, true),
+    matStator
+  );
+  dia.rotation.z = Math.PI/2;
+  g.add(dia);
+
+  /* Inner shroud */
+  const innerR = DISC_R[i] + 0.15;
+  const innerShroud = new THREE.Mesh(
+    new THREE.CylinderGeometry(innerR, innerR, 0.45, 36, 1, true),
+    matSteelDark
+  );
+  innerShroud.rotation.z = Math.PI/2;
+  g.add(innerShroud);
+
+  /* Stator vanes */
+  const vaneLen = (outerR - innerR) * 0.85;
+  const vaneRing = buildBladeRing(
+    Math.round(24 + i * 2.5),
+    innerR,
+    vaneLen,
+    matStator,
+    true
+  );
+  g.add(vaneRing);
+
+  statorGroup.add(g);
+}
+
+/* ---- Casing — multi-section realistic ---- */
+const casingCenterX = X0 + (STAGES-1)*SPACING/2;
+
+/* Main transparent casing */
+const casing = new THREE.Mesh(
+  new THREE.CylinderGeometry(CASING_R, CASING_R, CASING_LEN, 72, 1, true),
+  matCasing
+);
+casing.rotation.z = Math.PI/2;
+casing.position.x = casingCenterX;
+turbineRoot.add(casing);
+
+/* Casing reinforcement ribs (realistic) */
+for (let i = 0; i <= 7; i++){
+  const x = X0 - 1.8 + i * (CASING_LEN - 1.2) / 7;
+  const ribR = CASING_R + 0.02 + (i < 3 ? 0 : (i < 6 ? 0.15 : 0.3));
+  const rib = new THREE.Mesh(
+    new THREE.TorusGeometry(ribR, 0.10, 10, 56),
+    matCasingSolid
+  );
+  rib.rotation.y = Math.PI/2;
+  rib.position.x = x;
+  rib.castShadow = true;
+  turbineRoot.add(rib);
+}
+
+/* Casing horizontal split flanges (top & bottom) */
+[-1, 1].forEach(dir => {
+  const flangeLen = CASING_LEN + 0.6;
+  const flange = new THREE.Mesh(
+    new THREE.BoxGeometry(flangeLen, 0.22, 0.65),
+    matFlange
+  );
+  flange.position.set(casingCenterX, dir * (CASING_R + 0.08), 0);
+  flange.castShadow = true;
+  turbineRoot.add(flange);
+
+  /* Bolt holes along flange */
+  const boltCount = 14;
+  for (let b = 0; b < boltCount; b++){
+    const bx = casingCenterX - flangeLen/2 + 0.8 + b * (flangeLen - 1.6) / (boltCount - 1);
+    const bolt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.055, 0.32, 8),
+      matBolt
+    );
+    bolt.position.set(bx, dir * (CASING_R + 0.08), 0);
+    bolt.rotation.x = Math.PI/2;
+    turbineRoot.add(bolt);
+  }
+});
+
+/* Casing end flanges */
+[-1, 1].forEach(side => {
+  const x = side < 0
+    ? X0 - CASING_LEN/2 + (STAGES-1)*SPACING/2 + 0.15
+    : X0 + CASING_LEN/2 + (STAGES-1)*SPACING/2 - 0.15;
+
+  const endFlange = new THREE.Mesh(
+    new THREE.CylinderGeometry(CASING_R + 0.45, CASING_R + 0.45, 0.40, 56, 1, true),
+    matFlange
+  );
+  endFlange.rotation.z = Math.PI/2;
+  endFlange.position.x = x;
+  endFlange.castShadow = true;
+  turbineRoot.add(endFlange);
+
+  /* End flange bolt circle */
+  for (let b = 0; b < 16; b++){
+    const a = (b / 16) * Math.PI * 2;
+    const bolt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8),
+      matBolt
+    );
+    bolt.rotation.z = Math.PI/2;
+    bolt.position.set(
+      x,
+      Math.cos(a) * (CASING_R + 0.3),
+      Math.sin(a) * (CASING_R + 0.3)
+    );
+    turbineRoot.add(bolt);
+  }
+});
+
+/* ---- Inlet pipe (HP steam) — realistic elbow ---- */
+const inletX = X0 - SPACING/2 - 1.8;
+const inletPipe = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.95, 0.95, 9, 28, 1, true),
+  matPipeHot
+);
+inletPipe.position.set(inletX, 5.2, 0);
+inletPipe.castShadow = true;
+turbineRoot.add(inletPipe);
+
+/* Inlet elbow sphere */
+const inletElbow = new THREE.Mesh(
+  new THREE.SphereGeometry(1.05, 32, 20),
+  matPipeHot
+);
+inletElbow.position.set(inletX, 0.5, 0);
+inletElbow.castShadow = true;
+turbineRoot.add(inletElbow);
+
+/* Inlet flange at top */
+const inletFlange = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.25, 1.25, 0.28, 32),
+  matFlange
+);
+inletFlange.position.set(inletX, 9.8, 0);
+turbineRoot.add(inletFlange);
+
+/* ---- Exhaust pipe (LP to condenser) ---- */
+const exhaustX = X0 + (STAGES-1)*SPACING + SPACING/2 + 2.2;
+const exhaust = new THREE.Mesh(
+  new THREE.CylinderGeometry(2.8, 3.4, 10, 44, 1, true),
+  matPipe
+);
+exhaust.rotation.z = Math.PI/2;
+exhaust.position.set(exhaustX + 5, 0, 0);
+exhaust.castShadow = true;
+turbineRoot.add(exhaust);
+
+/* Exhaust flange */
+const exhaustFlange = new THREE.Mesh(
+  new THREE.CylinderGeometry(3.6, 3.6, 0.32, 48),
+  matFlange
+);
+exhaustFlange.rotation.z = Math.PI/2;
+exhaustFlange.position.set(exhaustX + 10.2, 0, 0);
+turbineRoot.add(exhaustFlange);
+
+/* ---- Bearings ---- */
+[-8.0, 8.0].forEach(x => {
+  const bearingBase = new THREE.Mesh(
+    new THREE.BoxGeometry(2.2, 1.2, 3.2),
+    matBearing
+  );
+  bearingBase.position.set(x, -2.8, 0);
+  bearingBase.castShadow = true;
+  bearingBase.receiveShadow = true;
+  turbineRoot.add(bearingBase);
+
+  /* Bearing cap (cylindrical top) */
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.1, 1.1, 2.2, 24, 1, false, 0, Math.PI),
+    matBearing
+  );
+  cap.rotation.z = Math.PI/2;
+  cap.rotation.y = Math.PI/2;
+  cap.position.set(x, -2.2, 0);
+  cap.castShadow = true;
+  turbineRoot.add(cap);
+});
+
+/* ---- Base plate & pedestals ---- */
+[-6, 0, 6].forEach(x => {
+  const ped = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 1.6, 6.0),
+    matPedestal
+  );
+  ped.position.set(x, -5.6, 0);
+  ped.castShadow = true;
+  ped.receiveShadow = true;
+  turbineRoot.add(ped);
+});
+
+const basePlate = new THREE.Mesh(
+  new THREE.BoxGeometry(30, 0.7, 7.2),
+  matBasePlate
+);
+basePlate.position.set(0, -6.7, 0);
+basePlate.receiveShadow = true;
+turbineRoot.add(basePlate);
+
+/* ============================================================
+   6. PARTICLE SYSTEMS (steam + water)
+   ============================================================ */
+function makeParticles(count, size, color, opacity){
+  const geo  = new THREE.BufferGeometry();
+  const pos  = new Float32Array(count * 3);
+  const vel  = new Float32Array(count);
+  const phase= new Float32Array(count);
+
+  for (let i = 0; i < count; i++){
+    const r = Math.pow(Math.random(), 0.6) * 4.2;
+    const a = Math.random() * Math.PI * 2;
+    pos[i*3]   = -13 + Math.random() * 28;
+    pos[i*3+1] = Math.cos(a) * r;
+    pos[i*3+2] = Math.sin(a) * r;
+    vel[i]     = 5 + Math.random() * 7;
+    phase[i]   = Math.random() * Math.PI * 2;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+  const mat = new THREE.PointsMaterial({
+    color, size, transparent:true, opacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite:false, sizeAttenuation:true
+  });
+  const pts = new THREE.Points(geo, mat);
+  pts.frustumCulled = false;
+  turbineRoot.add(pts);
+
+  return { points:pts, geo, mat, pos, vel, phase, count };
+}
+
+const steam = makeParticles(540, 0.16, 0xf0f4f8, 0.40);
+const water = makeParticles(240, 0.30, 0x3b82f6, 0.0);
+
+function respawnParticle(sys, i, initial){
+  const r = Math.pow(Math.random(), 0.6) * 4.2;
+  const a = Math.random() * Math.PI * 2;
+  sys.pos[i*3]   = initial ? -13 + Math.random()*28 : -13.5;
+  sys.pos[i*3+1] = Math.cos(a) * r;
+  sys.pos[i*3+2] = Math.sin(a) * r;
+  sys.vel[i]     = 5 + Math.random() * 7;
+}
+
+function updateParticles(sys, dt, t, speedMul, gravity){
+  const { pos, vel, phase, count } = sys;
+  for (let i = 0; i < count; i++){
+    pos[i*3]   += vel[i] * dt * speedMul;
+    pos[i*3+1] += Math.sin(t * 2.2 + phase[i]) * dt * 0.9;
+    pos[i*3+2] += Math.cos(t * 1.7 + phase[i]) * dt * 0.9;
+    if (gravity) pos[i*3+1] -= 3.5 * dt;
+    if (pos[i*3] > 14.5 || (gravity && pos[i*3+1] < -4.5)) {
+      respawnParticle(sys, i, false);
+    }
+  }
+  sys.geo.attributes.position.needsUpdate = true;
+}
+
+/* ============================================================
+   7. STATE MACHINE
+   ============================================================ */
+const RATE = { speed:0.7, temp:0.9, vib:1.4, axial:0.9, diff:0.7, moist:1.1, bow:0.8, water:1.6 };
+
+const P = { speed:3000, temp:540, vib:2.2, axial:0.15, diff:2, moist:0.4, bow:0, water:0 };
+const T = { speed:3000, temp:540, vib:2.2, axial:0.15, diff:2, moist:0.4, bow:0, water:0 };
+
+let mode = 'NORMAL';
+let rotorAngle = 0;
+let tripped = false;
+let turningTime = 0;
+let restartReady = false;
+const flags = { moist:false, temp:false, vib:false, stop:false, recover:false };
+
+function clearFlags(){
+  flags.moist = flags.temp = flags.vib = flags.stop = flags.recover = false;
+  turningTime = 0;
+}
+
+function setMode(m){
+  mode = m;
+  switch(m){
+    case 'NORMAL':
+      Object.assign(T, { speed:3000, temp:540, vib:2.2, axial:0.15, diff:2, moist:0.4, bow:0, water:0 });
+      setStatus('TRẠNG THÁI: BÌNH THƯỜNG', 'normal');
+      setPill('BÌNH THƯỜNG', 'OK', 'normal');
+      break;
+    case 'WATER_INDUCTION':
+      Object.assign(T, { speed:2500, temp:310, vib:17.5, axial:1.42, diff:56, moist:11.5, bow:0.34, water:1 });
+      setStatus('SỰ CỐ THỦY KÍCH – NƯỚC XÂM NHẬP', 'danger');
+      setPill('THỦY KÍCH', 'SỰ CỐ', 'danger');
+      break;
+    case 'TRIPPED':
+      Object.assign(T, { speed:0, temp:150, vib:0.6, axial:1.0, diff:40, moist:3.2, bow:0.24, water:0.1 });
+      setStatus('ĐÃ DỪNG KHẨN CẤP (TRIPPED)', 'warning');
+      setPill('ĐÃ TRIP', 'TRIP', 'warning');
+      break;
+    case 'TURNING':
+      Object.assign(T, { speed:1.6, temp:180, vib:1.9, axial:0.6, diff:9, moist:0.5, bow:0.06, water:0 });
+      setStatus('VẦN TRỤC – THEO DÕI LỆCH TÂM', 'warning');
+      setPill('VẦN TRỤC', 'VẦN', 'warning');
+      break;
+  }
+}
+
+/* ============================================================
+   8. UI HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const statusBar = $('status-bar');
+const statusPill = $('status-pill');
+const statusText = $('status-text');
+const statusTextShort = $('status-text-short');
+
+function setStatus(text, level){
+  statusBar.textContent = text;
+  statusBar.className = '';
+  if (level === 'warning') statusBar.classList.add('warning');
+  else if (level === 'danger') statusBar.classList.add('danger');
+}
+
+function setPill(textFull, textShort, level){
+  statusText.textContent = textFull;
+  statusTextShort.textContent = textShort;
+  statusPill.className = '';
+  if (level === 'warning') statusPill.classList.add('warning');
+  else if (level === 'danger') statusPill.classList.add('danger');
+}
+
+const logBody = $('logBody');
+function log(msg, type){
+  const d = document.createElement('div');
+  d.className = 'ev ' + (type || 'info');
+  const time = new Date().toLocaleTimeString('vi-VN', {hour12:false});
+  d.textContent = `[${time}] ${msg}`;
+  logBody.prepend(d);
+  while (logBody.children.length > 50) logBody.lastChild.remove();
+}
+
+/* ============================================================
+   9. PANEL TOGGLE
+   ============================================================ */
+document.querySelectorAll('[data-toggle]').forEach(head => {
+  head.addEventListener('click', () => {
+    const panel = document.getElementById(head.dataset.toggle);
+    if (panel) panel.classList.toggle('collapsed');
+  });
+});
+
+function applyResponsiveDefaults(){
+  const isMobile = innerWidth <= 820;
+  const hmi = $('hmi-panel');
+  const ctrl = $('control-panel');
+  if (isMobile){
+    hmi.classList.add('collapsed');
+    ctrl.classList.add('collapsed');
+  } else {
+    hmi.classList.remove('collapsed');
+    ctrl.classList.remove('collapsed');
+  }
+}
+applyResponsiveDefaults();
+
+/* ============================================================
+   10. BUTTONS
+   ============================================================ */
+const btnWater = $('btnWater');
+const btnTrip = $('btnTrip');
+const btnTurning = $('btnTurning');
+const btnReset = $('btnReset');
+const btnCamera = $('btnCamera');
+
+btnWater.onclick = () => {
+  if (mode === 'TRIPPED' || mode === 'TURNING') return;
+  tripped = false;
+  clearFlags();
+  setMode('WATER_INDUCTION');
+  log('Phát hiện độ ẩm hơi tăng cao – nghi ngờ nước xâm nhập', 'warn');
+  setTimeout(() => log('Nhiệt độ hơi chính giảm đột ngột', 'bad'), 1100);
+  setTimeout(() => log('Rung gối trục tăng vọt – xuất hiện tiếng va đập kim loại', 'bad'), 2200);
+  btnTurning.disabled = true;
+};
+
+btnTrip.onclick = () => {
+  if (mode === 'TRIPPED' || mode === 'TURNING') return;
+  doTrip('Người vận hành chủ động dừng khẩn cấp');
+};
+
+btnTurning.onclick = () => {
+  if (mode !== 'TRIPPED' && mode !== 'TURNING') return;
+  clearFlags();
+  setMode('TURNING');
+  log('Đưa hệ thống vần trục vào làm việc – theo dõi độ lệch tâm', 'info');
+  btnTurning.disabled = true;
+};
+
+btnReset.onclick = () => {
+  clearFlags();
+  tripped = false;
+  restartReady = false;
+  Object.assign(P, { speed:100, temp:400, vib:0.5, axial:0.0, diff:5, moist:0.4, bow:0, water:0 });
+  Object.assign(T, { speed:3000, temp:540, vib:2.2, axial:0.15, diff:2, moist:0.4, bow:0, water:0 });
+  rotorAngle = 0;
+  rotorGroup.position.set(0,0,0);
+  rotorGroup.rotation.set(0,0,0);
+  stageGroups.forEach(g => g.position.y = 0);
+  camTarget.copy(CAM_DEFAULT_POS);
+  camLookTarget.copy(CAM_DEFAULT_TGT);
+  camAnimating = true;
+  camAnimT = 0;
+  setMode('NORMAL');
+  btnTurning.disabled = false;
+  log('Khôi phục trạng thái – bắt đầu khởi động lại từ 100 v/p', 'ok');
+};
+
+let camIdx = 0;
+const CAM_PRESETS = [
+  { pos:[22, 14, 26], tgt:[0,-0.5,0] },
+  { pos:[0, 5, 34],   tgt:[0,-0.5,0] },
+  { pos:[34, 3, 0],   tgt:[0,-0.5,0] },
+  { pos:[0, 28, 0.1], tgt:[0,-0.5,0] },
+  { pos:[-22, 10, -18],tgt:[0,-0.5,0] }
+];
+btnCamera.onclick = () => {
+  camIdx = (camIdx + 1) % CAM_PRESETS.length;
+  const c = CAM_PRESETS[camIdx];
+  camTarget.copy(new THREE.Vector3(...c.pos));
+  camLookTarget.copy(new THREE.Vector3(...c.tgt));
+  camAnimating = true;
+  camAnimT = 0;
+};
+
+const camTarget = camera.position.clone();
+const camLookTarget = controls.target.clone();
+let camAnimating = false, camAnimT = 0;
+
+/* ============================================================
+   11. TRIP LOGIC
+   ============================================================ */
+function doTrip(reason){
+  if (mode === 'TRIPPED' || mode === 'TURNING') return;
+  setMode('TRIPPED');
+  log('BẢO VỆ TÁC ĐỘNG: ' + reason, 'bad');
+  log('Đóng toàn bộ van hơi chính (MSV/CV/RSV/IV)', 'bad');
+  log('Mở toàn bộ van xả đọng trên vỏ tuabin và đường ống hơi', 'warn');
+  log('Phá chân không bình ngưng – giảm tốc rotor khẩn cấp', 'warn');
+  tripped = true;
+  btnTurning.disabled = true;
+}
+
+/* ============================================================
+   12. HMI UPDATE
+   ============================================================ */
+const HMI = {
+  speed: $('val-speed'), temp: $('val-temp'), vib: $('val-vib'),
+  axial: $('val-axial'), diff: $('val-diff'), moist: $('val-moist')
+};
+const ROW = {
+  speed: $('row-speed'), temp: $('row-temp'), vib: $('row-vib'),
+  axial: $('row-axial'), diff: $('row-diff'), moist: $('row-moist')
+};
+
+function checkThreshold(rowId, val, warn, dang, isDrop){
+  const el = ROW[rowId];
+  el.className = 'param-row';
+  if (isDrop){
+    if (val < dang) el.classList.add('danger');
+    else if (val < warn) el.classList.add('warning');
+  } else {
+    if (val > dang) el.classList.add('danger');
+    else if (val > warn) el.classList.add('warning');
+  }
+}
+
+let hmiAccum = 0;
+function updateHMI(dt){
+  hmiAccum += dt;
+  if (hmiAccum < 0.08) return;
+  hmiAccum = 0;
+
+  HMI.speed.textContent = Math.max(0, Math.round(P.speed));
+  HMI.temp .textContent = Math.round(P.temp);
+  HMI.vib  .textContent = P.vib.toFixed(2);
+  HMI.axial.textContent = P.axial.toFixed(2);
+  HMI.diff .textContent = Math.round(P.diff);
+  HMI.moist.textContent = P.moist.toFixed(1);
+
+  checkThreshold('speed', P.speed, 500, 200, true);
+  checkThreshold('temp',  P.temp, 450, 400, true);
+  checkThreshold('vib',   P.vib,  4.5, 7.1, false);
+  checkThreshold('axial', P.axial,0.5, 0.9, false);
+  checkThreshold('diff',  P.diff, 28,  50,  false);
+  checkThreshold('moist', P.moist,3,   6,   false);
+}
+
+/* ============================================================
+   13. VISUAL UPDATES
+   ============================================================ */
+const CASING_HOT = new THREE.Color(0xff4d1a);
+const STEAM_BASE = new THREE.Color(0xf0f4f8);
+const STEAM_WET = new THREE.Color(0x3b82f6);
+
+function updateVisuals(dt, t){
+  const omega = (P.speed / 3000) * 3.6;
+  rotorAngle += omega * dt;
+  rotorGroup.rotation.x = rotorAngle;
+
+  for (let i = 0; i < STAGES; i++){
+    const s = i / (STAGES - 1);
+    stageGroups[i].position.y = P.bow * Math.sin(Math.PI * s);
+  }
+
+  const vibN = Math.min(P.vib / 20, 1);
+  turbineRoot.position.y = Math.sin(t * 42) * 0.045 * vibN;
+  turbineRoot.position.z = Math.cos(t * 37) * 0.045 * vibN;
+  turbineRoot.rotation.z = Math.sin(t * 29) * 0.0035 * vibN;
+
+  rotorGroup.position.x = -P.axial * 0.35;
+
+  const mN = Math.min(P.moist / 12, 1);
+  steam.mat.color.copy(STEAM_BASE).lerp(STEAM_WET, mN);
+  steam.mat.opacity = 0.40 + mN * 0.24;
+  steam.mat.size    = 0.16 + mN * 0.10;
+
+  water.mat.opacity = P.water * 0.85;
+  water.points.visible = P.water > 0.02;
+
+  const stress = Math.min(P.diff / 55, 1);
+  matCasing.emissive.copy(CASING_HOT).multiplyScalar(stress * 0.45);
+  matCasing.opacity = 0.13 + stress * 0.13;
+  coldLight.intensity = stress * 50;
+
+  const dmg = Math.min(Math.max((P.bow - 0.05) / 0.3, 0), 1);
+  lpMaterials.forEach(m => {
+    m.emissive.setRGB(dmg * 1.0, dmg * 0.18, 0);
+    m.emissiveIntensity = dmg * 1.6;
+  });
+
+  warmLight.intensity = 20 + (1 - mN) * 35;
+}
+
+/* ============================================================
+   14. SIMULATION STEP
+   ============================================================ */
+function stepSimulation(dt){
+  for (const k in P){
+    P[k] += (T[k] - P[k]) * Math.min(1, RATE[k] * dt);
+  }
+
+  if (!flags.moist && P.moist > 5){
+    flags.moist = true;
+    log('CẢNH BÁO: Độ ẩm hơi vượt 5% – nguy cơ nước xâm nhập', 'warn');
+  }
+  if (!flags.temp && P.diff > 28){
+    flags.temp = true;
+    log('Chênh nhiệt vách trên/dưới ≥ 28 °C – cảnh báo sốc nhiệt', 'warn');
+  }
+  if (!flags.vib && P.vib > 11){
+    flags.vib = true;
+    log('Rung gối trục vượt 11 mm/s – ngưỡng nguy hiểm', 'bad');
+  }
+
+  if (mode === 'WATER_INDUCTION' && !tripped && P.axial > 1.0){
+    tripped = true;
+    doTrip('Độ di trục vượt 1.0 mm – nguy cơ cháy bạc ổ đỡ chặn');
+  }
+
+  if (mode === 'TRIPPED' && P.speed < 40 && !flags.stop){
+    flags.stop = true;
+    log('Rotor đã dừng hẳn (0 v/p) – kiểm tra trước khi vần trục', 'info');
+    setTimeout(() => {
+      if (mode === 'TRIPPED'){
+        btnTurning.disabled = false;
+        log('ĐỦ ĐIỀU KIỆN vần trục – nhấn nút "Vần trục" để tiếp tục', 'ok');
+      }
+    }, 2000);
+  }
+
+  if (mode === 'TURNING'){
+    turningTime += dt;
+    if (!flags.recover && turningTime > 5){
+      flags.recover = true;
+      log('Chênh nhiệt vách giảm dần – độ lệch tâm trong giới hạn', 'ok');
+    }
+    if (turningTime > 9 && !restartReady){
+      restartReady = true;
+      log('ĐỦ ĐIỀU KIỆN khởi động lại (ΔT < 42 °C, lệch tâm < 0,038 mm)', 'ok');
+      log('Lưu ý: không khởi động lại trong vòng 24 giờ sau sự cố thủy kích', 'warn');
+    }
+  }
+}
+
+/* ============================================================
+   15. ANIMATION LOOP
+   ============================================================ */
+const clock = new THREE.Clock();
+let elapsed = 0;
+let paused = false;
+
+document.addEventListener('visibilitychange', () => { paused = document.hidden; });
+
+function animate(){
+  requestAnimationFrame(animate);
+  if (paused) return;
+
+  let dt = clock.getDelta();
+  dt = Math.min(dt, 0.05);
+  elapsed += dt;
+
+  stepSimulation(dt);
+
+  const flowSpeed = 0.35 + (P.speed / 3000) * 0.9;
+  updateParticles(steam, dt, elapsed, flowSpeed, false);
+  updateParticles(water, dt, elapsed * 1.15, flowSpeed, true);
+
+  updateVisuals(dt, elapsed);
+  updateHMI(dt);
+
+  if (camAnimating){
+    camAnimT += dt / 0.85;
+    const k = camAnimT < 1 ? (1 - Math.pow(1 - camAnimT, 3)) : 1;
+    camera.position.lerp(camTarget, k * 0.14);
+    controls.target.lerp(camLookTarget, k * 0.14);
+    if (camAnimT >= 1 && camera.position.distanceTo(camTarget) < 0.35){
+      camAnimating = false;
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   16. RESIZE
+   ============================================================ */
+let resizeTimer;
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(applyResponsiveDefaults, 200);
+});
+
+/* ============================================================
+   17. START
+   ============================================================ */
+setMode('NORMAL');
+log('Hệ thống giám sát tuabin đã khởi động', 'ok');
+log('Tổ máy vận hành bình thường – 3000 v/p, tải định mức', 'ok');
+animate();
+
+setTimeout(() => $('loader').classList.add('hide'), 700);
+</script>
+</body>
+</html>
