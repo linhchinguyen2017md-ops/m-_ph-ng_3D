@@ -2,22 +2,25 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#f2f7fd" />
 <title>Mô phỏng 3D — Thân vỏ Bình ngưng 540 MW | NĐ Mông Dương 1</title>
 <style>
   :root{
     --bg1:#f2f7fd; --bg2:#dfeaf8;
-    --panel:rgba(255,255,255,.86);
+    --panel:rgba(255,255,255,.9);
     --stroke:rgba(140,175,215,.45);
     --ink:#0f2744; --muted:#5c7893;
     --accent:#1e7fe0; --accent2:#0fb5a8;
+    --panel-peek:54px;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink)}
   body{background:radial-gradient(1200px 800px at 50% 0%,var(--bg1),var(--bg2));}
   #stage{position:fixed;inset:0}
-  canvas{display:block}
+  canvas{display:block;touch-action:none}
 
+  /* ═══ HUD TOP ═══ */
   #hud-top{
     position:fixed;top:16px;left:50%;transform:translateX(-50%);
     display:flex;align-items:center;gap:14px;
@@ -25,65 +28,106 @@
     background:var(--panel);backdrop-filter:blur(14px);
     border:1px solid rgba(255,255,255,.9);
     box-shadow:0 10px 30px rgba(20,60,110,.14);
-    z-index:20;white-space:nowrap;
+    z-index:20;white-space:nowrap;max-width:calc(100vw - 130px);
   }
-  #hud-top .dot{width:9px;height:9px;border-radius:50%;background:var(--accent2);box-shadow:0 0 0 4px rgba(15,181,168,.18)}
-  #hud-top h1{font-size:14px;font-weight:700;letter-spacing:.2px}
+  #hud-top .dot{width:9px;height:9px;border-radius:50%;background:var(--accent2);box-shadow:0 0 0 4px rgba(15,181,168,.18);flex-shrink:0}
+  #hud-top h1{font-size:14px;font-weight:700;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis}
   #hud-top span{font-size:11.5px;color:var(--muted);border-left:1px solid var(--stroke);padding-left:14px}
 
+  /* ═══ HOME BUTTON ═══ */
+  #btnHome{
+    position:fixed;top:16px;left:16px;width:44px;height:44px;
+    border-radius:13px;background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:0 8px 22px rgba(20,60,110,.14);
+    cursor:pointer;font-size:19px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    z-index:25;transition:.2s;color:var(--ink);
+  }
+  #btnHome:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 12px 28px rgba(30,127,224,.25);color:var(--accent)}
+  #btnHome:active{transform:scale(.94)}
+
+  /* ═══ PANEL ═══ */
   #panel{
-    position:fixed;top:86px;left:16px;width:274px;max-height:calc(100vh - 110px);
-    overflow-y:auto;padding:16px;border-radius:18px;
+    position:fixed;top:86px;left:16px;width:278px;max-height:calc(100vh - 110px);
+    padding:0;border-radius:18px;
     background:var(--panel);backdrop-filter:blur(16px);
     border:1px solid rgba(255,255,255,.9);
     box-shadow:0 14px 40px rgba(20,60,110,.16);
-    z-index:20;
+    z-index:20;overflow:hidden;
+    display:flex;flex-direction:column;
   }
-  #panel::-webkit-scrollbar{width:6px}
-  #panel::-webkit-scrollbar-thumb{background:rgba(30,127,224,.25);border-radius:3px}
-  .sec{margin-bottom:16px}
+  .panel-top{
+    display:none;flex-shrink:0;align-items:center;gap:8px;
+    padding:9px 16px 7px;cursor:pointer;user-select:none;
+    background:rgba(255,255,255,.5);
+    border-bottom:1px solid rgba(140,175,215,.18);
+  }
+  .panel-grab{width:36px;height:4px;border-radius:99px;background:rgba(30,127,224,.35);flex-shrink:0}
+  .panel-title{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+  .panel-chev{margin-left:auto;font-size:11px;color:var(--accent);transition:.25s}
+  #panel.open .panel-chev{transform:rotate(180deg)}
+
+  .panel-content{
+    padding:16px;overflow-y:auto;flex:1;overscroll-behavior:contain;
+  }
+  .panel-content::-webkit-scrollbar{width:6px}
+  .panel-content::-webkit-scrollbar-thumb{background:rgba(30,127,224,.25);border-radius:3px}
+
+  /* ═══ SECTIONS (collapsible) ═══ */
+  .sec{margin-bottom:14px}
   .sec:last-child{margin-bottom:0}
   .sec-t{
+    display:flex;align-items:center;gap:7px;
     font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
-    color:var(--accent);margin-bottom:9px;display:flex;align-items:center;gap:7px;
+    color:var(--accent);margin-bottom:0;padding:6px 0;cursor:pointer;user-select:none;
+    transition:.15s;
   }
+  .sec-t:hover{color:#0f5fb5}
   .sec-t::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--stroke),transparent)}
+  .sec-t .chev{font-size:9px;color:var(--accent);transition:transform .22s;flex-shrink:0}
+  .sec.collapsed .sec-t .chev{transform:rotate(-90deg)}
+  .sec-body{margin-top:9px;overflow:hidden}
+  .sec.collapsed .sec-body{display:none}
 
   .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
   .btn{
     border:1px solid var(--stroke);background:rgba(255,255,255,.75);
     color:var(--ink);font-size:11.5px;font-weight:600;font-family:inherit;
-    padding:8px 6px;border-radius:10px;cursor:pointer;transition:.18s;
+    padding:9px 6px;border-radius:10px;cursor:pointer;transition:.18s;
     display:flex;align-items:center;justify-content:center;gap:5px;
+    min-height:38px;
   }
   .btn:hover{background:#fff;border-color:var(--accent);color:var(--accent);transform:translateY(-1px);
     box-shadow:0 5px 14px rgba(30,127,224,.18)}
   .btn.on{background:linear-gradient(135deg,var(--accent),#3b9bf0);color:#fff;border-color:transparent;
     box-shadow:0 6px 16px rgba(30,127,224,.35)}
+  .btn:active{transform:scale(.97)}
 
-  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px;min-height:26px}
   .row label.lbl-row{font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;cursor:pointer;flex:1}
 
-  .sw{position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;display:inline-block}
+  .sw{position:relative;width:38px;height:22px;flex-shrink:0;cursor:pointer;display:inline-block}
   .sw input{opacity:0;width:0;height:0;position:absolute;pointer-events:none}
   .sw i{position:absolute;inset:0;border-radius:999px;background:#c7d5e4;transition:.22s;pointer-events:none}
-  .sw i::before{content:"";position:absolute;width:15px;height:15px;left:2.5px;top:2.5px;border-radius:50%;
+  .sw i::before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;
     background:#fff;transition:.22s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
   .sw input:checked + i{background:linear-gradient(135deg,var(--accent),#4aa8f5)}
   .sw input:checked + i::before{transform:translateX(16px)}
 
   input[type=range]{
-    -webkit-appearance:none;width:100%;height:5px;border-radius:99px;margin-top:6px;
+    -webkit-appearance:none;width:100%;height:6px;border-radius:99px;margin-top:6px;
     background:linear-gradient(90deg,var(--accent),#8fc4f5);outline:none;
   }
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;cursor:pointer;
-    border:2.5px solid var(--accent);box-shadow:0 2px 7px rgba(30,127,224,.4);
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;cursor:pointer;
+    border:3px solid var(--accent);box-shadow:0 2px 7px rgba(30,127,224,.4);
   }
-  .slide-wrap{padding:6px 0 2px}
+  .slide-wrap{padding:4px 0 2px}
   .slide-wrap .lab{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--muted)}
   .slide-wrap .lab b{color:var(--accent);font-variant-numeric:tabular-nums}
 
+  /* ═══ LEGEND ═══ */
   #legend{
     position:fixed;bottom:16px;right:16px;padding:13px 16px;border-radius:16px;
     background:var(--panel);backdrop-filter:blur(14px);
@@ -96,6 +140,7 @@
   #legend .li{display:flex;align-items:center;gap:8px;margin:5px 0;color:var(--muted);font-weight:600}
   #legend .chip{width:13px;height:13px;border-radius:4px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 
+  /* ═══ LABELS ═══ */
   .lbl{
     font:600 11px/1.25 "Segoe UI",system-ui,sans-serif;color:#0b2545;
     background:rgba(255,255,255,.94);
@@ -107,6 +152,7 @@
   .lbl.acc{border-color:rgba(15,181,168,.55);color:#0a5f57}
   .lbl.hot{border-color:rgba(255,122,61,.55);color:#7a2a00;background:rgba(255,240,230,.95)}
 
+  /* ═══ LOADER ═══ */
   #loader{position:fixed;inset:0;background:linear-gradient(160deg,#f4f9ff,#dbe9f8);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
     z-index:100;transition:opacity .7s;font-size:12px;color:var(--muted);letter-spacing:1.4px;font-weight:700}
@@ -115,15 +161,79 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   #loader.hide{opacity:0;pointer-events:none}
 
+  /* ═══ TOAST ═══ */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);
+    background:rgba(15,39,68,.92);color:#fff;font-size:12px;font-weight:600;
+    padding:10px 20px;border-radius:99px;z-index:60;opacity:0;
+    pointer-events:none;transition:.3s;backdrop-filter:blur(8px);
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ═════════════════════════════════════════════
+     RESPONSIVE — TABLET & MOBILE
+     ═════════════════════════════════════════════ */
   @media(max-width:820px){
-    #panel{width:238px;top:78px;left:10px;padding:12px}
-    #hud-top h1{font-size:12px} #hud-top span{display:none}
+    #hud-top{
+      top:12px;left:auto;right:12px;transform:none;
+      padding:8px 14px;gap:8px;max-width:calc(100vw - 120px);
+    }
+    #hud-top h1{font-size:11.5px;white-space:nowrap}
+    #hud-top span{display:none}
+    #hud-top .dot{width:7px;height:7px;box-shadow:0 0 0 3px rgba(15,181,168,.18)}
+
+    #btnHome{top:12px;left:12px;width:42px;height:42px;font-size:18px;border-radius:12px}
+
+    #panel{
+      top:auto;left:0;right:0;bottom:0;
+      width:100%;
+      max-height:78vh;
+      border-radius:22px 22px 0 0;
+      transform:translateY(calc(100% - var(--panel-peek)));
+      transition:transform .34s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 -12px 44px rgba(20,60,110,.20);
+      border-bottom:none;
+      padding-bottom:env(safe-area-inset-bottom,0);
+    }
+    #panel.open{transform:translateY(0)}
+    .panel-top{display:flex}
+    .panel-content{
+      max-height:calc(78vh - var(--panel-peek) - env(safe-area-inset-bottom,0));
+      padding:14px 16px 22px;
+    }
+
     #legend{display:none}
+
+    .btn{min-height:44px;font-size:12px;border-radius:12px}
+    .row{margin:11px 0;font-size:12.5px}
+    .sw{width:44px;height:26px}
+    .sw i::before{width:20px;height:20px;left:3px;top:3px}
+    .sw input:checked + i::before{transform:translateX(18px)}
+    input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+    .sec-t{font-size:11px;padding:9px 0}
+    .lbl{font-size:10px;padding:3px 7px}
+  }
+
+  /* Small phone tweaks */
+  @media(max-width:420px){
+    #hud-top{padding:7px 12px}
+    #hud-top h1{font-size:10.5px}
+    #btnHome{width:38px;height:38px;font-size:16px;border-radius:11px}
+    .panel-content{padding:12px 14px 20px}
+  }
+
+  /* Landscape phone — allow smaller panel */
+  @media(max-height:480px) and (max-width:900px){
+    #panel{max-height:88vh}
+    .panel-content{max-height:calc(88vh - var(--panel-peek))}
   }
 </style>
 </head>
 <body>
 <div id="stage"></div>
+
+<!-- Nút về trang chủ / khôi phục mặc định -->
+<button id="btnHome" title="Về mặc định" aria-label="Về mặc định">🏠</button>
 
 <header id="hud-top">
   <div class="dot"></div>
@@ -132,60 +242,86 @@
 </header>
 
 <aside id="panel">
-  <div class="sec">
-    <div class="sec-t">Chế độ xem</div>
-    <div class="btn-grid">
-      <button class="btn on" data-view="all">🌐 Toàn cảnh</button>
-      <button class="btn" data-view="cross">✂️ Cắt ngang</button>
-      <button class="btn" data-view="long">📐 Cắt dọc A</button>
-      <button class="btn" data-view="quarter">◱ Cắt 3/4</button>
-    </div>
+  <!-- Thanh kéo / tiêu đề (chỉ hiện trên mobile) -->
+  <div class="panel-top" id="panelToggle">
+    <div class="panel-grab"></div>
+    <div class="panel-title">Bảng điều khiển</div>
+    <span class="panel-chev">▾</span>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">Mặt cắt</div>
-    <div class="row">
-      <label class="lbl-row" for="cxOn">Mặt cắt ngang (X)</label>
-      <label class="sw"><input type="checkbox" id="cxOn"><i></i></label>
-    </div>
-    <div class="slide-wrap">
-      <div class="lab"><span>Vị trí</span><b id="cxVal">0.0 m</b></div>
-      <input type="range" id="cx" min="-8" max="8" step="0.1" value="0">
+  <div class="panel-content">
+
+    <!-- ─── CHẾ ĐỘ XEM ─── -->
+    <div class="sec" data-sec>
+      <div class="sec-t" role="button" tabindex="0">Chế độ xem <span class="chev">▼</span></div>
+      <div class="sec-body">
+        <div class="btn-grid">
+          <button class="btn on" data-view="all">🌐 Toàn cảnh</button>
+          <button class="btn" data-view="cross">✂️ Cắt ngang</button>
+          <button class="btn" data-view="long">📐 Cắt dọc A</button>
+          <button class="btn" data-view="quarter">◱ Cắt 3/4</button>
+        </div>
+      </div>
     </div>
 
-    <div class="row" style="margin-top:12px">
-      <label class="lbl-row" for="czOn">Mặt cắt dọc (Z)</label>
-      <label class="sw"><input type="checkbox" id="czOn"><i></i></label>
+    <!-- ─── MẶT CẮT ─── -->
+    <div class="sec" data-sec>
+      <div class="sec-t" role="button" tabindex="0">Mặt cắt <span class="chev">▼</span></div>
+      <div class="sec-body">
+        <div class="row">
+          <label class="lbl-row" for="cxOn">Mặt cắt ngang (X)</label>
+          <label class="sw"><input type="checkbox" id="cxOn"><i></i></label>
+        </div>
+        <div class="slide-wrap">
+          <div class="lab"><span>Vị trí</span><b id="cxVal">0.0 m</b></div>
+          <input type="range" id="cx" min="-8" max="8" step="0.1" value="0">
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <label class="lbl-row" for="czOn">Mặt cắt dọc (Z)</label>
+          <label class="sw"><input type="checkbox" id="czOn"><i></i></label>
+        </div>
+        <div class="slide-wrap">
+          <div class="lab"><span>Vị trí</span><b id="czVal">0.0 m</b></div>
+          <input type="range" id="cz" min="-12" max="12" step="0.1" value="-5.5">
+        </div>
+      </div>
     </div>
-    <div class="slide-wrap">
-      <div class="lab"><span>Vị trí</span><b id="czVal">0.0 m</b></div>
-      <input type="range" id="cz" min="-12" max="12" step="0.1" value="-5.5">
+
+    <!-- ─── LỚP HIỂN THỊ ─── -->
+    <div class="sec" data-sec>
+      <div class="sec-t" role="button" tabindex="0">Lớp hiển thị <span class="chev">▼</span></div>
+      <div class="sec-body">
+        <div class="row"><label class="lbl-row">Thân vỏ &amp; Hotwell</label><label class="sw"><input type="checkbox" data-part="casing" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Chùm ống Titan</label><label class="sw"><input type="checkbox" data-part="tubes" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Cổ &amp; BGN hạ áp</label><label class="sw"><input type="checkbox" data-part="neck" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Hộp nước</label><label class="sw"><input type="checkbox" data-part="waterbox" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Tuabin hạ áp</label><label class="sw"><input type="checkbox" data-part="turbine" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Ống liên thông</label><label class="sw"><input type="checkbox" data-part="pipes" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row">Chi tiết trong vỏ</label><label class="sw"><input type="checkbox" data-part="internals" checked><i></i></label></div>
+      </div>
     </div>
-  </div>
 
-  <div class="sec">
-    <div class="sec-t">Lớp hiển thị</div>
-    <div class="row"><label class="lbl-row">Thân vỏ & Hotwell</label><label class="sw"><input type="checkbox" data-part="casing" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Chùm ống Titan</label><label class="sw"><input type="checkbox" data-part="tubes" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Cổ & BGN hạ áp</label><label class="sw"><input type="checkbox" data-part="neck" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Hộp nước</label><label class="sw"><input type="checkbox" data-part="waterbox" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Tuabin hạ áp</label><label class="sw"><input type="checkbox" data-part="turbine" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Ống liên thông</label><label class="sw"><input type="checkbox" data-part="pipes" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row">Chi tiết trong vỏ</label><label class="sw"><input type="checkbox" data-part="internals" checked><i></i></label></div>
-  </div>
+    <!-- ─── MÔ PHỎNG DÒNG CHẢY ─── -->
+    <div class="sec" data-sec>
+      <div class="sec-t" role="button" tabindex="0">Mô phỏng dòng chảy <span class="chev">▼</span></div>
+      <div class="sec-body">
+        <div class="row"><label class="lbl-row" for="flowSteam">Hơi xuống</label><label class="sw"><input type="checkbox" id="flowSteam" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row" for="flowCond">Nước ngưng về rốn</label><label class="sw"><input type="checkbox" id="flowCond" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row" for="flowCool">Nước làm mát trong ống</label><label class="sw"><input type="checkbox" id="flowCool" checked><i></i></label></div>
+      </div>
+    </div>
 
-  <div class="sec">
-    <div class="sec-t">Mô phỏng dòng chảy</div>
-    <div class="row"><label class="lbl-row" for="flowSteam">Hơi xuống</label><label class="sw"><input type="checkbox" id="flowSteam" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row" for="flowCond">Nước ngưng về rốn</label><label class="sw"><input type="checkbox" id="flowCond" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row" for="flowCool">Nước làm mát trong ống</label><label class="sw"><input type="checkbox" id="flowCool" checked><i></i></label></div>
-  </div>
+    <!-- ─── TÙY CHỌN ─── -->
+    <div class="sec" data-sec>
+      <div class="sec-t" role="button" tabindex="0">Tùy chọn <span class="chev">▼</span></div>
+      <div class="sec-body">
+        <div class="row"><label class="lbl-row" for="lblOn">Nhãn chú thích</label><label class="sw"><input type="checkbox" id="lblOn" checked><i></i></label></div>
+        <div class="row"><label class="lbl-row" for="xray">Xuyên sáng vỏ</label><label class="sw"><input type="checkbox" id="xray"><i></i></label></div>
+        <div class="row"><label class="lbl-row" for="autoRot">Tự động xoay</label><label class="sw"><input type="checkbox" id="autoRot"><i></i></label></div>
+      </div>
+    </div>
 
-  <div class="sec">
-    <div class="sec-t">Tùy chọn</div>
-    <div class="row"><label class="lbl-row" for="lblOn">Nhãn chú thích</label><label class="sw"><input type="checkbox" id="lblOn" checked><i></i></label></div>
-    <div class="row"><label class="lbl-row" for="xray">Xuyên sáng vỏ</label><label class="sw"><input type="checkbox" id="xray"><i></i></label></div>
-    <div class="row"><label class="lbl-row" for="autoRot">Tự động xoay</label><label class="sw"><input type="checkbox" id="autoRot"><i></i></label></div>
   </div>
 </aside>
 
@@ -204,6 +340,7 @@
 </div>
 
 <div id="loader"><div class="ring"></div>ĐANG DỰNG MÔ HÌNH 3D…</div>
+<div id="toast"></div>
 
 <script type="importmap">
 {
@@ -247,6 +384,7 @@ controls.target.set(0, 5, 0);
 controls.minDistance = 14;
 controls.maxDistance = 130;
 controls.autoRotateSpeed = 0.6;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
 const clock = new THREE.Clock();
 
@@ -315,7 +453,6 @@ function makeFlowTexture(){
   c.width = 64; c.height = 128;
   const x = c.getContext('2d');
   x.fillStyle = '#000'; x.fillRect(0,0,64,128);
-  // 4 dải cyan phát sáng chạy dọc trục ống (v axis)
   for (let i=0; i<4; i++){
     const y = i * 32;
     const g = x.createLinearGradient(0, y, 0, y + 26);
@@ -354,7 +491,7 @@ function makeSpriteTex(){
 }
 const spTex = makeSpriteTex();
 
-/* ═══════════════ HELPERS — BO GÓC ═══════════════ */
+/* ═══════════════ HELPERS ═══════════════ */
 const world = new THREE.Group();
 scene.add(world);
 
@@ -551,7 +688,7 @@ label('Ống cân bằng nước',      0, -2.9,  0, 'acc');
 label('→ Hơi xuống',            0, 10.8,  0, 'acc');
 label('→ Nước ngưng về rốn',    0, -4.2,  0, 'hot');
 
-/* ═══════════════ PARTICLE SYSTEMS (MÔ PHỎNG DÒNG CHẢY) ═══════════════ */
+/* ═══════════════ PARTICLE SYSTEMS ═══════════════ */
 function makeParticleMat(color){
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.NormalBlending,
@@ -620,7 +757,6 @@ function spawnSteam(i){
   const isB = Math.random() < 0.5;
   const shellZ = isB ? 5.5 : -5.5;
   const p = i*3;
-  // 40% sinh trong cổ, 60% sinh trên đỉnh chùm ống
   if (Math.random() < 0.40){
     steam.pos[p]   = (Math.random()-0.5) * 6.5;
     steam.pos[p+1] = 6.3 + Math.random() * 3.4;
@@ -643,9 +779,10 @@ for (let i=0; i<STEAM_N; i++) spawnSteam(i);
 
 function updateSteam(dt){
   const { n, pos, alpha, vel, life, maxLife, shell } = steam;
+  let sizeDirty = false;
   for (let i=0; i<n; i++){
     life[i] += dt;
-    if (life[i] >= maxLife[i]){ spawnSteam(i); continue; }
+    if (life[i] >= maxLife[i]){ spawnSteam(i); sizeDirty = true; continue; }
     const p = i*3;
     pos[p]   += vel[p]   * dt;
     pos[p+1] += vel[p+1] * dt;
@@ -653,7 +790,6 @@ function updateSteam(dt){
     const zc = shell[i] ? 5.5 : -5.5;
     if (pos[p+2] < zc - 3.6) pos[p+2] = zc - 3.6;
     if (pos[p+2] > zc + 3.6) pos[p+2] = zc + 3.6;
-    // nhiễu nhẹ
     vel[p]   += (Math.random()-0.5) * 0.30 * dt;
     vel[p+2] += (Math.random()-0.5) * 0.30 * dt;
     const t = life[i] / maxLife[i];
@@ -665,6 +801,7 @@ function updateSteam(dt){
   }
   steam.geo.attributes.position.needsUpdate = true;
   steam.geo.attributes.aAlpha.needsUpdate = true;
+  if (sizeDirty) steam.geo.attributes.aSize.needsUpdate = true;
 }
 
 /* --- NƯỚC NGƯNG VỀ RỐN --- */
@@ -708,11 +845,11 @@ for (let i=0; i<COND_N; i++) spawnCond(i);
 
 function updateCond(dt){
   const { n, pos, alpha, vel, life, maxLife, shell } = cond;
+  let sizeDirty = false;
   for (let i=0; i<n; i++){
     life[i] += dt;
-    if (life[i] >= maxLife[i]){ spawnCond(i); continue; }
+    if (life[i] >= maxLife[i]){ spawnCond(i); sizeDirty = true; continue; }
     const p = i*3;
-    // Gia tốc trọng trường
     vel[p+1] -= 1.2 * dt;
     pos[p]   += vel[p]   * dt;
     pos[p+1] += vel[p+1] * dt;
@@ -729,6 +866,7 @@ function updateCond(dt){
   }
   cond.geo.attributes.position.needsUpdate = true;
   cond.geo.attributes.aAlpha.needsUpdate = true;
+  if (sizeDirty) cond.geo.attributes.aSize.needsUpdate = true;
 }
 
 /* ═══════════════ CUT VISUALS ═══════════════ */
@@ -760,6 +898,7 @@ const ui = {
   flowSteam:true, flowCond:true, flowCool:true
 };
 const $ = s => document.querySelector(s);
+const isMobile = () => innerWidth <= 820;
 
 function applyClips(){
   clipPlanes.length = 0;
@@ -806,35 +945,48 @@ document.querySelectorAll('[data-part]').forEach(cb=>{
   });
 });
 
+/* ═══════════════ ACCORDION SECTIONS ═══════════════ */
+document.querySelectorAll('.sec[data-sec]').forEach((sec, idx) => {
+  const head = sec.querySelector('.sec-t');
+  head.addEventListener('click', () => sec.classList.toggle('collapsed'));
+  head.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sec.classList.toggle('collapsed'); }
+  });
+  // Trên mobile: thu gọn các mục từ thứ 2 trở đi để gọn giao diện
+  if (isMobile() && idx > 0) sec.classList.add('collapsed');
+});
+
+/* ═══════════════ MOBILE PANEL TOGGLE ═══════════════ */
+const panelEl = $('#panel');
+$('#panelToggle').addEventListener('click', () => {
+  panelEl.classList.toggle('open');
+});
+
+/* ═══════════════ OPTIONS ═══════════════ */
 $('#lblOn').addEventListener('change', e=>{
   labels.forEach(l => l.visible = e.target.checked);
 });
 
-$('#xray').addEventListener('change', e=>{
-  const on = e.target.checked;
+function setXray(on){
   MAT.shell.transparent  = on;  MAT.shell.opacity  = on ? 0.28 : 1;  MAT.shell.depthWrite  = !on;
   MAT.hotwell.transparent= on;  MAT.hotwell.opacity= on ? 0.32 : 1;  MAT.hotwell.depthWrite= !on;
   MAT.neck.transparent   = on;  MAT.neck.opacity   = on ? 0.34 : 1;  MAT.neck.depthWrite   = !on;
   allMats.forEach(m=>m.needsUpdate = true);
-});
+}
+$('#xray').addEventListener('change', e=> setXray(e.target.checked));
 
 $('#autoRot').addEventListener('change', e=>{
   controls.autoRotate = e.target.checked;
 });
 
 /* --- Flow toggles --- */
-$('#flowSteam').addEventListener('change', e=>{
-  ui.flowSteam = e.target.checked;
-  steam.points.visible = ui.flowSteam;
-});
-$('#flowCond').addEventListener('change', e=>{
-  ui.flowCond = e.target.checked;
-  cond.points.visible = ui.flowCond;
-});
-$('#flowCool').addEventListener('change', e=>{
-  ui.flowCool = e.target.checked;
-  MAT.tube.emissiveIntensity = ui.flowCool ? 1.4 : 0.0;
-});
+function setFlowSteam(on){ ui.flowSteam = on; steam.points.visible = on; }
+function setFlowCond (on){ ui.flowCond  = on; cond.points.visible  = on; }
+function setFlowCool (on){ ui.flowCool  = on; MAT.tube.emissiveIntensity = on ? 1.4 : 0.0; }
+
+$('#flowSteam').addEventListener('change', e=> setFlowSteam(e.target.checked));
+$('#flowCond') .addEventListener('change', e=> setFlowCond(e.target.checked));
+$('#flowCool') .addEventListener('change', e=> setFlowCool(e.target.checked));
 
 /* ═══════════════ VIEWS ═══════════════ */
 const VIEWS = {
@@ -892,6 +1044,40 @@ document.querySelectorAll('[data-view]').forEach(b=>{
   b.addEventListener('click', ()=> setView(b.dataset.view));
 });
 
+/* ═══════════════ TOAST ═══════════════ */
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), 1600);
+}
+
+/* ═══════════════ NÚT VỀ MẶC ĐỊNH ═══════════════ */
+$('#btnHome').addEventListener('click', ()=>{
+  // 1. Camera & view
+  setView('all');
+  // 2. Lớp hiển thị
+  document.querySelectorAll('[data-part]').forEach(cb=>{
+    cb.checked = true;
+    parts[cb.dataset.part].forEach(o => o.visible = true);
+  });
+  // 3. Dòng chảy
+  $('#flowSteam').checked = true; setFlowSteam(true);
+  $('#flowCond').checked  = true; setFlowCond(true);
+  $('#flowCool').checked  = true; setFlowCool(true);
+  // 4. Tùy chọn
+  $('#lblOn').checked = true;   labels.forEach(l => l.visible = true);
+  $('#xray').checked  = false;  setXray(false);
+  $('#autoRot').checked = false; controls.autoRotate = false;
+  // 5. Mở lại tất cả mục accordion
+  document.querySelectorAll('.sec[data-sec]').forEach(s => s.classList.remove('collapsed'));
+  // 6. Đóng panel mobile
+  if (isMobile()) panelEl.classList.remove('open');
+  toast('Đã khôi phục về mặc định');
+});
+
 /* ═══════════════ RESIZE + LOOP ═══════════════ */
 addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight;
@@ -904,17 +1090,14 @@ function animate(){
   requestAnimationFrame(animate);
   const dt = Math.min(0.05, clock.getDelta());
 
-  /* --- Cập nhật texture nước làm mát --- */
   if (ui.flowCool){
     flowTex.offset.y -= 0.55 * dt;
     if (flowTex.offset.y < -1) flowTex.offset.y += 1;
   }
 
-  /* --- Cập nhật hạt hơi & nước ngưng --- */
   if (ui.flowSteam) updateSteam(dt);
   if (ui.flowCond)  updateCond(dt);
 
-  /* --- Cập nhật clipping uniforms cho particles --- */
   const clipXv = ui.cxOn ? 1 : 0, clipZv = ui.czOn ? 1 : 0;
   steam.mat.uniforms.uClipX.value = clipXv;
   steam.mat.uniforms.uClipXval.value = ui.cx;
