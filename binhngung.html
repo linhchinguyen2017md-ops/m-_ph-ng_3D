@@ -10,7 +10,7 @@
     --panel:rgba(255,255,255,.86);
     --stroke:rgba(140,175,215,.45);
     --ink:#0f2744; --muted:#5c7893;
-    --accent:#1e7fe0; --accent2:#0fb5a8; --warn:#ff7a3d;
+    --accent:#1e7fe0; --accent2:#0fb5a8;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink)}
@@ -18,7 +18,6 @@
   #stage{position:fixed;inset:0}
   canvas{display:block}
 
-  /* ---------- HEADER ---------- */
   #hud-top{
     position:fixed;top:16px;left:50%;transform:translateX(-50%);
     display:flex;align-items:center;gap:14px;
@@ -32,7 +31,6 @@
   #hud-top h1{font-size:14px;font-weight:700;letter-spacing:.2px}
   #hud-top span{font-size:11.5px;color:var(--muted);border-left:1px solid var(--stroke);padding-left:14px}
 
-  /* ---------- PANEL ---------- */
   #panel{
     position:fixed;top:86px;left:16px;width:274px;max-height:calc(100vh - 110px);
     overflow-y:auto;padding:16px;border-radius:18px;
@@ -64,10 +62,11 @@
     box-shadow:0 6px 16px rgba(30,127,224,.35)}
 
   .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px}
-  .row label{font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;cursor:pointer}
-  .sw{position:relative;width:36px;height:20px;flex-shrink:0}
-  .sw input{opacity:0;width:0;height:0;position:absolute}
-  .sw i{position:absolute;inset:0;border-radius:999px;background:#c7d5e4;transition:.22s;cursor:pointer}
+  .row label.lbl-row{font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;cursor:pointer;flex:1}
+
+  .sw{position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;display:inline-block}
+  .sw input{opacity:0;width:0;height:0;position:absolute;pointer-events:none}
+  .sw i{position:absolute;inset:0;border-radius:999px;background:#c7d5e4;transition:.22s;pointer-events:none}
   .sw i::before{content:"";position:absolute;width:15px;height:15px;left:2.5px;top:2.5px;border-radius:50%;
     background:#fff;transition:.22s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
   .sw input:checked + i{background:linear-gradient(135deg,var(--accent),#4aa8f5)}
@@ -85,20 +84,18 @@
   .slide-wrap .lab{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--muted)}
   .slide-wrap .lab b{color:var(--accent);font-variant-numeric:tabular-nums}
 
-  /* ---------- LEGEND ---------- */
   #legend{
     position:fixed;bottom:16px;right:16px;padding:13px 16px;border-radius:16px;
     background:var(--panel);backdrop-filter:blur(14px);
     border:1px solid rgba(255,255,255,.9);
     box-shadow:0 12px 34px rgba(20,60,110,.15);z-index:20;
-    font-size:11px;min-width:186px;
+    font-size:11px;min-width:196px;
   }
   #legend .lt{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
     color:var(--accent);margin-bottom:9px}
   #legend .li{display:flex;align-items:center;gap:8px;margin:5px 0;color:var(--muted);font-weight:600}
   #legend .chip{width:13px;height:13px;border-radius:4px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 
-  /* ---------- LABELS ---------- */
   .lbl{
     font:600 11px/1.25 "Segoe UI",system-ui,sans-serif;color:#0b2545;
     background:rgba(255,255,255,.94);
@@ -108,8 +105,8 @@
     pointer-events:none;user-select:none;
   }
   .lbl.acc{border-color:rgba(15,181,168,.55);color:#0a5f57}
+  .lbl.hot{border-color:rgba(255,122,61,.55);color:#7a2a00;background:rgba(255,240,230,.95)}
 
-  /* ---------- LOADER ---------- */
   #loader{position:fixed;inset:0;background:linear-gradient(160deg,#f4f9ff,#dbe9f8);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
     z-index:100;transition:opacity .7s;font-size:12px;color:var(--muted);letter-spacing:1.4px;font-weight:700}
@@ -131,7 +128,7 @@
 <header id="hud-top">
   <div class="dot"></div>
   <h1>Thân vỏ Bình ngưng — 540 MW</h1>
-  <span>NĐ Mông Dương 1 · Mô phỏng kết cấu 3D</span>
+  <span>NĐ Mông Dương 1 · Mô phỏng dòng chảy 3D</span>
 </header>
 
 <aside id="panel">
@@ -148,8 +145,8 @@
   <div class="sec">
     <div class="sec-t">Mặt cắt</div>
     <div class="row">
-      <label>Mặt cắt ngang (X)</label>
-      <span class="sw"><input type="checkbox" id="cxOn"><i></i></span>
+      <label class="lbl-row" for="cxOn">Mặt cắt ngang (X)</label>
+      <label class="sw"><input type="checkbox" id="cxOn"><i></i></label>
     </div>
     <div class="slide-wrap">
       <div class="lab"><span>Vị trí</span><b id="cxVal">0.0 m</b></div>
@@ -157,8 +154,8 @@
     </div>
 
     <div class="row" style="margin-top:12px">
-      <label>Mặt cắt dọc (Z)</label>
-      <span class="sw"><input type="checkbox" id="czOn"><i></i></span>
+      <label class="lbl-row" for="czOn">Mặt cắt dọc (Z)</label>
+      <label class="sw"><input type="checkbox" id="czOn"><i></i></label>
     </div>
     <div class="slide-wrap">
       <div class="lab"><span>Vị trí</span><b id="czVal">0.0 m</b></div>
@@ -168,25 +165,32 @@
 
   <div class="sec">
     <div class="sec-t">Lớp hiển thị</div>
-    <div class="row"><label>Thân vỏ & Hotwell</label><span class="sw"><input type="checkbox" data-part="casing" checked><i></i></span></div>
-    <div class="row"><label>Chùm ống Titan</label><span class="sw"><input type="checkbox" data-part="tubes" checked><i></i></span></div>
-    <div class="row"><label>Cổ & BGN hạ áp</label><span class="sw"><input type="checkbox" data-part="neck" checked><i></i></span></div>
-    <div class="row"><label>Hộp nước</label><span class="sw"><input type="checkbox" data-part="waterbox" checked><i></i></span></div>
-    <div class="row"><label>Tuabin hạ áp</label><span class="sw"><input type="checkbox" data-part="turbine" checked><i></i></span></div>
-    <div class="row"><label>Ống liên thông</label><span class="sw"><input type="checkbox" data-part="pipes" checked><i></i></span></div>
-    <div class="row"><label>Chi tiết trong vỏ</label><span class="sw"><input type="checkbox" data-part="internals" checked><i></i></span></div>
+    <div class="row"><label class="lbl-row">Thân vỏ & Hotwell</label><label class="sw"><input type="checkbox" data-part="casing" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Chùm ống Titan</label><label class="sw"><input type="checkbox" data-part="tubes" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Cổ & BGN hạ áp</label><label class="sw"><input type="checkbox" data-part="neck" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Hộp nước</label><label class="sw"><input type="checkbox" data-part="waterbox" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Tuabin hạ áp</label><label class="sw"><input type="checkbox" data-part="turbine" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Ống liên thông</label><label class="sw"><input type="checkbox" data-part="pipes" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row">Chi tiết trong vỏ</label><label class="sw"><input type="checkbox" data-part="internals" checked><i></i></label></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Mô phỏng dòng chảy</div>
+    <div class="row"><label class="lbl-row" for="flowSteam">Hơi xuống</label><label class="sw"><input type="checkbox" id="flowSteam" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row" for="flowCond">Nước ngưng về rốn</label><label class="sw"><input type="checkbox" id="flowCond" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row" for="flowCool">Nước làm mát trong ống</label><label class="sw"><input type="checkbox" id="flowCool" checked><i></i></label></div>
   </div>
 
   <div class="sec">
     <div class="sec-t">Tùy chọn</div>
-    <div class="row"><label>Nhãn chú thích</label><span class="sw"><input type="checkbox" id="lblOn" checked><i></i></span></div>
-    <div class="row"><label>Xuyên sáng vỏ</label><span class="sw"><input type="checkbox" id="xray"><i></i></span></div>
-    <div class="row"><label>Tự động xoay</label><span class="sw"><input type="checkbox" id="autoRot"><i></i></span></div>
+    <div class="row"><label class="lbl-row" for="lblOn">Nhãn chú thích</label><label class="sw"><input type="checkbox" id="lblOn" checked><i></i></label></div>
+    <div class="row"><label class="lbl-row" for="xray">Xuyên sáng vỏ</label><label class="sw"><input type="checkbox" id="xray"><i></i></label></div>
+    <div class="row"><label class="lbl-row" for="autoRot">Tự động xoay</label><label class="sw"><input type="checkbox" id="autoRot"><i></i></label></div>
   </div>
 </aside>
 
 <div id="legend">
-  <div class="lt">Chú giải vật liệu</div>
+  <div class="lt">Chú giải</div>
   <div class="li"><span class="chip" style="background:#c3d3e3"></span>Vỏ thép carbon</div>
   <div class="li"><span class="chip" style="background:#d9cba8"></span>Ống Titan</div>
   <div class="li"><span class="chip" style="background:#ff8a4c"></span>Hộp nước tuần hoàn</div>
@@ -194,8 +198,9 @@
   <div class="li"><span class="chip" style="background:#38bdf8"></span>BGN hạ áp #2</div>
   <div class="li"><span class="chip" style="background:#f472b6"></span>Ống xả bypass LP</div>
   <div class="li"><span class="chip" style="background:#22d3ee"></span>Ống liên thông hơi</div>
-  <div class="li"><span class="chip" style="background:#a78bfa"></span>Ống cân bằng nước</div>
-  <div class="li"><span class="chip" style="background:#34d399"></span>Ống hút khí không ngưng</div>
+  <div class="li"><span class="chip" style="background:#ffffff;box-shadow:inset 0 0 0 1px #888"></span>Hơi nước ngưng</div>
+  <div class="li"><span class="chip" style="background:#5cc8ff"></span>Giọt nước ngưng</div>
+  <div class="li"><span class="chip" style="background:#77ddff;box-shadow:0 0 6px #77ddff"></span>Nước làm mát (trong ống)</div>
 </div>
 
 <div id="loader"><div class="ring"></div>ĐANG DỰNG MÔ HÌNH 3D…</div>
@@ -213,12 +218,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-/* ══════════════════════════════════════════════════════════
-   1. RENDERER / SCENE / CAMERA
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ RENDERER / SCENE / CAMERA ═══════════════ */
 const stage = document.getElementById('stage');
-
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -230,13 +233,10 @@ stage.appendChild(renderer.domElement);
 
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(innerWidth, innerHeight);
-Object.assign(labelRenderer.domElement.style, {
-  position:'fixed', top:'0', left:'0', pointerEvents:'none', zIndex:'10'
-});
+Object.assign(labelRenderer.domElement.style, { position:'fixed', top:'0', left:'0', pointerEvents:'none', zIndex:'10' });
 stage.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
-
 const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.5, 600);
 camera.position.set(30, 22, 36);
 
@@ -248,19 +248,16 @@ controls.minDistance = 14;
 controls.maxDistance = 130;
 controls.autoRotateSpeed = 0.6;
 
-/* ══════════════════════════════════════════════════════════
-   2. ENVIRONMENT + LIGHTS
-   ══════════════════════════════════════════════════════════ */
+const clock = new THREE.Clock();
+
+/* ═══════════════ ENVIRONMENT ═══════════════ */
 function envTexture(){
   const c = document.createElement('canvas');
   c.width = 1024; c.height = 512;
   const x = c.getContext('2d');
   const g = x.createLinearGradient(0,0,0,512);
-  g.addColorStop(0.00,'#ffffff');
-  g.addColorStop(0.42,'#d8e9f8');
-  g.addColorStop(0.50,'#a9c6e0');
-  g.addColorStop(0.75,'#7d93a8');
-  g.addColorStop(1.00,'#5c6f80');
+  g.addColorStop(0.00,'#ffffff'); g.addColorStop(0.42,'#d8e9f8');
+  g.addColorStop(0.50,'#a9c6e0'); g.addColorStop(0.75,'#7d93a8'); g.addColorStop(1.00,'#5c6f80');
   x.fillStyle = g; x.fillRect(0,0,1024,512);
   x.fillStyle = 'rgba(255,255,255,.95)';
   x.beginPath(); x.ellipse(250,90,150,65,0,0,7); x.fill();
@@ -274,30 +271,16 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromEquirectangular(envTexture()).texture;
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x9db4c9, 1.15));
-const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(24, 34, 20); scene.add(key);
+const key  = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(24, 34, 20); scene.add(key);
 const fill = new THREE.DirectionalLight(0xdcecff, 0.85); fill.position.set(-28, 16, -22); scene.add(fill);
-const rim = new THREE.DirectionalLight(0xa8d8ff, 0.6); rim.position.set(0, -14, 26); scene.add(rim);
+const rim  = new THREE.DirectionalLight(0xa8d8ff, 0.6);  rim.position.set(0, -14, 26);  scene.add(rim);
 
-/* ══════════════════════════════════════════════════════════
-   3. CLIPPING PLANES
-   ══════════════════════════════════════════════════════════ */
-const clipPlanes = [];                                   // shared array
-const planeX = new THREE.Plane(new THREE.Vector3(-1,0,0), 0);  // keep x <= c
-const planeZ = new THREE.Plane(new THREE.Vector3(0,0,-1), 0);  // keep z <= c
+/* ═══════════════ CLIPPING ═══════════════ */
+const clipPlanes = [];
+const planeX = new THREE.Plane(new THREE.Vector3(-1,0,0), 0);
+const planeZ = new THREE.Plane(new THREE.Vector3(0,0,-1), 0);
 
-function applyClips(){
-  clipPlanes.length = 0;
-  if (ui.cxOn) clipPlanes.push(planeX);
-  if (ui.czOn) clipPlanes.push(planeZ);
-  cutVisX.visible = ui.cxOn;
-  cutVisZ.visible = ui.czOn;
-  cutVisX.position.x = ui.cx;
-  cutVisZ.position.z = ui.cz;
-}
-
-/* ══════════════════════════════════════════════════════════
-   4. MATERIALS
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ MATERIALS ═══════════════ */
 const allMats = [];
 function M(p){
   const m = new THREE.MeshStandardMaterial(p);
@@ -311,7 +294,7 @@ const MAT = {
   shell   : M({ color:0xc3d3e3, metalness:0.55, roughness:0.40 }),
   sheet   : M({ color:0x8095ab, metalness:0.85, roughness:0.32 }),
   hotwell : M({ color:0xa8bdd2, metalness:0.62, roughness:0.42 }),
-  tube    : M({ color:0xd9cba8, metalness:0.92, roughness:0.20 }),
+  tube    : M({ color:0xd9cba8, metalness:0.88, roughness:0.24 }),
   support : M({ color:0x6d8299, metalness:0.70, roughness:0.48 }),
   baffle  : M({ color:0x8fa3ba, metalness:0.60, roughness:0.50 }),
   neck    : M({ color:0xcfdcea, metalness:0.55, roughness:0.38 }),
@@ -326,51 +309,137 @@ const MAT = {
   hood    : M({ color:0x9aabc0, metalness:0.72, roughness:0.33, transparent:true, opacity:0.62 })
 };
 
-/* ══════════════════════════════════════════════════════════
-   5. HELPERS
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ FLOW TEXTURE (nước làm mát trong ống) ═══════════════ */
+function makeFlowTexture(){
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0,0,64,128);
+  // 4 dải cyan phát sáng chạy dọc trục ống (v axis)
+  for (let i=0; i<4; i++){
+    const y = i * 32;
+    const g = x.createLinearGradient(0, y, 0, y + 26);
+    g.addColorStop(0.00, 'rgba(90,200,255,0)');
+    g.addColorStop(0.35, 'rgba(160,240,255,1)');
+    g.addColorStop(0.55, 'rgba(190,250,255,1)');
+    g.addColorStop(0.70, 'rgba(160,240,255,1)');
+    g.addColorStop(1.00, 'rgba(90,200,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, y, 64, 26);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1, 4);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const flowTex = makeFlowTexture();
+MAT.tube.emissiveMap = flowTex;
+MAT.tube.emissive = new THREE.Color(0x7addff);
+MAT.tube.emissiveIntensity = 1.4;
+MAT.tube.needsUpdate = true;
+
+/* ═══════════════ SPRITE TEXTURE (hạt) ═══════════════ */
+function makeSpriteTex(){
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(32,32,0, 32,32,32);
+  g.addColorStop(0.00, 'rgba(255,255,255,1)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.75)');
+  g.addColorStop(0.70, 'rgba(255,255,255,0.20)');
+  g.addColorStop(1.00, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+const spTex = makeSpriteTex();
+
+/* ═══════════════ HELPERS — BO GÓC ═══════════════ */
 const world = new THREE.Group();
 scene.add(world);
 
 const parts = { casing:[], tubes:[], internals:[], neck:[], waterbox:[], turbine:[], pipes:[] };
 const reg = (cat, obj) => { parts[cat].push(obj); return obj; };
 
-function box(w,h,d, mat, x=0,y=0,z=0){
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-  m.position.set(x,y,z);
+function rbox(w, h, d, mat, x=0, y=0, z=0, radius=0.15, seg=3){
+  const rMax = Math.min(w, h, d) * 0.45;
+  const r = Math.max(0.005, Math.min(radius, rMax));
+  const g = new RoundedBoxGeometry(w, h, d, seg, r);
+  const m = new THREE.Mesh(g, mat);
+  m.position.set(x, y, z);
+  return m;
+}
+function rtaperBottom(w, h, d, sx, sz, mat, x=0, y=0, z=0, radius=0.15, seg=3){
+  const rMax = Math.min(w, h, d) * 0.45;
+  const r = Math.max(0.005, Math.min(radius, rMax));
+  const g = new RoundedBoxGeometry(w, h, d, seg, r);
+  const p = g.attributes.position;
+  for (let i=0;i<p.count;i++){
+    if (p.getY(i) < 0){
+      p.setX(i, p.getX(i) * sx);
+      p.setZ(i, p.getZ(i) * sz);
+    }
+  }
+  p.needsUpdate = true;
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mat);
+  m.position.set(x, y, z);
   return m;
 }
 function cylX(r, len, mat, x=0,y=0,z=0){
-  const g = new THREE.CylinderGeometry(r,r,len,20);
+  const g = new THREE.CylinderGeometry(r, r, len, 24);
   g.rotateZ(Math.PI/2);
   const m = new THREE.Mesh(g, mat); m.position.set(x,y,z); return m;
 }
 function cylZ(r, len, mat, x=0,y=0,z=0){
-  const g = new THREE.CylinderGeometry(r,r,len,20);
+  const g = new THREE.CylinderGeometry(r, r, len, 24);
   g.rotateX(Math.PI/2);
   const m = new THREE.Mesh(g, mat); m.position.set(x,y,z); return m;
 }
-/** Taper the BOTTOM face of a box geometry (keeps top at full size) */
-function taperBottom(w,h,d, sx, sz){
-  const g = new THREE.BoxGeometry(w,h,d);
-  const p = g.attributes.position;
-  for (let i=0;i<p.count;i++){
-    if (p.getY(i) < 0){ p.setX(i, p.getX(i)*sx); p.setZ(i, p.getZ(i)*sz); }
-  }
-  p.needsUpdate = true; g.computeVertexNormals();
-  return g;
-}
-/** Horizontal plate with a rectangular hole (for the condenser neck opening) */
-function plateWithHole(w,d,hw,hd,t){
+function roundedRectPath(w, d, r){
   const s = new THREE.Shape();
-  s.moveTo(-w/2,-d/2); s.lineTo(w/2,-d/2); s.lineTo(w/2,d/2); s.lineTo(-w/2,d/2); s.closePath();
-  const h = new THREE.Path();
-  h.moveTo(-hw/2,-hd/2); h.lineTo(-hw/2,hd/2); h.lineTo(hw/2,hd/2); h.lineTo(hw/2,-hd/2); h.closePath();
-  s.holes.push(h);
-  const g = new THREE.ExtrudeGeometry(s,{depth:t, bevelEnabled:false, curveSegments:1});
+  const hw = w/2, hd = d/2;
+  r = Math.min(r, hw*0.9, hd*0.9);
+  s.moveTo(-hw + r, -hd);
+  s.lineTo( hw - r, -hd);
+  s.quadraticCurveTo( hw, -hd,  hw, -hd + r);
+  s.lineTo( hw,  hd - r);
+  s.quadraticCurveTo( hw,  hd,  hw - r,  hd);
+  s.lineTo(-hw + r,  hd);
+  s.quadraticCurveTo(-hw,  hd, -hw,  hd - r);
+  s.lineTo(-hw, -hd + r);
+  s.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+  return s;
+}
+function plateWithHole(w, d, hw, hd, t, bevel=0.05, cornerR=0.28){
+  const s = roundedRectPath(w, d, cornerR);
+  const hole = new THREE.Path();
+  const ri = 0.10;
+  const x0 = -hw/2, y0 = -hd/2;
+  hole.moveTo(x0 + ri, y0);
+  hole.lineTo(x0 + hw - ri, y0);
+  hole.quadraticCurveTo(x0 + hw, y0, x0 + hw, y0 + ri);
+  hole.lineTo(x0 + hw, y0 + hd - ri);
+  hole.quadraticCurveTo(x0 + hw, y0 + hd, x0 + hw - ri, y0 + hd);
+  hole.lineTo(x0 + ri, y0 + hd);
+  hole.quadraticCurveTo(x0, y0 + hd, x0, y0 + hd - ri);
+  hole.lineTo(x0, y0 + ri);
+  hole.quadraticCurveTo(x0, y0, x0 + ri, y0);
+  s.holes.push(hole);
+  const b = Math.min(bevel, t*0.4);
+  const g = new THREE.ExtrudeGeometry(s, {
+    depth: t - b*2,
+    bevelEnabled: true,
+    bevelThickness: b,
+    bevelSize: b,
+    bevelSegments: 2,
+    curveSegments: 4
+  });
   g.rotateX(-Math.PI/2);
+  g.translate(0, b, 0);
   return g;
 }
+const labels = [];
 function label(text, x,y,z, cls=''){
   const el = document.createElement('div');
   el.className = 'lbl ' + cls;
@@ -381,47 +450,39 @@ function label(text, x,y,z, cls=''){
   labels.push(o);
   return o;
 }
-const labels = [];
 
-/* ══════════════════════════════════════════════════════════
-   6. BUILD — SHELL
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ BUILD SHELL ═══════════════ */
 const L = 16, W = 8, H = 6, hL = L/2, hW = W/2;
 const NECK_W = 7.0, NECK_D = 3.6;
 
-function buildShell(zc, tag){
+function buildShell(zc){
   const G = new THREE.Group();
   G.position.z = zc;
   world.add(G);
 
-  /* ---- 6.1 Casing walls ---- */
-  const t = 0.18;
-  G.add(reg('casing', box(L, H, t, MAT.shell, 0, H/2, -hW)));
-  G.add(reg('casing', box(L, H, t, MAT.shell, 0, H/2,  hW)));
+  const t = 0.22;
+  G.add(reg('casing', rbox(L, H, t, MAT.shell, 0, H/2, -hW, 0.09, 3)));
+  G.add(reg('casing', rbox(L, H, t, MAT.shell, 0, H/2,  hW, 0.09, 3)));
+
   const top = new THREE.Mesh(plateWithHole(L, W, NECK_W, NECK_D, t), MAT.shell);
   top.position.y = H;
   G.add(reg('casing', top));
 
-  /* ---- 6.2 Hotwell (giếng gom nước ngưng) ---- */
-  const hot = new THREE.Mesh(taperBottom(L, 3.0, W, 0.45, 0.50), MAT.hotwell);
-  hot.position.y = -1.5;
+  const hot = rtaperBottom(L, 3.0, W, 0.45, 0.50, MAT.hotwell, 0, -1.5, 0, 0.20, 3);
   G.add(reg('casing', hot));
 
-  /* ---- 6.3 Tube sheets (mặt sàng) ---- */
-  G.add(reg('casing', box(0.30, H, W, MAT.sheet, -hL+0.15, H/2, 0)));
-  G.add(reg('casing', box(0.30, H, W, MAT.sheet,  hL-0.15, H/2, 0)));
+  G.add(reg('casing', rbox(0.32, H, W, MAT.sheet, -hL+0.16, H/2, 0, 0.10, 3)));
+  G.add(reg('casing', rbox(0.32, H, W, MAT.sheet,  hL-0.16, H/2, 0, 0.10, 3)));
 
-  /* ---- 6.4 Tube bundle (chùm ống Titan) ---- */
   const rows = 22, cols = 16;
   const y0 = 0.85, y1 = 5.00, zGap = 0.50, zEdge = 3.45;
   const stepY = (y1-y0)/(rows-1);
   const stepZ = (zEdge-zGap)/(cols-1);
 
-  const tubeGeo = new THREE.CylinderGeometry(0.075, 0.075, L-0.6, 8);
+  const tubeGeo = new THREE.CylinderGeometry(0.075, 0.075, L-0.6, 12);
   tubeGeo.rotateZ(Math.PI/2);
 
-  const count = rows*cols*2;
-  const inst = new THREE.InstancedMesh(tubeGeo, MAT.tube, count);
+  const inst = new THREE.InstancedMesh(tubeGeo, MAT.tube, rows*cols*2);
   const mtx = new THREE.Matrix4();
   let k = 0;
   for (let r=0;r<rows;r++){
@@ -435,87 +496,242 @@ function buildShell(zc, tag){
   inst.instanceMatrix.needsUpdate = true;
   G.add(reg('tubes', inst));
 
-  /* ---- 6.5 Support plates (vách đỡ ống) ---- */
   [-5.0,-2.5, 0, 2.5, 5.0].forEach(x=>{
-    const p = box(0.06, 4.6, 7.2, MAT.support, x, 2.85, 0);
-    G.add(reg('internals', p));
+    G.add(reg('internals', rbox(0.06, 4.6, 7.2, MAT.support, x, 2.85, 0, 0.025, 2)));
   });
 
-  /* ---- 6.6 Impingement baffle + LP bypass dump tube ---- */
-  G.add(reg('internals', box(11, 0.10, 2.4, MAT.baffle, 0, 4.70, 0)));
+  G.add(reg('internals', rbox(11, 0.10, 2.4, MAT.baffle, 0, 4.70, 0, 0.04, 2)));
   G.add(reg('internals', cylX(0.30, 12.5, MAT.dump, 0, 5.35, 0)));
-  // spray nozzles
   for (let i=-4;i<=4;i++){
-    const n = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.34, 8), MAT.dump);
+    const n = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.34, 10), MAT.dump);
     n.position.set(i*1.35, 5.62, 0);
     G.add(reg('internals', n));
   }
-
-  /* ---- 6.7 Air-removal pipe (ống hút khí không ngưng) ---- */
   G.add(reg('internals', cylX(0.26, 19.0, MAT.airpipe, 0.8, 3.30, 0)));
 
-  /* ---- 6.8 Neck (cổ bình ngưng) ---- */
-  const neck = new THREE.Mesh(taperBottom(8.0, 3.6, 4.0, NECK_W/8.0, NECK_D/4.0), MAT.neck);
-  neck.position.y = H + 1.8;
+  const neck = rtaperBottom(8.0, 3.6, 4.0, NECK_W/8.0, NECK_D/4.0, MAT.neck, 0, H + 1.8, 0, 0.22, 3);
   G.add(reg('neck', neck));
 
-  /* ---- 6.9 Neck heaters: LP FWH #1 & #2 ---- */
   G.add(reg('neck', cylX(0.62, 5.6, MAT.heater1, 0, 7.05, -1.05)));
   G.add(reg('neck', cylX(0.62, 5.6, MAT.heater1, 0, 7.05,  1.05)));
   G.add(reg('neck', cylX(0.52, 5.2, MAT.heater2, 0, 8.65, -1.05)));
   G.add(reg('neck', cylX(0.52, 5.2, MAT.heater2, 0, 8.65,  1.05)));
 
-  /* ---- 6.10 Waterboxes ---- */
-  const wbR = box(2.0, 6.8, 8.8, MAT.water, 9.0, 3.0, 0);       // inlet / outlet
-  G.add(reg('waterbox', wbR));
-  G.add(reg('waterbox', box(2.0, 6.8, 0.14, MAT.waterD, 9.0, 3.0, 0))); // divider
-  const wbL = box(2.0, 6.8, 8.8, MAT.water, -9.0, 3.0, 0);      // reversing
-  G.add(reg('waterbox', wbL));
-  // flanges
-  G.add(reg('waterbox', box(0.20, 7.2, 9.2, MAT.sheet, 8.05, 3.0, 0)));
-  G.add(reg('waterbox', box(0.20, 7.2, 9.2, MAT.sheet, -8.05, 3.0, 0)));
+  G.add(reg('waterbox', rbox(2.0, 6.8, 8.8, MAT.water, 9.0, 3.0, 0, 0.25, 3)));
+  G.add(reg('waterbox', rbox(2.0, 6.8, 0.14, MAT.waterD, 9.0, 3.0, 0, 0.045, 2)));
+  G.add(reg('waterbox', rbox(2.0, 6.8, 8.8, MAT.water, -9.0, 3.0, 0, 0.25, 3)));
+  G.add(reg('waterbox', rbox(0.22, 7.2, 9.2, MAT.sheet, 8.05, 3.0, 0, 0.09, 3)));
+  G.add(reg('waterbox', rbox(0.22, 7.2, 9.2, MAT.sheet, -8.05, 3.0, 0, 0.09, 3)));
 
-  /* ---- 6.11 Turbine LP hood ---- */
-  const trans = new THREE.Mesh(taperBottom(9.6, 3.0, 7.2, 0.83, 0.55), MAT.hood);
-  trans.position.y = H + 3.6 + 1.5;
+  const trans = rtaperBottom(9.6, 3.0, 7.2, 0.83, 0.55, MAT.hood, 0, H + 3.6 + 1.5, 0, 0.35, 4);
   G.add(reg('turbine', trans));
-  const hood = box(9.6, 3.4, 7.2, MAT.hood, 0, H + 3.6 + 3.0 + 1.7, 0);
-  G.add(reg('turbine', hood));
+  G.add(reg('turbine', rbox(9.6, 3.4, 7.2, MAT.hood, 0, H + 3.6 + 3.0 + 1.7, 0, 0.35, 4)));
 
   return G;
 }
 
-/* Build both shells */
-const shellA = buildShell(-5.5, 'A');
-const shellB = buildShell( 5.5, 'B');
+const shellA = buildShell(-5.5);
+const shellB = buildShell( 5.5);
 
-/* ══════════════════════════════════════════════════════════
-   7. BUILD — INTER-SHELL CONNECTIONS
-   ══════════════════════════════════════════════════════════ */
-// Steam crossover duct
-const cross = box(3.6, 2.6, 8.2, MAT.duct, 0, 7.6, 0);
-world.add(reg('pipes', cross));
-// Water equalizing pipe
+world.add(reg('pipes', rbox(3.6, 2.6, 8.2, MAT.duct, 0, 7.6, 0, 0.30, 3)));
 world.add(reg('pipes', cylZ(0.50, 12.5, MAT.eqpipe, 0, -1.5, 0)));
 
-/* ══════════════════════════════════════════════════════════
-   8. LABELS
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ LABELS ═══════════════ */
 label('Tuabin hạ áp LP-A',      0, 15.4, -5.5);
 label('Tuabin hạ áp LP-B',      0, 15.4,  5.5);
 label('Cổ bình ngưng',          0,  9.9, -9.8);
 label('BGN hạ áp #1 & #2',      5.2, 8.0, -5.5);
 label('Chùm ống Titan',         0,  3.0, -14.2, 'acc');
 label('Thân vỏ Shell A',       -9.5, 6.4, -5.5);
-label('Giếng nước ngưng',       0, -3.6, -5.5, 'acc');
+label('Giếng nước ngưng',       0, -3.6, -5.5, 'hot');
 label('Hộp nước vào/ra',       11.6, 3.0, -5.5);
 label('Hộp nước đảo chiều',   -11.6, 3.0, -5.5);
 label('Ống liên thông hơi',     0,  9.5,  0);
 label('Ống cân bằng nước',      0, -2.9,  0, 'acc');
+label('→ Hơi xuống',            0, 10.8,  0, 'acc');
+label('→ Nước ngưng về rốn',    0, -4.2,  0, 'hot');
 
-/* ══════════════════════════════════════════════════════════
-   9. CUT-PLANE VISUAL GUIDES
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ PARTICLE SYSTEMS (MÔ PHỎNG DÒNG CHẢY) ═══════════════ */
+function makeParticleMat(color){
+  return new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.NormalBlending,
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uSprite: { value: spTex },
+      uClipX: { value: 0 }, uClipXval: { value: 0 },
+      uClipZ: { value: 0 }, uClipZval: { value: 0 }
+    },
+    vertexShader: `
+      attribute float aAlpha;
+      attribute float aSize;
+      uniform float uClipX; uniform float uClipXval;
+      uniform float uClipZ; uniform float uClipZval;
+      varying float vA;
+      void main(){
+        if ((uClipX > 0.5 && position.x > uClipXval) ||
+            (uClipZ > 0.5 && position.z > uClipZval)) {
+          vA = 0.0;
+          gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+          gl_PointSize = 0.0;
+          return;
+        }
+        vA = aAlpha;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = aSize * 380.0 / max(-mv.z, 1.0);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform sampler2D uSprite;
+      varying float vA;
+      void main(){
+        float s = texture2D(uSprite, gl_PointCoord).a;
+        float a = s * vA;
+        if (a < 0.01) discard;
+        gl_FragColor = vec4(uColor, a);
+      }
+    `
+  });
+}
+
+/* --- HƠI XUỐNG --- */
+const STEAM_N = 1100;
+const steam = {
+  n: STEAM_N,
+  pos: new Float32Array(STEAM_N * 3),
+  alpha: new Float32Array(STEAM_N),
+  size: new Float32Array(STEAM_N),
+  vel: new Float32Array(STEAM_N * 3),
+  life: new Float32Array(STEAM_N),
+  maxLife: new Float32Array(STEAM_N),
+  shell: new Int8Array(STEAM_N)
+};
+steam.mat = makeParticleMat(0xffffff);
+steam.geo = new THREE.BufferGeometry();
+steam.geo.setAttribute('position', new THREE.BufferAttribute(steam.pos, 3));
+steam.geo.setAttribute('aAlpha',   new THREE.BufferAttribute(steam.alpha, 1));
+steam.geo.setAttribute('aSize',    new THREE.BufferAttribute(steam.size, 1));
+steam.points = new THREE.Points(steam.geo, steam.mat);
+steam.points.frustumCulled = false;
+world.add(steam.points);
+
+function spawnSteam(i){
+  const isB = Math.random() < 0.5;
+  const shellZ = isB ? 5.5 : -5.5;
+  const p = i*3;
+  // 40% sinh trong cổ, 60% sinh trên đỉnh chùm ống
+  if (Math.random() < 0.40){
+    steam.pos[p]   = (Math.random()-0.5) * 6.5;
+    steam.pos[p+1] = 6.3 + Math.random() * 3.4;
+    steam.pos[p+2] = shellZ + (Math.random()-0.5) * 3.4;
+  } else {
+    steam.pos[p]   = (Math.random()-0.5) * 14.0;
+    steam.pos[p+1] = 4.6 + Math.random() * 1.6;
+    steam.pos[p+2] = shellZ + (Math.random()-0.5) * 7.6;
+  }
+  steam.vel[p]   = (Math.random()-0.5) * 0.35;
+  steam.vel[p+1] = -0.65 - Math.random() * 0.55;
+  steam.vel[p+2] = (Math.random()-0.5) * 0.35;
+  steam.life[i] = 0;
+  steam.maxLife[i] = 3.2 + Math.random() * 2.2;
+  steam.size[i] = 0.30 + Math.random() * 0.32;
+  steam.alpha[i] = 0;
+  steam.shell[i] = isB ? 1 : 0;
+}
+for (let i=0; i<STEAM_N; i++) spawnSteam(i);
+
+function updateSteam(dt){
+  const { n, pos, alpha, vel, life, maxLife, shell } = steam;
+  for (let i=0; i<n; i++){
+    life[i] += dt;
+    if (life[i] >= maxLife[i]){ spawnSteam(i); continue; }
+    const p = i*3;
+    pos[p]   += vel[p]   * dt;
+    pos[p+1] += vel[p+1] * dt;
+    pos[p+2] += vel[p+2] * dt;
+    const zc = shell[i] ? 5.5 : -5.5;
+    if (pos[p+2] < zc - 3.6) pos[p+2] = zc - 3.6;
+    if (pos[p+2] > zc + 3.6) pos[p+2] = zc + 3.6;
+    // nhiễu nhẹ
+    vel[p]   += (Math.random()-0.5) * 0.30 * dt;
+    vel[p+2] += (Math.random()-0.5) * 0.30 * dt;
+    const t = life[i] / maxLife[i];
+    let a;
+    if (t < 0.15) a = t / 0.15;
+    else if (t > 0.60) a = 1 - (t - 0.60) / 0.40;
+    else a = 1;
+    alpha[i] = a * 0.70;
+  }
+  steam.geo.attributes.position.needsUpdate = true;
+  steam.geo.attributes.aAlpha.needsUpdate = true;
+}
+
+/* --- NƯỚC NGƯNG VỀ RỐN --- */
+const COND_N = 700;
+const cond = {
+  n: COND_N,
+  pos: new Float32Array(COND_N * 3),
+  alpha: new Float32Array(COND_N),
+  size: new Float32Array(COND_N),
+  vel: new Float32Array(COND_N * 3),
+  life: new Float32Array(COND_N),
+  maxLife: new Float32Array(COND_N),
+  shell: new Int8Array(COND_N)
+};
+cond.mat = makeParticleMat(0x5cc8ff);
+cond.geo = new THREE.BufferGeometry();
+cond.geo.setAttribute('position', new THREE.BufferAttribute(cond.pos, 3));
+cond.geo.setAttribute('aAlpha',   new THREE.BufferAttribute(cond.alpha, 1));
+cond.geo.setAttribute('aSize',    new THREE.BufferAttribute(cond.size, 1));
+cond.points = new THREE.Points(cond.geo, cond.mat);
+cond.points.frustumCulled = false;
+world.add(cond.points);
+
+function spawnCond(i){
+  const isB = Math.random() < 0.5;
+  const shellZ = isB ? 5.5 : -5.5;
+  const p = i*3;
+  cond.pos[p]   = (Math.random()-0.5) * 14.0;
+  cond.pos[p+1] = 1.0 + Math.random() * 3.5;
+  cond.pos[p+2] = shellZ + (Math.random()-0.5) * 7.2;
+  cond.vel[p]   = (Math.random()-0.5) * 0.15;
+  cond.vel[p+1] = -1.4 - Math.random() * 1.2;
+  cond.vel[p+2] = (Math.random()-0.5) * 0.15;
+  cond.life[i] = 0;
+  cond.maxLife[i] = 1.3 + Math.random() * 0.9;
+  cond.size[i] = 0.13 + Math.random() * 0.10;
+  cond.alpha[i] = 0;
+  cond.shell[i] = isB ? 1 : 0;
+}
+for (let i=0; i<COND_N; i++) spawnCond(i);
+
+function updateCond(dt){
+  const { n, pos, alpha, vel, life, maxLife, shell } = cond;
+  for (let i=0; i<n; i++){
+    life[i] += dt;
+    if (life[i] >= maxLife[i]){ spawnCond(i); continue; }
+    const p = i*3;
+    // Gia tốc trọng trường
+    vel[p+1] -= 1.2 * dt;
+    pos[p]   += vel[p]   * dt;
+    pos[p+1] += vel[p+1] * dt;
+    pos[p+2] += vel[p+2] * dt;
+    const zc = shell[i] ? 5.5 : -5.5;
+    if (pos[p+2] < zc - 3.6) pos[p+2] = zc - 3.6;
+    if (pos[p+2] > zc + 3.6) pos[p+2] = zc + 3.6;
+    const t = life[i] / maxLife[i];
+    let a;
+    if (t < 0.10) a = t / 0.10;
+    else if (t > 0.75) a = 1 - (t - 0.75) / 0.25;
+    else a = 1;
+    alpha[i] = a * 0.90;
+  }
+  cond.geo.attributes.position.needsUpdate = true;
+  cond.geo.attributes.aAlpha.needsUpdate = true;
+}
+
+/* ═══════════════ CUT VISUALS ═══════════════ */
 function makeCutPlane(w,h, rotY){
   const g = new THREE.Group();
   const m = new THREE.Mesh(
@@ -538,12 +754,23 @@ function makeCutPlane(w,h, rotY){
 const cutVisX = makeCutPlane(30, 26, Math.PI/2);
 const cutVisZ = makeCutPlane(30, 26, 0);
 
-/* ══════════════════════════════════════════════════════════
-   10. UI WIRING
-   ══════════════════════════════════════════════════════════ */
-const ui = { cxOn:false, czOn:false, cx:0, cz:-5.5 };
-
+/* ═══════════════ UI STATE ═══════════════ */
+const ui = {
+  cxOn:false, czOn:false, cx:0, cz:-5.5,
+  flowSteam:true, flowCond:true, flowCool:true
+};
 const $ = s => document.querySelector(s);
+
+function applyClips(){
+  clipPlanes.length = 0;
+  if (ui.cxOn) clipPlanes.push(planeX);
+  if (ui.czOn) clipPlanes.push(planeZ);
+  cutVisX.visible = ui.cxOn;
+  cutVisZ.visible = ui.czOn;
+  cutVisX.position.x = ui.cx;
+  cutVisZ.position.z = ui.cz;
+}
+
 const cxEl = $('#cx'), czEl = $('#cz');
 const cxOnEl = $('#cxOn'), czOnEl = $('#czOn');
 
@@ -570,53 +797,59 @@ czOnEl.addEventListener('change', e => {
   applyClips(); syncViewButtons();
 });
 
-/* ---- Part visibility ---- */
 document.querySelectorAll('[data-part]').forEach(cb=>{
   cb.addEventListener('change', e=>{
     const v = e.target.checked;
-    parts[e.target.dataset.part].forEach(o => o.visible = v);
+    const cat = e.target.dataset.part;
+    if (!parts[cat]) return;
+    parts[cat].forEach(o => { o.visible = v; });
   });
 });
 
-/* ---- Labels toggle ---- */
 $('#lblOn').addEventListener('change', e=>{
   labels.forEach(l => l.visible = e.target.checked);
 });
 
-/* ---- X-ray shell ---- */
 $('#xray').addEventListener('change', e=>{
   const on = e.target.checked;
-  MAT.shell.transparent = on;
-  MAT.shell.opacity = on ? 0.28 : 1;
-  MAT.hotwell.transparent = on;
-  MAT.hotwell.opacity = on ? 0.32 : 1;
-  MAT.neck.transparent = on;
-  MAT.neck.opacity = on ? 0.34 : 1;
-  MAT.shell.depthWrite = !on;
-  MAT.hotwell.depthWrite = !on;
-  MAT.neck.depthWrite = !on;
+  MAT.shell.transparent  = on;  MAT.shell.opacity  = on ? 0.28 : 1;  MAT.shell.depthWrite  = !on;
+  MAT.hotwell.transparent= on;  MAT.hotwell.opacity= on ? 0.32 : 1;  MAT.hotwell.depthWrite= !on;
+  MAT.neck.transparent   = on;  MAT.neck.opacity   = on ? 0.34 : 1;  MAT.neck.depthWrite   = !on;
   allMats.forEach(m=>m.needsUpdate = true);
 });
 
-/* ---- Auto rotate ---- */
 $('#autoRot').addEventListener('change', e=>{
   controls.autoRotate = e.target.checked;
 });
 
-/* ---- View presets ---- */
+/* --- Flow toggles --- */
+$('#flowSteam').addEventListener('change', e=>{
+  ui.flowSteam = e.target.checked;
+  steam.points.visible = ui.flowSteam;
+});
+$('#flowCond').addEventListener('change', e=>{
+  ui.flowCond = e.target.checked;
+  cond.points.visible = ui.flowCond;
+});
+$('#flowCool').addEventListener('change', e=>{
+  ui.flowCool = e.target.checked;
+  MAT.tube.emissiveIntensity = ui.flowCool ? 1.4 : 0.0;
+});
+
+/* ═══════════════ VIEWS ═══════════════ */
 const VIEWS = {
-  all:     { pos:[30,22,36],  tgt:[0,5,0],   cx:false, cz:false, cxv:0,    czv:-5.5 },
-  cross:   { pos:[42,14,10],  tgt:[0,4,0],   cx:true,  cz:false, cxv:0,    czv:-5.5 },
-  long:    { pos:[4,12,-34],  tgt:[0,5,-5.5],cx:false, cz:true,  cxv:0,    czv:-5.5 },
-  quarter: { pos:[30,20,-30], tgt:[0,5,-4],  cx:true,  cz:true,  cxv:2,    czv:-2   }
+  all:     { pos:[30,22,36],  tgt:[0,5,0],    cx:false, cz:false, cxv:0, czv:-5.5 },
+  cross:   { pos:[42,14,10],  tgt:[0,4,0],    cx:true,  cz:false, cxv:0, czv:-5.5 },
+  long:    { pos:[4,12,-34],  tgt:[0,5,-5.5], cx:false, cz:true,  cxv:0, czv:-5.5 },
+  quarter: { pos:[30,20,-30], tgt:[0,5,-4],   cx:true,  cz:true,  cxv:2, czv:-2   }
 };
 
 function flyTo(v){
   const from = camera.position.clone();
-  const to = new THREE.Vector3(...v.pos);
-  const tf = controls.target.clone();
-  const tt = new THREE.Vector3(...v.tgt);
-  const t0 = performance.now(), dur = 900;
+  const to   = new THREE.Vector3(...v.pos);
+  const tf   = controls.target.clone();
+  const tt   = new THREE.Vector3(...v.tgt);
+  const t0   = performance.now(), dur = 900;
   (function step(){
     const k = Math.min(1, (performance.now()-t0)/dur);
     const e = 1 - Math.pow(1-k, 3);
@@ -643,27 +876,23 @@ function setView(name){
 }
 
 function syncViewButtons(active){
-  const btns = document.querySelectorAll('[data-view]');
-  btns.forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('on'));
   if (active) {
     const b = document.querySelector(`[data-view="${active}"]`);
     if (b) b.classList.add('on');
     return;
   }
-  // infer
-  if (ui.cxOn && ui.czOn) document.querySelector('[data-view="quarter"]').classList.add('on');
-  else if (ui.cxOn) document.querySelector('[data-view="cross"]').classList.add('on');
-  else if (ui.czOn) document.querySelector('[data-view="long"]').classList.add('on');
-  else document.querySelector('[data-view="all"]').classList.add('on');
+  if (ui.cxOn && ui.czOn)      document.querySelector('[data-view="quarter"]').classList.add('on');
+  else if (ui.cxOn)            document.querySelector('[data-view="cross"]').classList.add('on');
+  else if (ui.czOn)            document.querySelector('[data-view="long"]').classList.add('on');
+  else                         document.querySelector('[data-view="all"]').classList.add('on');
 }
 
 document.querySelectorAll('[data-view]').forEach(b=>{
   b.addEventListener('click', ()=> setView(b.dataset.view));
 });
 
-/* ══════════════════════════════════════════════════════════
-   11. RESIZE + LOOP
-   ══════════════════════════════════════════════════════════ */
+/* ═══════════════ RESIZE + LOOP ═══════════════ */
 addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
@@ -673,12 +902,34 @@ addEventListener('resize', ()=>{
 
 function animate(){
   requestAnimationFrame(animate);
+  const dt = Math.min(0.05, clock.getDelta());
+
+  /* --- Cập nhật texture nước làm mát --- */
+  if (ui.flowCool){
+    flowTex.offset.y -= 0.55 * dt;
+    if (flowTex.offset.y < -1) flowTex.offset.y += 1;
+  }
+
+  /* --- Cập nhật hạt hơi & nước ngưng --- */
+  if (ui.flowSteam) updateSteam(dt);
+  if (ui.flowCond)  updateCond(dt);
+
+  /* --- Cập nhật clipping uniforms cho particles --- */
+  const clipXv = ui.cxOn ? 1 : 0, clipZv = ui.czOn ? 1 : 0;
+  steam.mat.uniforms.uClipX.value = clipXv;
+  steam.mat.uniforms.uClipXval.value = ui.cx;
+  steam.mat.uniforms.uClipZ.value = clipZv;
+  steam.mat.uniforms.uClipZval.value = ui.cz;
+  cond.mat.uniforms.uClipX.value = clipXv;
+  cond.mat.uniforms.uClipXval.value = ui.cx;
+  cond.mat.uniforms.uClipZ.value = clipZv;
+  cond.mat.uniforms.uClipZval.value = ui.cz;
+
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
 }
 
-/* ---- init ---- */
 planeX.constant = ui.cx;
 planeZ.constant = ui.cz;
 applyClips();
