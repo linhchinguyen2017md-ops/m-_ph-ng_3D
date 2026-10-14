@@ -13,17 +13,13 @@
 html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
 font-family:'Segoe UI',Tahoma,sans-serif;user-select:none;-webkit-user-select:none;touch-action:none}
 #cv{position:absolute;inset:0}#cv canvas{display:block;touch-action:none}
-
-/* ===== Bảng điều khiển ===== */
 #dash{position:absolute;top:calc(8px + var(--safe-t));left:calc(8px + var(--safe-l));
-width:300px;max-width:calc(100% - 16px - var(--safe-l) - var(--safe-r));
+width:310px;max-width:calc(100% - 16px - var(--safe-l) - var(--safe-r));
 background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 border:1px solid var(--line);border-radius:12px;padding:12px;
 box-shadow:0 8px 24px rgba(0,0,0,.4);
 transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .28s;
 z-index:20;max-height:calc(100vh - 16px - var(--safe-t) - var(--safe-b));overflow-y:auto;overscroll-behavior:contain}
-
-/* Thanh tiêu đề có nút thu gọn */
 #dashHead{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;
 padding-bottom:6px;border-bottom:1px solid #1e293b}
 #dashHead h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0;color:var(--acc);
@@ -33,17 +29,12 @@ background:var(--btn);border:1px solid #475569;color:#f8fafc;border-radius:7px;c
 transition:background .15s,border-color .15s}
 .iconBtn:hover,.iconBtn:active{background:#0284c7;border-color:var(--acc)}
 .iconBtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* Trạng thái thu gọn: chỉ hiện header */
 #dash.collapsed{width:auto;min-width:0}
 #dash.collapsed #dashBody{display:none}
 #dash.collapsed #dashHead{margin-bottom:0;padding-bottom:0;border-bottom:0}
-
-/* Bảng đọc số */
 .r{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;margin-bottom:4px}
 .r span:first-child{color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r b{font-family:monospace;font-size:12.5px;white-space:nowrap}
-
 .g{margin-top:10px;padding-top:8px;border-top:1px solid #1e293b}
 label{font-size:11.5px;display:block;margin-bottom:4px;color:var(--muted)}
 label b{color:var(--text)}
@@ -53,7 +44,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 background:var(--acc);border-radius:50%;border:2px solid #0b0f19;box-shadow:0 0 0 2px rgba(56,189,248,.35)}
 input[type=range]::-moz-range-track{height:5px;background:#334155;border-radius:3px}
 input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--acc);border:2px solid #0b0f19;border-radius:50%}
-
 .b{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 button{min-height:36px;padding:7px 6px;background:var(--btn);border:1px solid #475569;color:#f8fafc;
 border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:600;font-family:inherit;
@@ -62,8 +52,6 @@ button:hover,button:active{background:#0284c7;border-color:var(--acc)}
 button.on{background:#0284c7;border-color:var(--acc)}
 button:active{transform:scale(.97)}
 button.full{grid-column:1/-1}
-
-/* ===== Nút nổi: Home + Toggle bảng ===== */
 #floatBar{position:absolute;bottom:calc(12px + var(--safe-b));right:calc(12px + var(--safe-r));
 display:flex;flex-direction:column;gap:8px;z-index:20}
 .floatBtn{width:48px;height:48px;border-radius:50%;background:var(--panel);backdrop-filter:blur(10px);
@@ -74,8 +62,6 @@ transition:background .15s,border-color .15s,transform .1s;padding:0}
 .floatBtn:active{transform:scale(.92)}
 .floatBtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .floatBtn.on{background:#0284c7;border-color:var(--acc)}
-
-/* ===== Chú thích ===== */
 .lg{position:absolute;bottom:calc(12px + var(--safe-b));left:calc(8px + var(--safe-l));
 background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 border:1px solid var(--line);padding:7px 10px;border-radius:9px;font-size:11px;pointer-events:none;
@@ -83,22 +69,16 @@ max-width:calc(100% - 130px);opacity:.95;transition:opacity .3s}
 .lg div{display:flex;align-items:center;gap:6px;margin:2px 0}
 .lg i{width:10px;height:10px;border-radius:2.5px;flex:0 0 auto}
 .lg.hide{opacity:0;pointer-events:none}
-
-/* ===== Mobile ===== */
 @media (max-width:600px){
   #dash{width:calc(100% - 16px - var(--safe-l) - var(--safe-r));padding:10px}
   #dashHead h2{font-size:11px}
   .iconBtn{width:32px;height:32px}
-  .floatBtn{width:52px;height:52px}   /* nút to hơn cho ngón tay trên mobile */
+  .floatBtn{width:52px;height:52px}
   .lg{font-size:10px;padding:6px 8px;max-width:calc(100% - 140px)}
   .lg.hide{display:none}
   .r{font-size:12px}
   button{min-height:38px;font-size:12px}
 }
-@media (max-height:520px){
-  #dash{max-height:calc(100vh - 16px - var(--safe-t) - var(--safe-b))}
-}
-/* Ẩn scrollbar khi không cần */
 #dash::-webkit-scrollbar{width:4px}
 #dash::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
 </style>
@@ -106,7 +86,6 @@ max-width:calc(100% - 130px);opacity:.95;transition:opacity .3s}
 <body>
 <div id="cv"></div>
 
-<!-- Bảng điều khiển -->
 <div id="dash">
   <div id="dashHead">
     <h2>Khớp Nối Thủy Lực 3D</h2>
@@ -116,13 +95,12 @@ max-width:calc(100% - 130px);opacity:.95;transition:opacity .3s}
   </div>
   <div id="dashBody">
     <div class="r"><span>Tốc độ động cơ N<sub>đc</sub>:</span><b id="nm" style="color:#60a5fa">0 rpm</b></div>
-    <div class="r"><span>Tỉ số truyền bánh răng i<sub>g</sub>:</span><b id="gr" style="color:#94a3b8">3.50</b></div>
-    <div class="r"><span>Tốc độ sơ cấp N₁:</span><b id="n1" style="color:#60a5fa">0 rpm</b></div>
-    <div class="r"><span>Tốc độ thứ cấp N₂:</span><b id="n2" style="color:#f87171">0 rpm</b></div>
+    <div class="r"><span>Tỉ số hộp số i<sub>g</sub> (1490→5060):</span><b id="gr" style="color:#94a3b8">3.396</b></div>
+    <div class="r"><span>Tốc độ sơ cấp N₁:</span><b id="n1" style="color:#2563eb">0 rpm</b></div>
+    <div class="r"><span>Tốc độ thứ cấp N₂:</span><b id="n2" style="color:#dc2626">0 rpm</b></div>
     <div class="r"><span style="color:#a78bfa"><b>Tỉ số khớp nối i = N₂/N₁:</b></span><b id="ci" style="color:#a78bfa">0.000</b></div>
     <div class="r"><span>Độ trượt s = 1 − i:</span><b id="sl" style="color:#facc15">0.0%</b></div>
     <div class="r"><span>Mức điền đầy dầu:</span><b id="oi" style="color:#38bdf8">0%</b></div>
-
     <div class="g">
       <label for="sc">Vị trí ống múc: <b id="scv">20%</b></label>
       <input type="range" id="sc" min="0" max="100" value="20">
@@ -139,7 +117,6 @@ max-width:calc(100% - 130px);opacity:.95;transition:opacity .3s}
   </div>
 </div>
 
-<!-- Nút nổi: Home + Bảng -->
 <div id="floatBar">
   <button class="floatBtn" id="btnHome" title="Về góc nhìn mặc định" aria-label="Home">
     <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
@@ -149,14 +126,13 @@ max-width:calc(100% - 130px);opacity:.95;transition:opacity .3s}
   </button>
 </div>
 
-<!-- Chú thích -->
 <div class="lg" id="legend">
-  <div><i style="background:#2563eb"></i>Bánh bơm (sơ cấp)</div>
-  <div><i style="background:#dc2626"></i>Bánh tuabin (thứ cấp)</div>
+  <div><i style="background:#2b6cb0"></i>Động cơ sơ cấp (1490 rpm) — bên trái</div>
+  <div><i style="background:#64748b"></i>Hộp số tăng tốc (1490 → 5060)</div>
+  <div><i style="background:#2563eb"></i>Bánh bơm — nửa SƠ CẤP của khớp nối</div>
+  <div><i style="background:#dc2626"></i>Bánh tuabin — nửa THỨ CẤP của khớp nối</div>
   <div><i style="background:#eab308"></i>Ống múc dầu</div>
-  <div><i style="background:#64748b"></i>Vỏ quay, hộp số tăng tốc</div>
-  <div><i style="background:#2b6cb0"></i>Động cơ sơ cấp (1490 rpm)</div>
-  <div><i style="background:#2f5d8a"></i>Bơm thứ cấp + khớp nối cứng</div>
+  <div><i style="background:#2f5d8a"></i>Bơm thứ cấp — bên phải (sau khớp nối cứng)</div>
   <div><i style="background:#f59e0b"></i>Mặt cắt vật liệu</div>
   <div><i style="background:#00e5ff"></i>Dòng dầu công tác</div>
 </div>
@@ -179,27 +155,26 @@ renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 host.appendChild(renderer.domElement);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.1,100);
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,200);
 
-/* Vị trí camera mặc định (Home) */
-const HOME_POS=new THREE.Vector3(15,7,17);
-const HOME_TARGET=new THREE.Vector3(3,0,1.2);
+const HOME_POS=new THREE.Vector3(15,12,30);
+const HOME_TARGET=new THREE.Vector3(-2,0,0);
 camera.position.copy(HOME_POS);
 const controls=new THREE.OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=0.06;
 controls.target.copy(HOME_TARGET);
-controls.minDistance=6;controls.maxDistance=48;
+controls.minDistance=6;controls.maxDistance=70;
 controls.rotateSpeed=0.9;controls.zoomSpeed=1.1;controls.panSpeed=0.8;
 controls.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
 
 /* ===== Môi trường ===== */
 (function(){
-  const es=new THREE.Scene(),sg=new THREE.SphereGeometry(20,32,16),cols=[],pos=sg.attributes.position;
+  const es=new THREE.Scene(),sg=new THREE.SphereGeometry(40,32,16),cols=[],pos=sg.attributes.position;
   const lo=new THREE.Color(0x05070d),hi=new THREE.Color(0x5b7596),c=new THREE.Color();
-  for(let i=0;i<pos.count;i++){c.copy(lo).lerp(hi,(pos.getY(i)/20+1)/2);cols.push(c.r,c.g,c.b);}
+  for(let i=0;i<pos.count;i++){c.copy(lo).lerp(hi,(pos.getY(i)/40+1)/2);cols.push(c.r,c.g,c.b);}
   sg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
   es.add(new THREE.Mesh(sg,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
-  [[0,12,6,10,5],[-12,4,8,5,8],[12,2,-6,5,8]].forEach(function(p){
+  [[0,24,12,20,10],[-24,8,16,10,16],[24,4,-12,10,16]].forEach(function(p){
     const m=new THREE.Mesh(new THREE.PlaneGeometry(p[3],p[4]),new THREE.MeshBasicMaterial({color:new THREE.Color(5,5,5),side:THREE.DoubleSide}));
     m.position.set(p[0],p[1],p[2]);m.lookAt(0,0,0);es.add(m);});
   const pm=new THREE.PMREMGenerator(renderer);
@@ -207,13 +182,14 @@ controls.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
 })();
 scene.add(new THREE.AmbientLight(0xffffff,0.15));
 const dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(8,14,10);scene.add(dl);
-const grid=new THREE.GridHelper(24,24,0x1e293b,0x111827);grid.position.y=-4.98;scene.add(grid);
+const grid=new THREE.GridHelper(48,48,0x1e293b,0x111827);grid.position.y=-4.98;scene.add(grid);
 
 /* ===== Vật liệu ===== */
 const M=(c,m,r,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:m,roughness:r,side:THREE.DoubleSide},o||{}));
 const matPump=M(0x2563eb,0.7,0.28),matTurb=M(0xdc2626,0.7,0.28),matShaft=M(0xb4bfcd,0.9,0.22),
 matScoop=M(0xeab308,0.6,0.3),matCut=M(0xf59e0b,0.3,0.55,{emissive:0x331a00}),matBolt=M(0x64748b,0.9,0.3),
 matBase=M(0x1f2937,0.5,0.6);
+const matMotor=M(0x2b6cb0,0.6,0.35), matPumpBody=M(0x2f5d8a,0.55,0.4);
 const matHouse=new THREE.MeshPhysicalMaterial({color:0x9fb6cc,metalness:0.15,roughness:0.12,transparent:true,opacity:0.24,side:THREE.DoubleSide,depthWrite:false});
 
 function crisp(p,e){e=e||0.004;const o=[],n=p.length;
@@ -232,8 +208,9 @@ function wheelProfile(d){const o=[],i=[],N=48,ri=Ro-T;
   for(let k=0;k<=N;k++){const a=Math.PI*k/N;o.push(V(Rc+Ro*Math.cos(a),d*(GAP+Ro*Math.sin(a))));}
   for(let k=N;k>=0;k--){const a=Math.PI*k/N;i.push(V(Rc+ri*Math.cos(a),d*(GAP+ri*Math.sin(a))));}
   return o.concat(i);}
+/* ĐÃ SỬA: dấu âm trong profile để hub nối đúng phía torus */
 function hubProfile(d){return [[0,-4.9],[0.30,-4.9],[0.34,-4.85],[0.34,-3.9],[0.46,-3.9],[0.46,-3.3],[0.40,-3.3],[0.40,-2.2],
-  [1.65,-1.05],[1.55,-0.93],[0.40,-1.9],[0,-1.9]].map(p=>V(p[0],d*p[1]));}
+  [1.65,-1.05],[1.55,-0.93],[0.40,-1.9],[0,-1.9]].map(p=>V(p[0],-d*p[1]));}
 function vaneGeo(d){const s=new THREE.Shape(),ri=Ro-T*0.6,N=28;
   for(let k=0;k<=N;k++){const a=Math.PI*k/N,x=d*(GAP+ri*Math.sin(a)),y=Rc+ri*Math.cos(a);k?s.lineTo(x,y):s.moveTo(x,y);}
   const g=new THREE.ExtrudeGeometry(s,{depth:0.06,bevelEnabled:false,curveSegments:1});g.translate(0,0,-0.03);return g;}
@@ -248,9 +225,11 @@ function buildWheel(d,mat,N){
   const caps=[cap(prof,0),cap(prof,L)].map(c=>new THREE.Mesh(c,matCut));
   const hub=new THREE.Mesh(lathe(crisp(hubProfile(d)),true),matShaft);
   const vanes=ring(vaneGeo(d),mat.clone(),N,function(o,t){o.position.set(0,0,0);o.rotation.set(Math.PI/2+t,0,0);});
-  const key=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.07,0.1),matBolt);key.position.set(d*4.4,0.34,0);
+  const key=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.07,0.1),matBolt);key.position.set(-d*4.4,0.34,0);
   g.add(cut,full,hub,vanes,key);caps.forEach(c=>g.add(c));
   scene.add(g);return {g,cut,full,caps,vanes,N,nCut:Math.round(N*0.75)};}
+/* Bánh bơm sơ cấp: d=-1 → torus bên trái, trục hướng về động cơ bên trái
+   Bánh tuabin thứ cấp: d=+1 → torus bên phải, trục hướng về bơm bên phải */
 const pw=buildWheel(-1,matPump,36),tw=buildWheel(1,matTurb,40);
 
 /* Vỏ khớp nối */
@@ -266,65 +245,99 @@ const NB=24,boltGeo=new THREE.CylinderGeometry(0.1,0.1,0.8,6);boltGeo.rotateZ(Ma
 const bolts=ring(boltGeo,matBolt,NB,function(o,t){o.rotation.set(0,0,0);o.position.set(0,3.78*Math.cos(Math.PI/2+t),3.78*Math.sin(Math.PI/2+t));});
 scene.add(bolts);const nBoltCut=Math.round(NB*0.75);
 
-/* Vỏ quay */
+/* Vỏ quay (shell) gắn liền bánh bơm */
 const matShell=M(0x7b8794,0.75,0.35),matPipe=M(0x475569,0.6,0.4);
-const spr=[[2.9,-0.55],[3.42,-0.55],[3.42,1.85],[3.1,1.85],[3.1,1.72],[3.27,1.72],[3.27,-0.2],[2.9,-0.2]].map(p=>V(p[0],p[1]));
+const spr=[[2.9,-1.1],[3.42,-1.1],[3.42,1.85],[3.1,1.85],[3.1,1.72],[3.27,1.72],[3.27,-0.75],[2.9,-0.75]].map(p=>V(p[0],p[1]));
 const sp=crisp(spr);
 const shell={cut:new THREE.Mesh(lathe(sp,false),matShell),full:new THREE.Mesh(lathe(sp,true),matShell),caps:[cap(spr,0),cap(spr,L)].map(c=>new THREE.Mesh(c,matCut))};
 shell.full.visible=false;pw.g.add(shell.cut,shell.full);shell.caps.forEach(c=>pw.g.add(c));
 const act=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,2.4,32),matHouse);act.position.set(2.02,5.4,0);act.renderOrder=3;
 const boss=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.7,32),matBase);boss.position.set(2.02,3.95,0);scene.add(act,boss);
 
-/* ===== Truyền động sơ cấp ===== */
+/* ============================================================
+   TRUYỀN ĐỘNG:  ĐỘNG CƠ (1490) → HỘP SỐ (→5060) → KHỚP NỐI CỨNG → SƠ CẤP
+   Tất cả nằm BÊN TRÁI khớp nối (X < 0)
+   ============================================================ */
 const MOTOR_RPM=1490;
-const Z_MOTOR=56,Z_PRIMARY=16,GEAR_RATIO=Z_MOTOR/Z_PRIMARY;
-const R_MOTOR_GEAR=1.75,R_PRIMARY_GEAR=0.5;
-const zOff=R_MOTOR_GEAR+R_PRIMARY_GEAR;
+const PRIMARY_RPM=5060;
+const GEAR_RATIO=PRIMARY_RPM/MOTOR_RPM;   /* = 3.3959... */
+const R_GEAR_BIG=1.70, R_GEAR_SMALL=R_GEAR_BIG/GEAR_RATIO;   /* ≈ 0.5006 */
+const Z_GEAR_BIG=54, Z_GEAR_SMALL=16;
+const zOff=R_GEAR_BIG+R_GEAR_SMALL;       /* khoảng cách tâm hai bánh răng */
+const GEAR_X=-7.6;                        /* vị trí trục bánh răng (X âm, bên trái) */
 
 function gear(R,n,w){const g=new THREE.Group(),b=new THREE.CylinderGeometry(R-0.07,R-0.07,w,64);b.rotateZ(Math.PI/2);g.add(new THREE.Mesh(b,matShaft));
   g.add(ring(new THREE.BoxGeometry(w,0.14,R*TAU/n*0.48),matShaft,n,function(o,t){o.rotation.set(t,0,0);o.position.set(0,R*Math.cos(t),R*Math.sin(t));}));return g;}
 function addCyl(parent,r,len,x,y,z,mat){const g=new THREE.CylinderGeometry(r,r,len,40);g.rotateZ(Math.PI/2);const m=new THREE.Mesh(g,mat);m.position.set(x,y,z);parent.add(m);return m;}
 
-const primaryGear=gear(R_PRIMARY_GEAR,Z_PRIMARY,0.55);primaryGear.position.x=3.3;pw.g.add(primaryGear);
-const bh=new THREE.CylinderGeometry(0.6,0.6,0.9,32);bh.rotateZ(Math.PI/2);
-const bhm=new THREE.Mesh(bh,matShaft);bhm.position.x=3.3;pw.g.add(bhm);
+/* Bánh răng nhỏ trên trục SƠ CẤP (đầu ra hộp số, 5060 rpm) */
+const primaryGear=gear(R_GEAR_SMALL,Z_GEAR_SMALL,0.55);
+primaryGear.position.set(GEAR_X,0,0);
+pw.g.add(primaryGear);
 
-const motorGear=gear(R_MOTOR_GEAR,Z_MOTOR,0.55);motorGear.position.set(3.3,0,zOff);scene.add(motorGear);
+/* Trục sơ cấp kéo dài từ hub tới hộp số */
+addCyl(pw.g,0.30,0.8,-5.2,0,0,matShaft);          /* X=-5.6 .. -4.8 */
+addCyl(pw.g,0.62,0.22,-5.78,0,0,matBolt);         /* nửa khớp nối cứng phía sơ cấp */
+addCyl(pw.g,0.62,0.22,-6.01,0,0,matBolt);         /* nửa khớp nối cứng phía hộp số */
+addCyl(pw.g,0.30,1.7,-6.85,0,0,matShaft);         /* X=-7.7 .. -6.0 */
+const boltPrim=new THREE.CylinderGeometry(0.06,0.06,0.5,8);boltPrim.rotateZ(Math.PI/2);
+pw.g.add(ring(boltPrim,matBolt,6,function(o,t){o.rotation.set(0,0,0);o.position.set(-5.9,0.46*Math.cos(t),0.46*Math.sin(t));}));
 
-addCyl(scene,0.28,2.9,4.75,0,zOff,matShaft);
-addCyl(scene,0.62,0.20,6.15,0,zOff,matBolt);
-addCyl(scene,0.62,0.20,6.40,0,zOff,matBolt);
-const boltM=new THREE.CylinderGeometry(0.07,0.07,0.62,8);boltM.rotateZ(Math.PI/2);
-scene.add(ring(boltM,matBolt,6,function(o,t){o.rotation.set(0,0,0);o.position.set(6.28,0.46*Math.cos(t),zOff+0.46*Math.sin(t));}));
+/* Bánh răng lớn trên trục ĐỘNG CƠ (đầu vào hộp số, 1490 rpm) */
+const motorGear=gear(R_GEAR_BIG,Z_GEAR_BIG,0.55);
+motorGear.position.set(GEAR_X,0,zOff);
+scene.add(motorGear);
 
-addCyl(scene,1.05,3.30,8.15,0,zOff,M(0x2b6cb0,0.6,0.35));
+/* Trục động cơ + khớp nối cứng động cơ ↔ hộp số */
+addCyl(scene,0.30,1.7,-8.45,0,zOff,matShaft);     /* X=-9.3 .. -7.6 */
+addCyl(scene,0.62,0.22,-9.41,0,zOff,matBolt);
+addCyl(scene,0.62,0.22,-9.64,0,zOff,matBolt);
+addCyl(scene,0.30,1.5,-10.40,0,zOff,matShaft);    /* X=-11.15 .. -9.65 */
+const boltMot=new THREE.CylinderGeometry(0.06,0.06,0.5,8);boltMot.rotateZ(Math.PI/2);
+scene.add(ring(boltMot,matBolt,6,function(o,t){o.rotation.set(0,0,0);o.position.set(-9.53,0.46*Math.cos(t),zOff+0.46*Math.sin(t));}));
+
+/* Thân động cơ + gân tản nhiệt + nắp + chân đế (bên trái) */
+addCyl(scene,1.05,3.30,-12.90,0,zOff,matMotor);
 for(let i=0;i<7;i++){const f=new THREE.Mesh(new THREE.TorusGeometry(1.08,0.07,8,28),matShaft);
-  f.rotation.y=Math.PI/2;f.position.set(7.0+i*0.42,0,zOff);scene.add(f);}
-addCyl(scene,0.90,0.35,9.95,0,zOff,matBolt);
-const mFoot=new THREE.Mesh(new THREE.BoxGeometry(3.4,3.7,1.7),matBase);mFoot.position.set(8.2,-2.9,zOff);scene.add(mFoot);
+  f.rotation.y=Math.PI/2;f.position.set(-11.6+i*0.42,0,zOff);scene.add(f);}
+addCyl(scene,0.90,0.35,-14.70,0,zOff,matBolt);
+const mFoot=new THREE.Mesh(new THREE.BoxGeometry(3.4,3.7,1.7),matBase);
+mFoot.position.set(-12.9,-2.9,zOff);scene.add(mFoot);
 
-const gc=new THREE.Mesh(new THREE.BoxGeometry(1.2,3.9,5.4),matHouse);gc.position.set(3.3,0,0.85);gc.renderOrder=3;scene.add(gc);
+/* Vỏ hộp số: bao quanh hai bánh răng */
+const gc=new THREE.Mesh(new THREE.BoxGeometry(1.4,3.9,5.1),matHouse);
+gc.position.set(GEAR_X,0,zOff/2);
+gc.renderOrder=3;scene.add(gc);
 
-/* ===== Đầu ra thứ cấp ===== */
-function cyl(r,len,x,y,z,mat){const g=new THREE.CylinderGeometry(r,r,len,40);g.rotateZ(Math.PI/2);const m=new THREE.Mesh(g,mat);m.position.set(x,y,z);scene.add(m);return m;}
-cyl(0.30,3.0,-6.4,0,0,matShaft);
-cyl(0.80,0.22,-5.05,0,0,matBolt);
-cyl(0.80,0.22,-5.55,0,0,matBolt);
-const boltC=new THREE.CylinderGeometry(0.075,0.075,0.78,8);boltC.rotateZ(Math.PI/2);
-scene.add(ring(boltC,matBolt,8,function(o,t){o.rotation.set(0,0,0);o.position.set(-5.30,0.58*Math.cos(t),0.58*Math.sin(t));}));
-cyl(0.55,0.30,-7.35,0,0,matBolt);
-cyl(1.35,1.90,-8.60,0,0,M(0x2f5d8a,0.55,0.4));
-cyl(1.00,0.45,-9.75,0,0,M(0x2f5d8a,0.55,0.4));
-const dis=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,1.5,28),matPipe);dis.position.set(-8.6,2.0,0);scene.add(dis);
-const disF=new THREE.Mesh(new THREE.CylinderGeometry(0.58,0.58,0.18,28),matBolt);disF.position.set(-8.6,2.72,0);scene.add(disF);
-const pFoot=new THREE.Mesh(new THREE.BoxGeometry(2.6,4.0,2.3),matBase);pFoot.position.set(-8.5,-2.75,0);scene.add(pFoot);
+/* ============================================================
+   ĐẦU RA THỨ CẤP:  NỬA THỨ CẤP → KHỚP NỐI CỨNG → BƠM (bên phải)
+   ============================================================ */
+/* Trục thứ cấp kéo dài từ hub tới khớp nối cứng */
+addCyl(tw.g,0.30,0.8,5.2,0,0,matShaft);           /* X=4.8 .. 5.6 */
+addCyl(tw.g,0.62,0.22,5.78,0,0,matBolt);          /* nửa khớp nối cứng phía tuabin */
+addCyl(tw.g,0.62,0.22,6.01,0,0,matBolt);          /* nửa khớp nối cứng phía bơm */
+const boltSec=new THREE.CylinderGeometry(0.06,0.06,0.5,8);boltSec.rotateZ(Math.PI/2);
+tw.g.add(ring(boltSec,matBolt,6,function(o,t){o.rotation.set(0,0,0);o.position.set(5.9,0.46*Math.cos(t),0.46*Math.sin(t));}));
 
-cyl(0.55,3.6,1,-1.2,-4.8,matPipe);
-[-0.2,2.2].forEach(function(x){const l=new THREE.Mesh(new THREE.BoxGeometry(0.4,3,0.6),matBase);l.position.set(x,-3.2,-4.8);scene.add(l);});
+/* Trục bơm + vỏ bơm + ổ đỡ + ống đẩy */
+addCyl(scene,0.30,1.7,6.85,0,0,matShaft);         /* X=6.0 .. 7.7 */
+addCyl(scene,0.55,0.30,7.85,0,0,matBolt);         /* nắp ổ đỡ */
+addCyl(scene,1.35,1.90,8.90,0,0,matPumpBody);     /* thân bơm volute */
+addCyl(scene,1.00,0.45,10.05,0,0,matPumpBody);    /* nắp bơm */
+const dis=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,1.5,28),matPipe);dis.position.set(8.9,2.0,0);scene.add(dis);
+const disF=new THREE.Mesh(new THREE.CylinderGeometry(0.58,0.58,0.18,28),matBolt);disF.position.set(8.9,2.72,0);scene.add(disF);
+const pFoot=new THREE.Mesh(new THREE.BoxGeometry(2.6,4.0,2.3),matBase);pFoot.position.set(8.8,-2.75,0);scene.add(pFoot);
+
+/* Mạch dầu: bộ làm mát + đường ống (đặt phía sau khớp nối) */
+addCyl(scene,0.55,3.6,-0.5,-1.2,-4.8,matPipe);
+[-1.5,1.2].forEach(function(x){const l=new THREE.Mesh(new THREE.BoxGeometry(0.4,3,0.6),matBase);l.position.set(x,-3.2,-4.8);scene.add(l);});
 function pipe(a){scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(a.map(p=>new THREE.Vector3(p[0],p[1],p[2]))),48,0.1,12,false),matPipe));}
-pipe([[2.02,4.1,0],[2.02,4.8,-1.2],[2.6,3.8,-4.8],[2.6,-0.2,-4.8],[2.6,-1.2,-4.8]]);
-pipe([[-0.6,-1.2,-4.8],[-1.2,-0.9,-4.3],[-1.2,0,-3.75]]);
-const base=new THREE.Mesh(new THREE.BoxGeometry(24,0.25,11),matBase);base.position.set(-1.0,-4.85,-0.4);scene.add(base);
+pipe([[2.02,4.1,0],[2.02,4.8,-1.2],[-0.5,3.8,-4.8],[-0.5,-0.2,-4.8],[-0.5,-1.2,-4.8]]);
+pipe([[-1.5,-1.2,-4.8],[-2.2,-0.9,-4.3],[-2.2,0,-3.75]]);
+
+/* Bệ đỡ chung */
+const base=new THREE.Mesh(new THREE.BoxGeometry(30,0.25,11),matBase);
+base.position.set(-2.5,-4.85,-0.4);scene.add(base);
 [-1.7,1.7].forEach(function(x){const s=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.05,2.4),matBase);s.position.set(x,-4.3,0);scene.add(s);});
 
 /* Ống múc */
@@ -340,7 +353,7 @@ const mouthG=new THREE.CylinderGeometry(0.21,0.12,0.24,32,1,true);mouthG.rotateX
 const mouth=new THREE.Mesh(mouthG,matScoop);mouth.position.set(1.25,0,0.42);scoop.add(mouth);
 scene.add(scoop);
 
-/* Hạt dầu */
+/* Hạt dầu trong khoang làm việc */
 const NP=900,pp=new Float32Array(NP*3),pa=new Float32Array(NP),pr=new Float32Array(NP),pz=new Float32Array(NP);
 for(let i=0;i<NP;i++){pa[i]=Math.random()*TAU;pr[i]=0.05+Math.sqrt(Math.random())*0.85;pz[i]=Math.random()*TAU;}
 const pg=new THREE.BufferGeometry(),pat=new THREE.BufferAttribute(pp,3);pat.setUsage(THREE.DynamicDrawUsage);pg.setAttribute('position',pat);
@@ -361,7 +374,7 @@ function setCut(on){
 /* ===== UI ===== */
 const $=id=>document.getElementById(id);
 const ui={nm:$('nm'),gr:$('gr'),n1:$('n1'),n2:$('n2'),ci:$('ci'),sl:$('sl'),oi:$('oi'),sc:$('scv')};
-ui.gr.textContent=GEAR_RATIO.toFixed(2);
+ui.gr.textContent=GEAR_RATIO.toFixed(3);
 
 let running=true,cutOn=true,scoopPct=20,Nmot=0,N1=0,N2=0,acc=0,poloidal=0,couplingRatio=0;
 const SLIP_MIN=0.03,SLIP_K=0.95;
@@ -371,7 +384,6 @@ $('bp').addEventListener('click',function(e){running=!running;e.target.textConte
 $('bc').addEventListener('click',function(e){cutOn=!cutOn;e.target.textContent=cutOn?'Mặt cắt: BẬT':'Mặt cắt: TẮT';e.target.classList.toggle('on',cutOn);setCut(cutOn);});
 setCut(true);
 
-/* Chế độ trong suốt */
 const xr={on:false,op:0.3};
 function setXray(){
   [matPump,matTurb,matShell].forEach(function(m){m.transparent=xr.on;m.opacity=xr.on?xr.op:1;m.depthWrite=!xr.on;m.needsUpdate=true;});
@@ -381,20 +393,16 @@ function setXray(){
 $('bx').addEventListener('click',function(e){xr.on=!xr.on;e.target.textContent=xr.on?'Trong suốt: BẬT':'Trong suốt: TẮT';e.target.classList.toggle('on',xr.on);setXray();});
 $('xo').addEventListener('input',function(e){xr.op=e.target.value/100;$('xov').textContent=e.target.value+'%';if(xr.on)setXray();});
 
-/* ===== Thu gọn bảng điều khiển ===== */
+/* Thu gọn bảng */
 const dash=$('dash'),icoCollapse=$('icoCollapse');
 function setDashCollapsed(c){
   dash.classList.toggle('collapsed',c);
-  icoCollapse.innerHTML = c
-    ? '<polyline points="15 3 9 12 15 21"/>'   /* mũi tên mở ra */
-    : '<polyline points="6 9 12 15 18 9"/>';   /* mũi tên thu vào */
+  icoCollapse.innerHTML=c?'<polyline points="15 3 9 12 15 21"/>':'<polyline points="6 9 12 15 18 9"/>';
 }
-/* Tự thu gọn trên màn hình nhỏ khi khởi động */
-if(innerWidth<600 || innerHeight<560) setDashCollapsed(true);
+if(innerWidth<600||innerHeight<560)setDashCollapsed(true);
 $('btnCollapse').addEventListener('click',function(){setDashCollapsed(!dash.classList.contains('collapsed'));});
 $('btnDash').addEventListener('click',function(){
   if(innerWidth<600){
-    /* Trên mobile: ẩn/hiện cả bảng */
     const hidden=dash.style.display==='none';
     dash.style.display=hidden?'':'none';
     this.classList.toggle('on',!hidden);
@@ -404,7 +412,7 @@ $('btnDash').addEventListener('click',function(){
   }
 });
 
-/* ===== Home: đưa camera về góc nhìn mặc định ===== */
+/* Home animation */
 const HOME_ANIM={active:false,t:0,dur:0.6,p0:new THREE.Vector3(),t0:new THREE.Vector3()};
 $('btnHome').addEventListener('click',function(){
   HOME_ANIM.active=true;HOME_ANIM.t=0;
@@ -412,24 +420,26 @@ $('btnHome').addEventListener('click',function(){
   HOME_ANIM.t0.copy(controls.target);
 });
 function updateHome(dt){
-  if(!HOME_ANIM.active) return;
+  if(!HOME_ANIM.active)return;
   HOME_ANIM.t+=dt/HOME_ANIM.dur;
   const k=Math.min(1,HOME_ANIM.t);
-  const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2; /* easeInOutQuad */
+  const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
   camera.position.lerpVectors(HOME_ANIM.p0,HOME_POS,e);
   controls.target.lerpVectors(HOME_ANIM.t0,HOME_TARGET,e);
-  if(k>=1) HOME_ANIM.active=false;
+  if(k>=1)HOME_ANIM.active=false;
 }
 
-/* ===== Vòng lặp ===== */
 const clock=new THREE.Clock(),SPIN=0.05;
 renderer.setAnimationLoop(function(){
   const dt=Math.min(clock.getDelta(),0.05);
 
+  /* Động cơ */
   Nmot += ((running?MOTOR_RPM:0)-Nmot)*0.08;
+  /* Qua hộp số 1490 → 5060 */
   const N1_target=Nmot*GEAR_RATIO;
   N1 += (N1_target-N1)*0.12;
 
+  /* Khớp nối thủy lực */
   const fill=running?15+scoopPct/100*85:0;
   const u=Math.max(0,1-fill/100);
   const slipTarget=fill<5?1:Math.min(1,SLIP_MIN+u*SLIP_K);
@@ -442,7 +452,8 @@ renderer.setAnimationLoop(function(){
   const pos=2.9-scoopPct/100*1.5;scoop.position.y=pos;
   const w1=N1*TAU/60,w2=N2*TAU/60;
   pw.g.rotation.x-=w1*dt*SPIN;tw.g.rotation.x-=w2*dt*SPIN;
-  motorGear.rotation.x=-pw.g.rotation.x*(Z_PRIMARY/Z_MOTOR);
+  /* Bánh răng lớn (động cơ) quay ngược chiều, tỉ số nghịch đảo */
+  motorGear.rotation.x=-pw.g.rotation.x*(Z_GEAR_SMALL/Z_GEAR_BIG);
 
   for(let i=0;i<NR;i++){ra[i]-=w1*dt*SPIN;const r=pos+rq[i]*(3.08-pos),k=i*3;rp[k]=rx[i];rp[k+1]=r*Math.cos(ra[i]);rp[k+2]=r*Math.sin(ra[i]);}
   rat.needsUpdate=true;rg.setDrawRange(0,fill>0?Math.floor(NR*(3.08-pos)/1.7):0);
@@ -474,9 +485,8 @@ renderer.setAnimationLoop(function(){
 addEventListener('resize',function(){
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight);
-  if(innerWidth>=600) {dash.style.display='';}
+  if(innerWidth>=600){dash.style.display='';}
 });
-/* Không cho kéo trang trên mobile */
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('touchmove',e=>{if(e.target.closest('#dash,#floatBar,.lg'))return;e.preventDefault();},{passive:false});
 })();
