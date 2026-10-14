@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mô phỏng 3D bộ vần trục tuabin hơi</title>
+<style>
+:root{--bg1:#f7fafd;--bg2:#dfe8f1;--ink:#1d2a38;--mut:#5a6b7c;--pn:rgba(255,255,255,.92);--ln:#cfd9e4;--ac:#1f6fd1}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:linear-gradient(#f7fafd,#dfe8f1);overflow:hidden}
+#c{position:absolute;inset:0}canvas{display:block}
+#ui{position:absolute;top:0;right:0;width:310px;max-width:100%;max-height:100%;overflow:auto;padding:max(10px,env(safe-area-inset-top)) 10px 10px;}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 10px rgba(30,60,100,.1)}
+h1{font-size:15px;margin:0 0 2px}h2{font-size:12px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.sub{font-size:12px;color:var(--mut)}
+button{font:inherit;font-size:13px;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;border:1px solid var(--ln);background:#fff;color:var(--ink);border-radius:10px;cursor:pointer}
+button:hover{border-color:var(--ac)}button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;gap:6px}.row button{text-align:center}
+label{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0}input[type=range]{width:100%}
+.lamps{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lp{font-size:11px;display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--ln);border-radius:8px;background:#fff}
+.lp i{width:11px;height:11px;border-radius:50%;background:#c3ccd6;display:inline-block}.lp.on i{background:#22b14c;box-shadow:0 0 8px #22b14c}.lp.on.r i{background:#f59e0b;box-shadow:0 0 8px #f59e0b}
+#desc{font-size:13px;line-height:1.45}#rpm{font-size:22px;font-weight:600}
+.lb{position:absolute;pointer-events:none;font-size:11px;background:rgba(255,255,255,.9);border:1px solid #b9c7d6;border-radius:6px;padding:2px 6px;white-space:nowrap;transform:translate(-50%,-120%)}
+@media(max-width:700px){#ui{width:100%;max-height:48%;top:auto;bottom:0}}
+</style></head><body>
+<div id="c"></div><div id="labels"></div>
+<div id="ui">
+<div class="pn"><h1>Bộ vần trục tuabin hơi</h1><div class="sub">Động cơ dựng đứng → bánh trụ → bánh côn → bánh răng cài nằm ngang · kéo chuột để xoay, cuộn để zoom</div></div>
+<div class="pn"><h2>Cơ cấu &amp; các giai đoạn</h2><div class="row" style="margin-bottom:8px"><button id="m1" class="on" style="text-align:center">Bánh răng cài</button><button id="m2" style="text-align:center">Ly hợp SSS</button></div>
+<button data-m="A" data-s="1">1 · Tuabin dừng (ZERO SPEED)</button>
+<button data-m="A" data-s="2">2 · Động cơ phụ dò &amp; xy lanh cài khớp</button>
+<button data-m="A" data-s="3">3 · Ăn khớp xong (TG ENGAGE)</button>
+<button data-m="A" data-s="4">4 · Động cơ chính quay trục 4 v/p</button>
+<button data-m="A" data-s="5">5 · Nạp hơi → TỰ NHẢ ăn khớp</button>
+<button data-m="A" data-s="6">6 · Cắt hơi, giảm tốc → tự đồng bộ</button>
+<button data-m="A" data-s="7">7 · TỰ ĂN KHỚP lại (không dùng khí nén)</button>
+<button data-m="B" data-s="1" style="display:none">1 · Tuabin dừng</button>
+<button data-m="B" data-s="2" style="display:none">2 · Động cơ chạy → TỰ ĂN KHỚP (ngàm bắt bánh cóc)</button>
+<button data-m="B" data-s="3" style="display:none">3 · Bộ phận trượt tới cuối hành trình, quay 4 v/p</button>
+<button data-m="B" data-s="4" style="display:none">4 · Nạp hơi → mô-men đảo chiều, TỰ NHẢ (chạy trớn)</button>
+<button data-m="B" data-s="5" style="display:none">5 · Cắt hơi, đồng tốc → TỰ ĂN KHỚP lại</button>
+<div class="row"><button id="auto" style="text-align:center">▶ Chạy tự động</button><button id="rst" style="text-align:center">↺ Đặt lại</button></div></div>
+<div class="pn"><h2>Trạng thái</h2><div id="rpm">0 v/p</div><div class="lamps" style="margin:8px 0">
+<div class="lp" id="l1"><i></i>ZERO SPEED</div><div class="lp" id="l2"><i></i>TG ENGAGE</div>
+<div class="lp r" id="l3"><i></i>Động cơ phụ</div><div class="lp r" id="l4"><i></i>Động cơ chính</div><div class="lp" id="l5"><i></i>Khí nén cài khớp</div><div class="lp" id="l6"><i></i>Tự đồng bộ</div></div>
+<div id="desc"></div></div>
+<div class="pn"><h2>Lớp cắt &amp; hiển thị</h2>
+<label><input type="checkbox" id="cut"> Bật mặt cắt dọc</label>
+<label>Vị trí cắt<input type="range" id="cutp" min="-1.4" max="3.2" step="0.05" value="0"></label>
+<label>Độ trong vỏ<input type="range" id="op" min="0.05" max="1" step="0.05" value="0.35"></label>
+<label><input type="checkbox" id="hs" checked> Vỏ hộp &amp; giảm tốc</label>
+<label><input type="checkbox" id="lbl" checked> Nhãn chi tiết</label></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const host=$('c');const R=new THREE.WebGLRenderer({antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.localClippingEnabled=true;host.appendChild(R.domElement);
+const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(40,1,.1,200);
+sc.add(new THREE.HemisphereLight(0xffffff,0xb8c6d6,.95));
+const dl=new THREE.DirectionalLight(0xffffff,.85);dl.position.set(6,12,9);sc.add(dl);
+const dl2=new THREE.DirectionalLight(0xffffff,.35);dl2.position.set(-8,4,-6);sc.add(dl2);
+const plane=new THREE.Plane(new THREE.Vector3(0,0,-1),5);
+const M=(c,m=.6,r=.35,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:m,roughness:r},o));
+const clipped=[];const CM=(c,m,r,o)=>{const x=M(c,m,r,o);x.clippingPlanes=[plane];x.side=THREE.DoubleSide;clipped.push(x);return x};
+function rbox(w,h,d,r,mat){const s=new THREE.Shape(),x=-w/2,y=-h/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);
+const g=new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:true,bevelSize:r*.3,bevelThickness:r*.3,bevelSegments:3,curveSegments:6});g.translate(0,0,-d/2);return new THREE.Mesh(g,mat)}
+function cyl(r,l,mat,seg=48){const g=new THREE.CylinderGeometry(r,r,l,seg);g.rotateZ(Math.PI/2);return new THREE.Mesh(g,mat)}
+function gear(N,m,depth,mat){const p=2*Math.PI/N,r=N*m/2,rt=r+m,rr=r-1.25*m,s=new THREE.Shape(),pts=[];
+for(let i=0;i<N;i++){const a=i*p;[[rr,-.28],[rt,-.14],[rt,.14],[rr,.28]].forEach(([q,f])=>pts.push([q*Math.cos(a+f*p),q*Math.sin(a+f*p)]))}
+s.moveTo(...pts[0]);pts.slice(1).forEach(q=>s.lineTo(...q));s.closePath();
+const g=new THREE.ExtrudeGeometry(s,{depth:depth,bevelEnabled:true,bevelSize:.012,bevelThickness:.012,bevelSegments:2});g.translate(0,0,-depth/2);
+const mesh=new THREE.Mesh(g,mat),grp=new THREE.Group();grp.rotation.y=Math.PI/2;grp.add(mesh);grp.mesh=mesh;return grp}
+const steel=M(0x9aa7b5,.85,.3),dark=M(0x5c6773,.8,.35),gold=M(0xd49a2a,.8,.25),paint=M(0xe9eef4,.2,.5),blue=M(0x2f6fc4,.4,.4),org=M(0xe8742a,.4,.4),base=M(0xc9d3de,.3,.6);
+const world=new THREE.Group();sc.add(world);
+const grid=new THREE.GridHelper(30,30,0xc1cdda,0xdbe3ec);grid.position.y=-2.41;world.add(grid);
+const bp=rbox(17,.3,4.4,.08,base);bp.position.set(-1.2,-2.55,0);world.add(bp);
+// rotor
+const N1=40,N2=14,mod=.08,CD=2.16;
+const rotor=new THREE.Group();world.add(rotor);
+const shaft=cyl(.55,9.4,steel);shaft.position.x=-.1;rotor.add(shaft);
+const bull=gear(N1,mod,.5,M(0x8c99a8,.9,.3));rotor.add(bull);
+const hub=cyl(.9,.6,dark);rotor.add(hub);
+const fl=cyl(1.05,.35,steel,64);fl.position.x=2.6;rotor.add(fl);
+for(let i=0;i<8;i++){const a=i*Math.PI/4,b=cyl(.09,.5,dark,16);b.position.set(2.6,.82*Math.cos(a),.82*Math.sin(a));rotor.add(b)}
+const mk=rbox(.2,.25,.12,.03,M(0xffb020,.2,.5));mk.position.set(2.6,.95,0);mk.rotation.y=Math.PI/2;rotor.add(mk);
+[-3.4,3.7].forEach(x=>{const p=rbox(1.1,2.3,1.6,.12,paint);p.position.set(x,-1.25,0);p.rotation.y=Math.PI/2;world.add(p);const b=cyl(.62,.9,dark);b.position.set(x,0,0);world.add(b)});
+// support plate
+const plate=rbox(6.4,6.2,.3,.15,paint);plate.position.set(-1.7,.7,-1.2);world.add(plate);
+const hm=CM(0xdfe7ef,.2,.45,{transparent:true,opacity:.35,depthWrite:false});
+const hg=new THREE.Group();
+const hous=rbox(2.7,1.8,2.2,.2,hm);hous.position.set(-.55,2.2,-.1);hg.add(hous);
+const red=rbox(2.8,3.4,4.6,.2,hm);red.position.set(-3.2,CD+.75,.9);hg.add(red);
+const mm=CM(0x2f6fc4,.4,.4),am=CM(0xe8742a,.4,.4);
+const vcyl=(r,l,m)=>new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,48),m);
+const MZ=1.8,MX=-3.2;
+const mainM=vcyl(.75,1.6,mm);mainM.position.set(MX,CD+3.25,MZ);hg.add(mainM);
+for(let i=0;i<7;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.75,.05,12,48),mm);t.rotation.x=Math.PI/2;t.position.set(MX,CD+2.6+i*.22,MZ);hg.add(t)}
+const tb=rbox(.6,.6,.35,.06,mm);tb.position.set(MX+.95,CD+3.25,MZ);hg.add(tb);
+const auxM=vcyl(.5,1,am);auxM.position.set(MX,CD+4.55,MZ);hg.add(auxM);
+for(let i=0;i<4;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.5,.04,12,40),am);t.rotation.x=Math.PI/2;t.position.set(MX,CD+4.15+i*.22,MZ);hg.add(t)}
+world.add(hg);
+// gear train: motor -> spur B/A (vertical axes) -> bevel V/H -> horizontal pinion shaft
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+function gv(N,m,d,mat){const g=gear(N,m,d,mat),w=new THREE.Group();w.add(g);w.rotation.z=Math.PI/2;w.mesh=g.mesh;return w}
+function bevel(mat){const g=new THREE.Group(),sp=new THREE.Group();g.add(sp);
+const c=new THREE.Mesh(new THREE.CylinderGeometry(.55,.03,.55,48),mat);c.position.y=.275;sp.add(c);
+for(let i=0;i<16;i++){const pv=new THREE.Group();pv.rotation.y=i*Math.PI/8;const t=new THREE.Mesh(new THREE.BoxGeometry(.06,.78,.12),mat);t.rotation.z=-Math.PI/4;t.position.set(.3,.3,0);pv.add(t);sp.add(pv)}
+g.sp=sp;return g}
+const gA=gv(30,.08,.45,steel);gA.position.set(MX,CD+1.5,0);world.add(gA);
+const gB=gv(15,.08,.45,gold);gB.position.set(MX,CD+1.5,MZ);world.add(gB);
+const sA=vcyl(.15,1.5,dark);sA.position.set(MX,CD+1.25,0);world.add(sA);
+const sB=vcyl(.15,1.2,dark);sB.position.set(MX,CD+1.85,MZ);world.add(sB);
+const vbv=bevel(steel);vbv.position.set(MX,CD,0);world.add(vbv);
+const hbv=bevel(steel);hbv.rotation.z=Math.PI/2;hbv.position.set(MX,CD,0);world.add(hbv);
+const sft=cyl(.2,5.3,dark);sft.position.set(-1.65,CD,0);world.add(sft);
+// sliding pinion (horizontal engagement)
+const PX=-1;const pin=new THREE.Group();pin.position.set(PX,CD,0);world.add(pin);
+const pg=gear(N2,mod,.5,gold);pin.add(pg);
+const slv=cyl(.3,1.0,gold);slv.position.x=-.75;pin.add(slv);
+const hub2=cyl(.3,.4,gold);hub2.position.x=.45;pin.add(hub2);
+const fork=new THREE.Group();world.add(fork);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(.38,.07,16,40),dark);ring.rotation.y=Math.PI/2;fork.add(ring);
+const arm=rbox(.18,.2,1.4,.04,dark);arm.position.set(0,0,.7);fork.add(arm);
+const rod=cyl(.07,1,M(0xdde3ea,.95,.15),20);world.add(rod);
+const cb=cyl(.2,1.6,M(0x2c8f6b,.4,.4));cb.position.set(2,CD,1.4);world.add(cb);
+const cap1=cyl(.24,.1,dark);cap1.position.set(1.2,CD,1.4);world.add(cap1);const cap2=cyl(.24,.1,dark);cap2.position.set(2.8,CD,1.4);world.add(cap2);
+const sv=rbox(.3,.3,.3,.05,M(0x222b36,.3,.5));sv.position.set(2,CD+.32,1.4);world.add(sv);
+// SSS clutch (mode B)
+const sssG=new THREE.Group();sssG.position.set(0,CD,0);sssG.visible=false;world.add(sssG);
+const P12=Math.PI/6,KH=1.1,LS=.55,E=KH*LS;
+const tm=CM(0xcfd8e2,.5,.4,{transparent:true,opacity:.28,depthWrite:false});
+const sl=M(0xb9c4d0,.85,.3,{side:THREE.DoubleSide}),pw=M(0xc0392b,.5,.4);
+const ribs=new THREE.Group();sssG.add(ribs);
+for(let j=0;j<6;j++){const pts=[];for(let i=0;i<=40;i++){const x=-2+i*.0475,ph=j*Math.PI/3+KH*(x+1.1);pts.push(new THREE.Vector3(x,.26*Math.cos(ph),.26*Math.sin(ph)))}ribs.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),60,.04,8),gold))}
+const slider=new THREE.Group();slider.position.x=-1.1;sssG.add(slider);
+[.4,.3].forEach(r=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.5,48,1,true),sl);c.rotation.z=Math.PI/2;slider.add(c)});
+[-.25,.25].forEach(x=>{const c=new THREE.Mesh(new THREE.RingGeometry(.3,.4,48),sl);c.rotation.y=Math.PI/2;c.position.x=x;slider.add(c)});
+for(let i=0;i<12;i++){let pv=new THREE.Group();pv.rotation.x=i*P12+P12/2;let t=new THREE.Mesh(new THREE.BoxGeometry(.3,.12,.14),gold);t.position.set(.1,.46,0);pv.add(t);slider.add(pv);
+pv=new THREE.Group();pv.rotation.x=i*P12;t=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.14),dark);t.position.set(-.2,.43,0);t.rotation.x=.5;pv.add(t);slider.add(pv)}
+const oring=new THREE.Group();sssG.add(oring);
+const shl=new THREE.Mesh(new THREE.CylinderGeometry(.62,.62,1.2,48,1,true),tm);shl.rotation.z=Math.PI/2;shl.position.x=-.9;oring.add(shl);
+const cup=cyl(.62,.06,steel);cup.position.x=-.28;oring.add(cup);
+const fl2=new THREE.Mesh(new THREE.TorusGeometry(.62,.04,12,48),steel);fl2.rotation.y=Math.PI/2;fl2.position.x=-1.5;oring.add(fl2);
+for(let i=0;i<12;i++){const pv=new THREE.Group();pv.rotation.x=i*P12;const t=new THREE.Mesh(new THREE.BoxGeometry(.5,.14,.14),steel);t.position.set(-.55,.55,0);pv.add(t);oring.add(pv)}
+const pawls=[0,Math.PI].map(a=>{const pv=new THREE.Group();pv.rotation.x=a;oring.add(pv);const pj=new THREE.Group();pj.position.set(-1.32,.5,.1);pv.add(pj);const t=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.2),pw);t.position.set(0,-.03,-.1);pj.add(t);return pj});
+// state
+const S={st:1,th:0,w:0,wT:0,sl:-1,slT:-1,a2:0,w2:0,auto:null};
+const D={1:"Tuabin đã dừng hẳn, đèn ZERO SPEED sáng, dầu bôi trơn đã làm việc. Bánh răng cài nằm ở vị trí nhả, cách vành răng lớn một khoảng an toàn.",
+2:"Động cơ phụ 0,75 kW (dựng đứng) quay chậm, truyền qua bánh trụ và bánh côn xuống trục nằm ngang. Xy lanh khí nén đẩy bánh răng cài trượt ngang vào ăn khớp êm, tránh va đập đầu răng.",
+3:"Bánh răng đã vào khớp hoàn toàn, tín hiệu TG ENGAGE báo tại tủ điều khiển tại chỗ. Động cơ phụ ngắt, sẵn sàng cấp điện động cơ chính.",
+4:"Động cơ chính 3 kW đóng điện, mô-men lớn quay rotor qua cặp bánh trụ, cặp bánh côn, bánh răng cài và vành răng lớn ở 4 v/p. Tốc độ hiển thị đã phóng đại.",
+5:"TỰ NHẢ: nạp hơi xung động, rotor vượt tốc độ vần trục. Vành răng lớn trở thành bên chủ động, mô-men ngược đẩy bánh răng cài trượt ngang văng ra, bảo vệ hộp số và động cơ.",
+6:"Cắt hơi, rotor giảm tốc theo đà. Động cơ vần trục khởi động, bánh răng cài quay khóa pha theo tốc độ rotor (tự đồng bộ), chưa vào khớp, không cần khí nén.",
+7:"TỰ ĂN KHỚP: khi rotor giảm tới tốc độ vần trục và hai bên đồng tốc, ngàm chặn và rãnh then xoắn kéo bánh răng cài trượt thẳng vào ăn khớp mượt, rồi động cơ quay rotor ở 4 v/p."};
+function setStage(n){S.st=n;document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE&&+b.dataset.s===n));$('desc').textContent=(MODE==='B'?DB:D)[n];if(MODE==='B'){S.wT=n===4?5:n===5?.3:0;return}
+if(n<=3)S.wT=0;if(n===4){S.wT=.5;S.slT=0}if(n===5)S.wT=5;if(n===6){S.wT=.6;S.slT=-1}if(n===7)S.wT=.5}
+const f2=th=>-Math.PI/2-Math.PI/N2-(th-Math.PI/2)*N1/N2;
+const lamp=(id,v)=>$(id).classList.toggle('on',v);
+let MODE='A';const SB={win:0,bin:0,e:0,r0:null},WM=.5*N1/N2;
+const DB={1:"Tuabin dừng, động cơ vần trục chưa chạy. Bánh răng cài luôn ăn khớp vành răng lớn. Ly hợp SSS nằm giữa trục vào (rãnh then xoắn ốc, vàng) và bánh răng cài, đang ở vị trí nhả.",
+2:"Động cơ chạy, trục vào quay và đạt tốc độ lớn hơn phía ra. Răng bánh cóc của bộ phận trượt chạm mũi ngàm (pawl, đỏ) gắn trên vành ngoài, chặn bộ phận trượt xoay theo, buộc nó dịch thẳng dọc rãnh then xoắn ốc. Lúc này răng ly hợp đã thẳng hàng nên vào khớp mượt.",
+3:"Bộ phận trượt chạm chặn cuối hành trình, răng ly hợp ăn khớp hoàn toàn; ngàm đã trượt khỏi răng bánh cóc nên không chịu tải. Mô-men truyền qua răng cứng, rotor quay ở 4 v/p.",
+4:"Nạp hơi: rotor vượt tốc độ trục vào, mô-men trên rãnh then xoắn đảo chiều, bộ phận trượt tự trượt về vị trí nhả và ly hợp chạy trớn (ngàm bị ratchet qua răng bánh cóc). Không cần khí nén hay tác động tay.",
+5:"Cắt hơi, rotor giảm tốc theo đà, động cơ vần trục chạy lại. Khi hai tốc độ đi qua điểm đồng bộ, ngàm bắt răng bánh cóc, bộ phận trượt tự ăn khớp trở lại rồi quay rotor ở 4 v/p."};
+const lt=(id,t)=>{$(id).lastChild.textContent=t};
+function setMode(m){MODE=m;clearTimeout(S.auto);$('auto').textContent='▶ Chạy tự động';$('m1').classList.toggle('on',m==='A');$('m2').classList.toggle('on',m==='B');
+document.querySelectorAll('[data-m]').forEach(b=>{if(b.dataset.s)b.style.display=b.dataset.m===m?'':'none'});
+sssG.visible=m==='B';[fork,rod,cb,cap1,cap2,sv,slv].forEach(o=>o.visible=m==='A');
+const T=m==='B'?['Ngắt: ZERO SPEED','TG ENGAGE','Động cơ vần trục','Chạy trớn (nhả)','Ngàm chạm bánh cóc','Mô-men đảo chiều']:null;
+if(T){['l1','l2','l3','l4','l5','l6'].forEach((id,i)=>lt(id,T[i]));lt('l1','ZERO SPEED')}else{['ZERO SPEED','TG ENGAGE','Động cơ phụ','Động cơ chính','Khí nén cài khớp','Tự đồng bộ'].forEach((t,i)=>lt('l'+(i+1),t))}
+S.w=0;S.wT=0;S.sl=-1;S.slT=-1;SB.win=0;SB.e=0;SB.r0=null;setStage(1)}
+$('m1').onclick=()=>setMode('A');$('m2').onclick=()=>setMode('B');
+function tickB(dt){
+ const st=S.st,mT=(st===2||st===3||st===5)?WM:0,cl=(a,lo,hi)=>Math.max(lo,Math.min(hi,a));
+ SB.win+=cl(mT-SB.win,-1.5*dt,1.5*dt);SB.bin+=SB.win*dt;
+ const acc=st===4?1.2:st===5?.9:1,locked=SB.e>=E-1e-4&&st!==4&&SB.win>.05;
+ S.w+=cl((locked?SB.win*N2/N1:S.wT)-S.w,-acc*dt,acc*dt);S.th+=S.w*dt;
+ const rel=SB.win-S.w*N1/N2,ain=-SB.bin,aout=f2(S.th);
+ if(SB.e>0){SB.r0=null;SB.e=cl(SB.e+rel*dt,0,E)}
+ else{const r=(((ain-aout)%P12)+P12)%P12;if(rel>.01&&SB.r0!==null&&r-SB.r0>P12/2)SB.e=1e-3;SB.r0=r}
+ pin.position.x=0;rotor.rotation.x=S.th;bull.mesh.rotation.z=S.th;pg.mesh.rotation.z=aout;
+ oring.rotation.x=aout;ribs.rotation.x=ain;slider.rotation.x=ain+SB.e;slider.position.x=-1.1+SB.e/KH;
+ vbv.sp.rotation.y=ain;hbv.sp.rotation.y=-ain+Math.PI/16;gA.mesh.rotation.z=ain;gB.mesh.rotation.z=-2*ain-Math.PI/15;
+ const rr=(((ain-aout)%P12)+P12)%P12,lift=SB.e>0?0:(rel<-.05?rr/P12*.5:.05);pawls.forEach(q=>q.rotation.x=lift);
+ const rpm=S.w<.6?S.w*8:4+(S.w-.5)/4.5*2996;$('rpm').textContent=Math.round(rpm)+' v/p';
+ lamp('l1',S.w<.02);lamp('l2',SB.e>=E-.01);lamp('l3',SB.win>.05);lamp('l4',SB.e<=0&&rel<-.05);lamp('l5',SB.e>0&&SB.e<E-.01);lamp('l6',SB.e>0&&rel<-.02)}
+function tick(dt){if(MODE==='B'){tickB(dt);return}
+ if(S.st===1&&S.w<.05)S.slT=-1;
+ if((S.st===2||S.st===3)&&S.w<.05)S.slT=0;
+ if(S.st===6&&S.w<.62)setStage(7);
+ if(S.st===7)S.slT=S.w<.62?0:-1;
+ const st=S.st,acc=st===5?1.2:st===6?.9:1;
+ S.w+=Math.max(-acc*dt,Math.min(acc*dt,S.wT-S.w));
+ if(st===5&&S.w>1.3&&S.slT!==-1){S.slT=-1;S.w2=-S.w*N1/N2*.2}
+ S.th+=S.w*dt;
+ const v=(S.slT===-1&&st===5)?1.6:st===7?.5:.55;S.sl+=Math.max(-v*dt,Math.min(v*dt,S.slT-S.sl));
+ const eng=S.sl>-.55,sync=st>=6,p=2*Math.PI/N2;
+ if(eng){S.a2=f2(S.th)}
+ else if(sync){let d=f2(S.th)-S.a2;d=(((d+p/2)%p)+p)%p-p/2;S.a2+=-S.w*N1/N2*dt+d*Math.min(1,5*dt)}
+ else{if(st===2){S.w2+=(1.3-S.w2)*Math.min(1,3*dt)}else{S.w2*=Math.exp(-1.8*dt)}S.a2+=S.w2*dt}
+ rotor.rotation.x=S.th;bull.mesh.rotation.z=S.th;pg.mesh.rotation.z=S.a2;
+ vbv.sp.rotation.y=S.a2;hbv.sp.rotation.y=-S.a2+Math.PI/16;gA.mesh.rotation.z=S.a2;gB.mesh.rotation.z=-2*S.a2-Math.PI/15;
+ const px=S.sl;pin.position.x=px;fork.position.set(px+.6,CD,0);
+ const xs=px+.6,len=1.2-xs;rod.scale.x=len;rod.position.set((xs+1.2)/2+.0,CD,1.4);rod.position.x=(xs+1.2)/2;
+ const rpm=S.w<.6?S.w*8:4+(S.w-.5)/4.5*2996;$('rpm').textContent=Math.round(rpm)+' v/p';
+ const e2=S.sl>-.02;
+ lamp('l1',S.w<.02);lamp('l2',e2);lamp('l3',st===2||st===6||(st===7&&!e2));lamp('l4',st===4||(st===7&&e2));lamp('l5',st>=2&&st<=4);lamp('l6',st===6||(st===7&&!e2));
+}
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{clearTimeout(S.auto);$('auto').textContent='▶ Chạy tự động';setStage(+b.dataset.s)});
+$('rst').onclick=()=>{clearTimeout(S.auto);$('auto').textContent='▶ Chạy tự động';S.wT=0;S.slT=-1;setStage(1)};
+$('auto').onclick=()=>{clearTimeout(S.auto);$('auto').textContent='⏸ Đang chạy…';const T=MODE==='B'?[0,0,4000,4000,6000,7000]:[0,0,4200,3000,4200,5200,6500,7000];let n=1;const go=()=>{setStage(n);if(n<(MODE==='B'?5:7)){const t=T[n+1];n++;S.auto=setTimeout(go,t)}else $('auto').textContent='▶ Chạy tự động'};if(S.w>.05||S.sl>-.9){S.wT=0;S.slT=-1;setStage(1);S.auto=setTimeout(go,2500)}else go()};
+// layers
+const upd=()=>{plane.constant=$('cut').checked?+$('cutp').value:5;hm.opacity=+$('op').value;hm.depthWrite=hm.opacity>.9;hg.visible=$('hs').checked};
+['cut','cutp','op','hs'].forEach(i=>$(i).oninput=upd);upd();
+// labels
+const L=[["Động cơ phụ 0,75 kW",()=>V(-3.2,CD+5.2,1.8)],["Động cơ chính 3 kW",()=>V(-1.9,CD+3.3,1.8)],["Cặp bánh răng trụ",()=>V(-3.2,CD+1.5,2.4)],["Cặp bánh răng côn",()=>V(-3.2,CD+.2,0)],["Bánh răng cài (clash pinion)",()=>V(pin.position.x,CD+.85,0)],["Vành răng lớn (bull gear)",()=>V(0,-1.8,0)],["Xy lanh khí nén",()=>V(2,CD+.5,1.4),"A"],["Rotor tuabin",()=>V(-3.4,.9,0)],["Mặt bích khớp nối",()=>V(2.6,1.3,0)],["Bộ phận trượt (răng ly hợp + bánh cóc)",()=>V(slider.position.x,CD+.9,0),"B"],["Ngàm chặn (pawl)",()=>V(-1.4,CD-.85,0),"B"],["Rãnh then xoắn ốc (trục vào)",()=>V(-2.1,CD-.55,0),"B"],["Vành ngoài (răng ly hợp trong)",()=>V(-.7,CD+.95,0),"B"]].map(([t,f,m])=>{const e=document.createElement('div');e.className='lb';e.textContent=t;$('labels').appendChild(e);return{e,f,m}});
+// orbit
+let az=.75,el=.32,rad=25;const tg=new THREE.Vector3(-1.6,2.6,0);let drag=null;
+const cv=R.domElement;cv.style.touchAction='none';
+cv.onpointerdown=e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointerup=()=>drag=null;
+cv.onpointermove=e=>{if(!drag)return;az-=(e.clientX-drag[0])*.006;el=Math.max(-.2,Math.min(1.45,el+(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY]};
+cv.onwheel=e=>{e.preventDefault();rad=Math.max(6,Math.min(42,rad*(1+e.deltaY*.001)))};
+function rs(){const w=host.clientWidth,h=host.clientHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
+setStage(1);let last=performance.now();
+(function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000);last=t;tick(dt);
+ cam.position.set(tg.x+rad*Math.sin(az)*Math.cos(el),tg.y+rad*Math.sin(el),tg.z+rad*Math.cos(az)*Math.cos(el));cam.lookAt(tg);R.render(sc,cam);
+ const show=$('lbl').checked;L.forEach(o=>{const ok=show&&(!o.m||(o.m==='A')===(MODE==='A'));o.e.style.display=ok?'block':'none';if(!ok)return;const v=o.f().project(cam);o.e.style.left=(v.x*.5+.5)*host.clientWidth+'px';o.e.style.top=(-v.y*.5+.5)*host.clientHeight+'px'})})(last);
+</script></body></html>
