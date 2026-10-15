@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Đề Thi Giữ Bậc Máy Phó 2026</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: text;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .page-transition {
+      animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans flex flex-col antialiased">
+
+  <!-- ==================== HEADER ĐIỀU HƯỚNG CỐ ĐỊNH ==================== -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
+      
+      <!-- Cụm nút điều hướng Home & Back -->
+      <div class="flex items-center gap-1.5" id="navControls">
+        <!-- Nút Home: luôn đưa về danh mục chính -->
+        <button id="btnHome" onclick="goHome()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary-50 text-primary-700 dark:bg-primary-950/60 dark:text-primary-300 border border-primary-200/50 dark:border-primary-800/50 active:scale-95 transition-all">
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </button>
+
+        <!-- Nút Back: quay lại màn hình trước -->
+        <button id="btnBack" onclick="goBack()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 active:scale-95 transition-all">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back</span>
+        </button>
+
+        <!-- Logo/Tiêu đề khi ở trang Home -->
+        <div id="homeBrand" class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center font-bold text-sm shadow">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Giữ Bậc Máy Phó 2026</h1>
+            <p class="text-[10px] text-slate-500 font-medium">Sổ Tay Vận Hành & Khắc Phục Sự Cố</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chuyển đổi Dark / Light Theme -->
+      <button onclick="toggleDarkMode()" aria-label="Đổi giao diện sáng tối" class="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <i id="themeIcon" class="fa-solid fa-moon text-base"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== VIEW 1: TRANG DANH MỤC CÂU HỎI (HOME) ==================== -->
+  <main id="viewCatalog" class="flex-1 max-w-xl w-full mx-auto p-4 page-transition">
+    
+    <!-- Tiêu đề & Giới thiệu danh mục -->
+    <div class="mb-4 p-4 rounded-2xl bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-700 text-white shadow-md">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-primary-100">Đề cương sát hạch</span>
+        <span class="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">23 Câu</span>
+      </div>
+      <h2 class="text-base font-bold">Danh Sách Câu Hỏi Nghiệp Vụ</h2>
+      <p class="text-xs text-primary-100/90 mt-1">Chạm vào từng câu hỏi bên dưới để mở trang đọc đáp án chi tiết.</p>
+    </div>
+
+    <!-- Thanh tìm kiếm nhanh & Bộ lọc hệ thống -->
+    <div class="sticky top-14 z-30 bg-slate-100/95 dark:bg-slate-950/95 backdrop-blur-md pt-1 pb-3 space-y-2">
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input 
+          type="text" 
+          id="searchBox" 
+          placeholder="Tìm theo số câu hoặc nội dung (dầu EH, bình ngưng...)" 
+          oninput="filterQuestions()"
+          class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm"
+        >
+        <button id="btnResetSearch" onclick="resetSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Nhãn phân loại chuyên đề cuộn ngang -->
+      <div class="flex gap-1.5 overflow-x-auto pb-0.5 hide-scrollbar text-[11px] font-semibold" id="categoryGroup">
+        <button onclick="selectCategory('all', this)" class="cat-pill active-pill shrink-0 px-3 py-1.5 rounded-lg border transition-all">Tất cả (23)</button>
+        <button onclick="selectCategory('tuabin', this)" class="cat-pill shrink-0 px-3 py-1.5 rounded-lg border transition-all">Tuabin & Dầu</button>
+        <button onclick="selectCategory('nuoc', this)" class="cat-pill shrink-0 px-3 py-1.5 rounded-lg border transition-all">Nước cấp - Ngưng</button>
+        <button onclick="selectCategory('binhngung', this)" class="cat-pill shrink-0 px-3 py-1.5 rounded-lg border transition-all">Bình ngưng & Khí</button>
+        <button onclick="selectCategory('mayphat', this)" class="cat-pill shrink-0 px-3 py-1.5 rounded-lg border transition-all">Máy phát & Phụ</button>
+      </div>
+    </div>
+
+    <!-- Số lượng kết quả -->
+    <div class="flex justify-between items-center text-[11px] text-slate-500 dark:text-slate-400 px-1 mb-2 font-medium">
+      <span id="labelTotalVisible">Hiển thị 23 câu hỏi</span>
+      <span>Chạm để đọc</span>
+    </div>
+
+    <!-- Danh sách hiển thị câu hỏi (Chỉ tiêu đề) -->
+    <div id="catalogList" class="space-y-2 pb-10">
+      <!-- Được render tự động qua Javascript -->
+    </div>
+  </main>
+
+  <!-- ==================== VIEW 2: TRANG ĐỌC ĐÁP ÁN CHI TIẾT (DETAIL PAGE) ==================== -->
+  <main id="viewReader" class="hidden flex-1 max-w-xl w-full mx-auto p-4 page-transition pb-28">
+    
+    <!-- Thanh điều hướng nhỏ trên đầu trang đọc -->
+    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2.5 font-medium">
+      <button onclick="goHome()" class="flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline">
+        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+        <span>Về danh mục</span>
+      </button>
+      <div class="flex items-center gap-2">
+        <span id="detailCatBadge" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold">Tuabin & Dầu</span>
+        <span id="detailScoreBadge" class="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded text-[10px] font-bold">3.0đ</span>
+      </div>
+    </div>
+
+    <!-- Hộp tiêu đề câu hỏi -->
+    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-3">
+      <div class="flex items-start gap-3">
+        <div id="detailIndexTag" class="shrink-0 w-8 h-8 rounded-xl bg-primary-600 text-white font-bold flex items-center justify-center text-sm shadow">
+          1
+        </div>
+        <h2 id="detailQuestionTitle" class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+          <!-- Tên câu hỏi chi tiết -->
+        </h2>
+      </div>
+    </div>
+
+    <!-- Hộp nội dung trả lời chi tiết -->
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2 text-primary-600 dark:text-primary-400">
+          <i class="fa-solid fa-clipboard-check text-sm"></i>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Nội dung trả lời</span>
+        </div>
+        <button onclick="copyAnswer()" class="text-xs text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-1.5 py-1 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          <i class="fa-regular fa-copy"></i>
+          <span>Sao chép</span>
+        </button>
+      </div>
+
+      <!-- Bài làm / Đáp án -->
+      <article id="detailAnswerBody" class="text-xs sm:text-sm leading-relaxed space-y-3.5 text-slate-700 dark:text-slate-300">
+        <!-- Rendered via JS -->
+      </article>
+    </div>
+
+    <!-- Thanh chuyển bài phía dưới (Bottom Navigation Bar) -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-2.5 px-4">
+      <div class="max-w-xl mx-auto flex items-center justify-between gap-2">
+        <button id="btnPrevQuestion" onclick="stepQuestion(-1)" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition">
+          <i class="fa-solid fa-chevron-left text-[10px]"></i>
+          <span>Câu trước</span>
+        </button>
+
+        <button onclick="goHome()" class="w-12 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary-600 active:scale-95 transition" title="Trang danh mục">
+          <i class="fa-solid fa-list"></i>
+        </button>
+
+        <button id="btnNextQuestion" onclick="stepQuestion(1)" class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md shadow-primary-500/20 active:scale-95 transition">
+          <span>Câu tiếp theo</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Thông báo sao chép -->
+  <div id="toastMessage" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900/90 text-white text-xs rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300">
+    Đã sao chép đáp án thành công!
+  </div>
+
+  <!-- ==================== CƠ SỞ DỮ LIỆU ĐỀ THI & LOGIC ==================== -->
+  <script>
+    const examQuestions = [
+      {
+        id: 1,
+        title: "Trình tự kiểm tra, chuẩn bị khởi động và các bước khởi động hệ thống dầu bôi trơn?",
+        score: "3.0đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Trình tự kiểm tra, chuẩn bị khởi động</h4>
+          <p>Chuẩn bị khởi động hệ thống dầu bôi trơn được tiến hành đồng thời với việc chuẩn bị vận hành Tuabin. Trước khi khởi động, công tác chuẩn bị sau phải hoàn thành:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Kiểm tra tất cả các công việc sửa chữa của hệ thống đã được kết thúc, khiếm khuyết được loại bỏ, phiếu công tác đã khóa.</li>
+            <li>Kiểm tra bằng mắt các thiết bị: vệ sinh khu vực sạch sẽ, mặt bích kết nối, van chặn, van một chiều tốt, sẵn sàng khởi động.</li>
+            <li>Các thiết bị đo lường, điều khiển của hệ thống dầu bôi trơn các ổ đỡ Tuabin - Máy phát phải đưa vào vận hành và kiểm tra.</li>
+            <li>Chất lượng dầu trong bể dầu chính phải được kiểm tra lấy mẫu (do Hóa thực hiện), đảm bảo đạt yêu cầu.</li>
+            <li>Mức dầu bể chính ở mức làm việc bình thường. Nhiệt độ dầu trong bể không nhỏ hơn 21℃.</li>
+            <li>Mạch điều khiển, tự động, bảo vệ, liên động và tín hiệu cảnh báo đã được cấp điện.</li>
+            <li>Kiểm tra chức năng hệ thống cảnh báo ở phòng điều khiển khi đạt giới hạn mức bể dầu.</li>
+            <li>Lượng dầu bổ sung sẵn sàng; Động cơ và thiết bị đã cấp điện. Nước làm mát cấp cho bộ làm mát dầu đầy đủ.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Các bước khởi động hệ thống</h4>
+          <p class="text-xs italic text-slate-500">Máy trưởng và Máy phó phối hợp thực hiện theo trình tự:</p>
+          <div class="space-y-2 mt-2">
+            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+              <strong class="text-primary-600 dark:text-primary-400">Bước 1:</strong> Xác nhận chế độ điều khiển quạt hút khí bể dầu ở “Manu”, Máy trưởng kích xác nhận quạt cần chạy, Máy phó đứng tại chỗ quạt ngoài công trường.
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+              <strong class="text-primary-600 dark:text-primary-400">Bước 2:</strong> Máy trưởng kích khởi động quạt hút khí trên DCS, kiểm tra thông số dòng điện; Máy phó kiểm tra tại chỗ: âm thanh, độ rung, áp lực đầu đẩy.
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+              <strong class="text-primary-600 dark:text-primary-400">Bước 3:</strong> Xác nhận chế độ điều khiển bơm dầu bôi trơn ở “Man”. Máy trưởng kích xác nhận bơm cần chạy, Máy phó đứng tại vị trí bơm công trường.
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+              <strong class="text-primary-600 dark:text-primary-400">Bước 4:</strong> Máy trưởng khởi động bơm trên DCS; kiểm tra áp lực, nhiệt độ dầu bình thường; xác nhận dầu đến các gối đỡ qua kính thăm dầu. Đưa quạt hút và bơm dầu còn lại về chế độ dự phòng liên động.
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Các trường hợp dừng khẩn cấp bơm cấp và thao tác khi dừng sự cố?",
+        score: "2.5đ",
+        category: "nuoc",
+        categoryName: "Nước cấp - Ngưng",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Các trường hợp cần dừng khẩn cấp bơm cấp</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Bơm rung, va đập hoặc phát tiếng kêu bất thường mạnh; có dấu hiệu bó kẹt trục.</li>
+            <li>Mất nước đầu hút, áp suất hút giảm nghiêm trọng, bơm bị xâm thực hoặc không tạo được áp suất cấp.</li>
+            <li>Mất áp suất dầu bôi trơn; nhiệt độ ổ trục tăng đến mức bảo vệ.</li>
+            <li>Phớt, đường ống hoặc thân bơm rò rỉ lớn, nguy cơ gây bỏng hay hư hỏng thiết bị.</li>
+            <li>Động cơ quá dòng, có khói, mùi khét, cháy hoặc sự cố phần điện.</li>
+            <li>Bơm tự ngắt do bảo vệ; xuất hiện sự cố đe dọa an toàn người và thiết bị.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Thao tác khi dừng sự cố</h4>
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li>Nhấn dừng khẩn cấp (Emergency Stop) hoặc thực hiện lệnh dừng theo quy trình, báo ngay cho Máy trưởng/Trưởng kíp. Nếu có cháy/nổ, ưu tiên cứu người và ứng cứu khẩn cấp.</li>
+            <li>Xác nhận bơm đã dừng, kiểm tra áp suất, lưu lượng nước cấp. Theo dõi chặt mực nước bao hơi, áp suất lò hơi.</li>
+            <li>Khởi động đưa bơm dự phòng vào làm việc theo quy trình; tuyệt đối không khởi động lại bơm vừa sự cố khi chưa xác định rõ nguyên nhân.</li>
+            <li>Cô lập bơm sự cố bằng các van và cắt nguồn điện theo phiếu cô lập. Không đóng van hút/van cấp tùy tiện khi chưa xác nhận trạng thái.</li>
+            <li>Nếu không duy trì được nước cấp cho lò, phải thực hiện giảm tải hoặc dừng lò sự cố theo quy trình.</li>
+            <li>Ghi nhật ký vận hành thời điểm, tín hiệu bảo vệ, thông số trước/sau khi dừng; bàn giao sửa chữa.</li>
+          </ol>
+        `
+      },
+      {
+        id: 3,
+        title: "Trình tự tách 01 nhánh bình ngưng ra khỏi vận hành và biện pháp an toàn trước khi làm việc?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Trình tự tách nhánh bình ngưng</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Xác định đúng nhánh cần tách, kiểm tra điều kiện vận hành nhánh còn lại và báo các vị trí liên quan.</li>
+            <li>Giảm tải tổ máy phù hợp với mức suy giảm chân không bình ngưng, chờ tải và thông số ổn định.</li>
+            <li>Khởi động đưa bơm hút chân không thứ hai vào làm việc song song.</li>
+            <li>Đóng các nguồn xả vào nửa bình ngưng cần tách.</li>
+            <li>Dừng hệ thống bơm bóng rửa ống ngưng và dừng phin lọc tinh của nhánh cần tách.</li>
+            <li>Đóng van nước tuần hoàn đầu ra trước, sau đó đóng van nước tuần hoàn đầu vào của nhánh cần tách. Giám sát chặt chẽ độ chân không.</li>
+            <li>Xác nhận các van đóng kín, cắt điện van đầu ra, van đầu vào, phin lọc tinh; khóa thẻ cô lập (LOTO).</li>
+            <li>Đóng van rút khí tới bơm rút khí hộp nước; mở van xả khí hộp nước tuần hoàn.</li>
+            <li>Cô lập các đường liên thông, mở van xả đáy xả hết nước; khẳng định hết nước, hết áp lực.</li>
+            <li>Mở cửa người chui (manhole), đặt quạt thông gió thông thoáng khoang nước.</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Biện pháp an toàn trước và trong khi làm việc</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Có phiếu công tác, trang bị BHLĐ đầy đủ, kiểm tra lại toàn bộ điểm cô lập (LOTO), treo biển cảnh báo.</li>
+            <li>Đo nồng độ Oxy và khí độc trong hộp nước trước khi vào; chỉ cho người vào khi khí đạt chuẩn an toàn.</li>
+            <li>Duy trì thông gió liên tục, bố trí người trực giám sát bên ngoài và chuẩn bị phương án cứu hộ.</li>
+            <li>Nếu điều kiện không khí thay đổi hoặc quạt thông gió ngừng chạy, lập tức rút toàn bộ người ra ngoài.</li>
+          </ul>
+        `
+      },
+      {
+        id: 4,
+        title: "Trình tự kiểm tra, chuẩn bị khởi động hệ thống nước cấp sau sửa chữa?",
+        score: "3.0đ",
+        category: "nuoc",
+        categoryName: "Nước cấp - Ngưng",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Kiểm tra chuẩn bị khởi động</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Đảm bảo trong đường ống không có tạp vật, nơi làm việc dọn sạch, đủ ánh sáng, người đã rút hết, khóa phiếu công tác.</li>
+            <li>Kiểm tra nối đất, cách điện động cơ, nguồn điện cấp lực và điều khiển tốt.</li>
+            <li>Mức dầu bôi trơn bể ở mức bình thường, chất lượng dầu đạt chuẩn; đồng hồ đo kiểm tra chính xác.</li>
+            <li>Bơm nước làm mát kín, hệ thống khí nén điều khiển làm việc bình thường.</li>
+            <li>Bơm tuần hoàn bình khử khí làm việc bình thường, nước cấp tại khử khí đã được gia nhiệt và khử khí sơ bộ.</li>
+            <li>Chạy bơm dầu khởi động: áp lực dầu bôi trơn > 1,7 bar, dầu chảy qua các gối đỡ bình thường qua kính thăm.</li>
+            <li>Xả khí nạp nước làm mát bộ làm mát dầu, bộ làm mát động cơ, làm mát nước chèn bơm.</li>
+            <li>Mở từ từ van đầu hút, van xả khí, điền đầy đuổi khí và sấy nóng thân bơm cấp.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">II. Điều kiện liên động cho phép khởi động nhóm bơm cấp</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono my-2">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Mức dầu bể bơm cấp > 1/2</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Áp lực dầu bôi trơn > 1,7 bar</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Áp hút bơm tăng áp ≥ 1,47 bar</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• ΔT vỏ trên/dưới bơm cấp ≤ 40℃</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• ΔT nước khử khí & vỏ bơm ≤ 70℃</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Khớp nối thủy lực &lt; 2%</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Van tái tuần hoàn mở hoàn toàn</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Van điện đầu đẩy đóng (Manual)</div>
+          </div>
+        `
+      },
+      {
+        id: 5,
+        title: "Hiện tượng, nguyên nhân, biện pháp xử lý áp lực dầu bôi trơn tuabin giảm thấp?",
+        score: "2.5đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Hiện tượng</h4>
+          <p>Màn hình DCS báo còi và đèn cảnh báo áp lực dầu bôi trơn thấp; đồng hồ áp suất tại chỗ giảm; bơm dầu bôi trơn dự phòng tự động liên động vào làm việc.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Nguyên nhân</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Dầu bôi trơn lẫn tạp chất gây tắc nghẽn, độ chênh áp qua phin lọc dầu tăng cao.</li>
+            <li>Lỗi van điều chỉnh áp lực dầu bôi trơn (kẹt, hỏng lò xo điều áp).</li>
+            <li>Sự cố bơm dầu bôi trơn đang làm việc (hỏng bơm, mất điện động cơ).</li>
+            <li>Lỗi cảm biến áp suất, đường ống trích tín hiệu đo lường hoặc điều khiển C&I.</li>
+            <li>Bục vỡ hoặc rò rỉ lớn trên đường ống dẫn dầu bôi trơn.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Biện pháp xử lý</h4>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Kiểm tra sự làm việc của bơm dầu dự phòng vừa liên động chạy; cử người kiểm tra áp lực tại chỗ và kiểm tra động cơ bơm bị sự cố.</li>
+            <li>Nếu chênh áp phin lọc cao: Tiến hành đảo chuyển phin lọc dầu sang nhánh dự phòng và vệ sinh phin bị bẩn.</li>
+            <li>Nếu lỗi thiết bị đo: Yêu cầu C&I kiểm tra, xử lý đường lấy tín hiệu và bộ cảm biến.</li>
+            <li>Nếu lỗi van điều chỉnh áp lực hoặc áp suất tụt không thể khôi phục (&le; 1,21 bar): <strong>Phải dừng khẩn cấp tuabin có phá hoại chân không</strong> theo quy trình sự cố để bảo vệ gối trục.</li>
+          </ul>
+        `
+      },
+      {
+        id: 6,
+        title: "Các bước tách bộ trao đổi nhiệt nước làm kín ra sửa chữa và biện pháp an toàn?",
+        score: "2.5đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Trình tự chuyển đổi và tách ra sửa chữa (Đổi từ A sang B)</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Báo cáo Máy trưởng/Trưởng kíp trước khi chuyển đổi; ghi lại áp lực, mức bể nước làm mát kín.</li>
+            <li>Kiểm tra van xả đáy bình B đã đóng; mở nhỏ van vào bình B và van xả khí để điền đầy nước, đóng xả khí khi hết bọt khí.</li>
+            <li>Mở từ từ van nước làm mát kín đầu vào bộ B, theo dõi mức nước bể giãn nở.</li>
+            <li>Mở van nước làm mát phụ vào/ra bộ B, xả khí và điều chỉnh duy trì nhiệt độ nước làm mát kín &lt; 37°C.</li>
+            <li>Mở van đầu ra nước làm mát kín của bộ B.</li>
+            <li>Đóng từ từ van đầu vào và van đầu ra nước làm mát kín của bộ làm mát A.</li>
+            <li>Đóng van đầu vào và đầu ra nước làm mát phụ của bộ làm mát A.</li>
+            <li>Mở van xả đọng cả phía nước làm mát kín và làm mát phụ của bình A để xả hết áp và nước tồn.</li>
+            <li>Cắt điện các van điện (nếu có), thực hiện khóa chốt LOTO.</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Biện pháp an toàn</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Giám sát liên tục nhiệt độ, áp lực nước làm mát kín trong suốt quá trình đảo chuyển thiết bị.</li>
+            <li>Khóa, treo biển báo cấm thao tác các van cô lập cả 2 phía nước kín và nước hở (nước phụ).</li>
+            <li>Xả hết áp lực, xả cạn nước và kiểm tra nhiệt độ thiết bị nguội an toàn trước khi bàn giao cho đơn vị sửa chữa mở nắp bích.</li>
+          </ul>
+        `
+      },
+      {
+        id: 7,
+        title: "Trình tự kiểm tra, chuẩn bị khởi động hệ thống nước ngưng sau sửa chữa?",
+        score: "3.0đ",
+        category: "nuoc",
+        categoryName: "Nước cấp - Ngưng",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Kiểm tra hiện trường & thiết bị</h4>
+          <p>Khẳng định công việc sửa chữa hoàn thành, người rút hết, vệ sinh sạch, khóa phiếu công tác. Kiểm tra nối đất động cơ, mở cấp nguồn các van điện. Các cửa người chui bình ngưng đã đóng kín, van xả cạn đóng.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Thiết lập sơ đồ đường đi nước ngưng</h4>
+          <p class="text-xs text-slate-500">Mở van vào/ra các bình: Bình ngưng hơi chèn, Bình gia nhiệt hạ áp số 1, 2, 3, 4. Đóng toàn bộ các van đi tắt (bypass). Mở van chặn trước/sau van điều chỉnh mức bình ngưng và bình khử khí (van bypass đóng).</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Nạp nước bình ngưng & thân bơm</h4>
+          <p>Mở van bổ sung cấp nước khử khoáng vào bình ngưng đến mức làm việc. Mở nước chèn bơm ngưng. Mức dầu gối đỡ bơm &gt; 2/3 mắt thăm dầu. Mở van hút, mở van xả khí phin lọc và thân bơm để điền đầy nước.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">4. Điều kiện cho phép chạy bơm ngưng</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono my-2">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Tủ điều khiển không để Local</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Mức nước bình ngưng > 400 mm</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Van tái tuần hoàn để AUTO</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Van đầu hút bơm mở hoàn toàn</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Van đầu đẩy bơm đóng (Auto)</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Không cảnh báo chênh áp phin hút</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Nhiệt độ gối trục &lt; 95℃</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">• Nhiệt độ cuộn dây &lt; 130℃</div>
+          </div>
+        `
+      },
+      {
+        id: 8,
+        title: "Hiện tượng, nguyên nhân và biện pháp khắc phục sự cố áp lực dầu chèn thấp?",
+        score: "2.5đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Hiện tượng</h4>
+          <p>DCS báo áp lực dầu chèn hoặc chênh áp dầu chèn – Hydro giảm thấp. Bơm dầu chèn dự phòng hoặc bơm sự cố tự liên động khởi động. Có thể xuất hiện cảnh báo rò rỉ khí Hydro hoặc tăng lượng Hydro bổ sung.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Nguyên nhân</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Nguồn cấp dầu suy giảm: bơm đang chạy bị hỏng, mất điện nguồn, bơm dự phòng không tự khởi động.</li>
+            <li>Mức dầu trong bể cấp thấp; rò rỉ bục vỡ đường ống dầu chèn.</li>
+            <li>Phin lọc dầu bị tắc nghẽn bẩn, chênh áp cao.</li>
+            <li>Van điều chỉnh chênh áp dầu chèn - Hydro bị kẹt, hỏng cơ cấu điều tiết.</li>
+            <li>Áp suất khí Hydro trong máy phát tăng cao đột biến làm giảm độ chênh áp.</li>
+            <li>Hỏng cảm biến đo chênh áp hoặc đường ống trích tín hiệu đo bị nghẽn.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Biện pháp xử lý</h4>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Báo cáo Máy trưởng. Khởi động cưỡng bức bơm dầu chèn dự phòng/sự cố nếu liên động không tác động.</li>
+            <li>Đối chiếu áp suất tại chỗ và DCS để loại trừ lỗi đo lường.</li>
+            <li>Nếu tắc phin lọc: Đảo phin lọc dầu dự phòng.</li>
+            <li>Kiểm tra nồng độ khí Hydro quanh gối trục đề phòng Hydro rò rỉ ra ngoài gây nguy cơ cháy nổ.</li>
+            <li><strong>Lưu ý quan trọng:</strong> Nếu chênh áp tiếp tục giảm không giữ được mức cho phép, phải tiến hành dừng tổ máy và xả khí Hydro máy phát theo quy trình. <em>Tuyệt đối không dừng bơm dầu chèn khi trong máy phát vẫn còn áp lực Hydro!</em></li>
+          </ul>
+        `
+      },
+      {
+        id: 9,
+        title: "Nguyên tắc tạo chân không bình ngưng, các bước thực hiện và các hệ thống cần kiểm tra khi chân không giảm?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Nguyên tắc tạo chân không</h4>
+          <p>Hơi thoát khỏi tuabin có thể tích riêng rất lớn ($V_1$). Khi vào bình ngưng truyền nhiệt cho nước tuần hoàn làm mát, hơi ngưng tụ thành nước có thể tích riêng rất nhỏ ($V_2 \ll V_1$). Sự sụt giảm thể tích riêng đột ngột trong không gian kín tạo ra chân không sâu. Hệ thống bơm chân không có nhiệm vụ duy trì chân không bằng cách liên tục hút các khí không ngưng lọt vào bình ngưng ra ngoài khí quyển.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Các bước tạo chân không bình ngưng</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Cấp hơi ống góp hơi tự dùng (15 bar, 350℃).</li>
+            <li>Ấn Master Reset tuabin trên hệ thống điều khiển.</li>
+            <li>Đưa hệ thống hơi chèn trục tuabin vào làm việc (áp lực ~0,28 bar, nhiệt độ ~250℃) để làm kín cổ trục.</li>
+            <li>Khởi động 02 bơm chân không bình ngưng.</li>
+            <li>Thiết lập các van xả đọng hơi chính, hơi tái nhiệt, hơi trích và vỏ van sang chế độ AUTO/Mở.</li>
+            <li>Đóng van stop hơi tái lạnh khi van xả khí lò hơi còn mở để tránh không khí lọt ngược vào.</li>
+            <li>Kết thúc quá trình tạo chân không khi áp suất trong bình ngưng &lt; 0,1 bar (tuyệt đối).</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Khi chân không bình ngưng giảm, cần kiểm tra:</h4>
+          <div class="space-y-2 mt-2">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded"><strong>Nước tuần hoàn:</strong> Lưu lượng, áp suất, nhiệt độ nước làm mát vào/ra; rác bám lưới lọc bình ngưng.</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded"><strong>Bơm hút chân không:</strong> Tình trạng bơm, áp suất hút, nhiệt độ nước làm kín bơm chân không.</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded"><strong>Độ kín hệ thống chân không:</strong> Van phá chân không, bích nối tuabin hạ áp, cửa người chui, kính thăm, van xả đọng.</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded"><strong>Hơi chèn trục tuabin:</strong> Áp suất hơi chèn có bị sụt giảm làm lọt gió vào gối trục không.</div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded"><strong>Mức nước bình ngưng:</strong> Mức nước dâng quá cao ngập dàn ống ngưng (ngập khoang hơi).</div>
+          </div>
+        `
+      },
+      {
+        id: 10,
+        title: "Trình tự kiểm tra, chuẩn bị khởi động hệ thống dầu chèn máy phát?",
+        score: "3.0đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Chuẩn bị trước khi khởi động:</h4>
+          <p class="text-xs text-slate-500 mb-2">Tiến hành đồng thời với công tác chuẩn bị khởi động Tuabin:</p>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Mọi công tác lắp đặt sửa chữa đường ống đã hoàn thành, khu vực vệ sinh sạch sẽ, đủ chiếu sáng, phương tiện PCCC sẵn sàng, phiếu công tác đã khóa.</li>
+            <li>Bể chân không, bể dầu phụ, bộ lọc dầu, bẫy hơi, bộ dò chất lỏng sẵn sàng làm việc.</li>
+            <li>Bơm dầu chính, bơm sự cố, bơm chân không dầu chèn đủ điều kiện làm việc; kiểm tra đúng chiều quay động cơ.</li>
+            <li>Kiểm tra trạng thái đóng mở trơn tru của toàn bộ các van; van cô lập đồng hồ đo lường mở.</li>
+            <li>Trên giao diện TCS: Đặt chế độ MANUAL cho bơm dầu chính A, bơm sự cố và quạt hút.</li>
+            <li>Từ hệ thống dầu bôi trơn, điền đầy dầu vào bể chân không cho đến khi van phao đóng lại.</li>
+            <li>Kiểm tra bộ chuyển đổi tín hiệu mức của bể chân không làm việc bình thường và chính xác.</li>
+          </ul>
+        `
+      },
+      {
+        id: 11,
+        title: "Hiện tượng, nguyên nhân và biện pháp khắc phục sự cố độ rung gối trục tuabin tăng cao?",
+        score: "2.5đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Hiện tượng</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>DCS/TCS báo còi và hiển thị cảnh báo (Alarm) hoặc trip rung gối trục/độ rung tương đối của trục.</li>
+            <li>Biên độ rung tại một hoặc nhiều gối trục tăng dần hoặc tăng vọt đột ngột.</li>
+            <li>Tại hiện trường: Tiếng va đập, cọ sát cơ khí, tiếng rít hoặc tiếng gõ kim loại bất thường; bệ đỡ rung mạnh.</li>
+            <li>Có thể kèm theo nhiệt độ gối trục, nhiệt độ dầu bôi trơn hồi về tăng cao; độ di trục hoặc độ lệch tâm thay đổi.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Nguyên nhân</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Cơ khí:</strong> Mất cân bằng động rôto (cong trục, nứt gãy cánh, bám cáu cặn); lệch tâm trục ghép nối giữa các xilanh hoặc với máy phát; mòn tróc bạc lót gối đỡ; thời gian vần trục trước khi khởi động không đủ.</li>
+            <li><strong>Giãn nở nhiệt:</strong> Sấy tuabin không đều, chênh lệch nhiệt độ vách trên/dưới vỏ &gt; 50℃ làm vênh thân gây chạm cọ; tăng tốc hoặc tăng tải quá nhanh gây chênh giãn nở vượt giới hạn.</li>
+            <li><strong>Thủy động & hơi:</strong> Thủy kích (mang nước vào tuabin); chân không bình ngưng giảm làm nhiệt độ hơi thoát LP quá cao gây biến dạng vỏ; ngập nước gối từ hơi chèn.</li>
+            <li><strong>Dầu mỡ:</strong> Áp lực dầu bôi trơn thấp hoặc nhiệt độ dầu quá thấp/quá cao gây dao động màng dầu (oil whip).</li>
+            <li><strong>Đo lường:</strong> Hỏng đầu dò đo rung Bently Nevada, lỏng giắc cắm tín hiệu gây rung ảo.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Biện pháp xử lý</h4>
+          <ul class="list-disc pl-5 space-y-1.5">
+            <li>Đối chiếu ngay với các thông số liên quan (nhiệt gối, dòng điện, âm thanh tại chỗ) để xác định rung thật hay ảo.</li>
+            <li>Nếu đang tăng tốc qua dải tới hạn mà rung: Phải nhanh chóng vượt qua vùng cộng hưởng; nếu không qua được phải hạ tốc độ về vần trục kiểm tra lại độ đảo trục (&le; 0,038 mm).</li>
+            <li>Nếu đang mang tải: Giảm tải để theo dõi; kiểm tra và xả đọng đường hơi đề phòng thủy kích; điều chỉnh lại nhiệt độ dầu bôi trơn ($40 \div 45℃$).</li>
+            <li><strong>Dừng khẩn cấp:</strong> Nếu <strong>độ rung gối trục &ge; 0,229 mm</strong> hoặc có tiếng cọ xát kim loại rõ ràng, tia lửa/khói phát ra từ gối: <strong>Lập tức thực hiện DỪNG TUABIN CÓ PHÁ HOẠI CHÂN KHÔNG!</strong></li>
+            <li>Sau khi dừng: Duy trì dầu bôi trơn làm mát gối, đưa bộ vần trục vào làm việc ngay khi đủ điều kiện tốc độ.</li>
+          </ul>
+        `
+      },
+      {
+        id: 12,
+        title: "Các bước điền nước và kiểm tra hệ thống nước làm mát kín sau đại tu tổ máy?",
+        score: "2.5đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Xác nhận an toàn:</strong> Công tác sửa chữa đã xong, người và dụng cụ đã rút hết, khóa phiếu công tác, mặt bằng dọn sạch sẽ.</li>
+            <li><strong>Kiểm tra phục hồi hệ thống:</strong> Xác nhận bơm, phin lọc, van hút/đẩy/van một chiều đã lắp đúng chiều; đóng các van xả đáy; đóng van cấp nước sang lò. Bể giãn nở đã vệ sinh sạch, đóng kín nắp người chui.</li>
+            <li><strong>Điền nước vào hệ thống:</strong> Chạy bơm bổ sung nước ngưng, mở van bypass qua van điều chỉnh để nạp nước vào bể giãn nở. Điền từ từ và giám sát rò rỉ tại các mối nối sau đại tu.</li>
+            <li><strong>Xả khí:</strong> Mở tất cả các van xả khí ở điểm cao trên đường ống, thân bơm, bộ trao đổi nhiệt. Khi nước chảy ra liên tục không còn bọt khí thì khóa van xả khí lại.</li>
+            <li><strong>Kiểm tra sau điền:</strong> Kiểm tra mức bể giãn nở, áp suất tĩnh của hệ thống, kiểm tra độ kín các mặt bích van. Bổ sung nước và đưa các van nạp về vị trí vận hành tiêu chuẩn.</li>
+          </ol>
+        `
+      },
+      {
+        id: 13,
+        title: "Trình tự kiểm tra, chuẩn bị trước khi khởi động hệ thống nước làm mát Stator?",
+        score: "3.0đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Công tác chuẩn bị</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Hệ thống nước khử khoáng và hệ thống nước làm mát kín đã vận hành bình thường.</li>
+            <li>Phiếu công tác đã khóa, người rút hết khỏi vị trí thiết bị.</li>
+            <li>Liên động và bảo vệ đã thử nghiệm sẵn sàng; động cơ và van điện đã cấp nguồn.</li>
+            <li>Báo nhân viên C&I cấp nguồn tủ giám sát Hydro, Dầu và Nước làm mát stator.</li>
+            <li>Nguồn khí nén đo lường và điều khiển sẵn sàng; đường ống nước stator đã được thông rửa đạt tiêu chuẩn dẫn điện.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">II. Kiểm tra trạng thái các van chính</h4>
+          <div class="overflow-x-auto text-xs my-2">
+            <table class="w-full border-collapse border border-slate-300 dark:border-slate-700">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800">
+                  <th class="border border-slate-300 dark:border-slate-700 p-1.5 text-left">Tên van</th>
+                  <th class="border border-slate-300 dark:border-slate-700 p-1.5 text-left">Mô tả</th>
+                  <th class="border border-slate-300 dark:border-slate-700 p-1.5 text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="border p-1.5 font-mono">NS10 / NS11</td><td class="border p-1.5">Van bổ sung gốc / cách ly</td><td class="border p-1.5 text-center text-red-600 font-bold">ĐÓNG</td></tr>
+                <tr><td class="border p-1.5 font-mono">NS1a / NS1b</td><td class="border p-1.5">Van đầu hút bơm nước Stator</td><td class="border p-1.5 text-center text-green-600 font-bold">MỞ</td></tr>
+                <tr><td class="border p-1.5 font-mono">NS2a / NS2b</td><td class="border p-1.5">Van đầu đẩy bơm nước Stator</td><td class="border p-1.5 text-center text-green-600 font-bold">MỞ</td></tr>
+                <tr><td class="border p-1.5 font-mono">NS3a / NS4a</td><td class="border p-1.5">Van vào/ra bình làm mát đang dùng</td><td class="border p-1.5 text-center text-green-600 font-bold">MỞ</td></tr>
+                <tr><td class="border p-1.5 font-mono">NS3b / NS4b</td><td class="border p-1.5">Van vào/ra bình làm mát dự phòng</td><td class="border p-1.5 text-center text-red-600 font-bold">ĐÓNG</td></tr>
+                <tr><td class="border p-1.5 font-mono">NS7a / NS8a</td><td class="border p-1.5">Van vào/ra phin lọc nước Stator chính</td><td class="border p-1.5 text-center text-green-600 font-bold">MỞ</td></tr>
+                <tr><td class="border p-1.5 font-mono">XNS1 / XNS2</td><td class="border p-1.5">Các van xả cạn bể và bình</td><td class="border p-1.5 text-center text-red-600 font-bold">ĐÓNG</td></tr>
+                <tr><td class="border p-1.5 font-mono">13MKF..AA501</td><td class="border p-1.5">Các van xả khí bình & phin lọc</td><td class="border p-1.5 text-center text-green-600 font-bold">MỞ</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        id: 14,
+        title: "Hiện tượng, nguyên nhân, biện pháp xử lý áp lực đầu đẩy bơm dầu thủy lực (EH) giảm?",
+        score: "2.5đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Hiện tượng</h4>
+          <p>Báo động âm thanh phòng điều khiển trung tâm; cảnh báo áp lực đầu đẩy dầu EH thấp &le; 13 MPa (130 bar); bơm dầu EH dự phòng tự động liên động vào làm việc.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">Bảng phân tích nguyên nhân & Biện pháp xử lý</h4>
+          <div class="overflow-x-auto text-xs my-2">
+            <table class="w-full border-collapse border border-slate-300 dark:border-slate-700">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800">
+                  <th class="border border-slate-300 dark:border-slate-700 p-2 text-left">Nguyên nhân</th>
+                  <th class="border border-slate-300 dark:border-slate-700 p-2 text-left">Biện pháp xử lý</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                <tr>
+                  <td class="border p-2 font-semibold">1. Bơm dầu thủy lực EH bị hỏng</td>
+                  <td class="border p-2">Kiểm tra bơm đang chạy, xác nhận bơm dự phòng đã làm việc; cô lập và bàn giao sửa chữa bơm hỏng.</td>
+                </tr>
+                <tr>
+                  <td class="border p-2 font-semibold">2. Van một chiều kẹt/rò, van chặn đóng</td>
+                  <td class="border p-2">Khởi động bơm dự phòng, kiểm tra áp lực; kiểm tra trạng thái mở của van chặn và độ kín van 1 chiều.</td>
+                </tr>
+                <tr>
+                  <td class="border p-2 font-semibold">3. Hư hỏng bình bù áp lực (Tích áp)</td>
+                  <td class="border p-2">Kiểm tra áp suất nạp bóng khí Nitrogen bình tích áp, nạp bổ sung nếu thiếu khí $N_2$.</td>
+                </tr>
+                <tr>
+                  <td class="border p-2 font-semibold">4. Chênh áp phin lọc cao (tắc phin)</td>
+                  <td class="border p-2">Chuyển sang nhánh phin lọc dự phòng và đưa phin bẩn ra vệ sinh/thay lõi lọc.</td>
+                </tr>
+                <tr>
+                  <td class="border p-2 font-semibold">5. Hàm lượng khí trong dầu EH cao</td>
+                  <td class="border p-2">Lấy mẫu phân tích hóa nghiệm dầu thủy lực; tiến hành lọc tách khí hoặc thay dầu mới.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        id: 15,
+        title: "Phương pháp kiểm tra bằng khí Heli để tìm điểm rò rỉ gây giảm chân không bình ngưng?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Nguyên lý thử kín bằng khí Heli</h4>
+          <p>Khí Helium ($He$) là khí trơ, phân tử cực nhỏ, không cháy nổ, khuếch tán nhanh. Lắp đầu hút của <strong>Máy phổ khối Heli</strong> vào đường xả của bơm hút chân không bình ngưng. Khi xịt khí Heli vào các điểm nghi ngờ rò rỉ bên ngoài vùng chân không, nếu vị trí đó bị hở, Heli sẽ bị hút vào trong bình ngưng và theo bơm chân không ra ngoài đầu xả. Máy phổ khối sẽ phát hiện và đo chính xác nồng độ Heli gia tăng, từ đó xác định chính xác vị trí rò rỉ mà không cần dừng tổ máy.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Trình tự thực hiện</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Chuẩn bị giàn giáo tại các điểm cao: khớp nối giãn nở cổ bình ngưng, bích hạ áp, màng an toàn LP.</li>
+            <li>Lắp đầu lấy mẫu vào đường ống xả bơm chân không, kết nối máy phổ khối Heli, bật máy và hiệu chuẩn nền.</li>
+            <li>Xịt khí Heli lần lượt vào từng vị trí nghi ngờ (mối hàn, mặt bích, van xả đọng, cửa người chui, trục van).</li>
+            <li>Chờ thời gian đáp ứng của hệ thống; nếu nồng độ Heli tăng vọt thì vị trí vừa xịt bị rò rỉ. Đánh dấu vị trí.</li>
+            <li>Chờ nồng độ Heli trở về mức nền trước khi xịt kiểm tra vị trí tiếp theo.</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">3. Đánh giá mức độ rò rỉ theo giá trị đo</h4>
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono my-2">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">1x10⁻⁷ ÷ 10x10⁻⁷: <strong>Nhỏ</strong></div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">1x10⁻⁶ ÷ 10x10⁻⁶: <strong>Trung bình</strong></div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">1x10⁻⁵ ÷ 10x10⁻⁵: <strong>Lớn</strong></div>
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded">&gt; 1x10⁻⁴ std.cc/s: <strong>Rất lớn</strong></div>
+          </div>
+        `
+      },
+      {
+        id: 16,
+        title: "Trình tự khởi động hệ thống dầu EH và những chú ý trong quá trình khởi động?",
+        score: "3.0đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Trình tự khởi động</h4>
+          <p class="text-xs text-slate-500 mb-2">Thực hiện khi có lệnh của Trưởng kíp lò máy, Máy trưởng & Máy phó phối hợp:</p>
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Bước 1:</strong> Vận hành bơm làm mát hoặc chạy thanh sấy điện nếu nhiệt độ dầu trong bể chưa nằm trong dải làm việc tiêu chuẩn (<strong>35 ÷ 43℃</strong>).</li>
+            <li><strong>Bước 2:</strong> Máy trưởng kích xác nhận bơm dầu cần chạy trên DCS; Máy phó đứng tại vị trí bơm công trường.</li>
+            <li><strong>Bước 3:</strong> Máy trưởng bấm khởi động bơm, theo dõi dòng điện và áp lực đầu đẩy; Máy phó kiểm tra tại chỗ: tiếng kêu, độ rung, rò rỉ.</li>
+            <li><strong>Bước 4:</strong> Xác nhận thông số bình thường, đưa bơm dầu còn lại về chế độ dự phòng liên động (AUTO).</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Những chú ý quan trọng</h4>
+          <div class="space-y-1.5 text-xs">
+            <p>• <strong>Dừng khẩn cấp bơm dầu EH khi:</strong> Xuất hiện tiếng cọ xát va chạm kim loại trong thân bơm; rung động lớn; có khói phát ra từ ổ đỡ hoặc động cơ.</p>
+            <p>• <strong>Thông số vận hành bình thường:</strong></p>
+            <div class="grid grid-cols-2 gap-2 font-mono p-2 bg-slate-100 dark:bg-slate-800 rounded mt-1">
+              <div>- Áp suất dầu EH: <strong>165 bar</strong></div>
+              <div>- Nhiệt độ dầu: <strong>35 ÷ 43℃</strong></div>
+              <div>- Dòng điện động cơ: <strong>99 ÷ 99.3 A</strong></div>
+              <div>- Mức dầu bể EH: <strong>Bình thường</strong></div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 17,
+        title: "Các bước đưa bình gia nhiệt cao áp (HP Heaters) vào làm việc?",
+        score: "2.5đ",
+        category: "nuoc",
+        categoryName: "Nước cấp - Ngưng",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Đưa phía nước cấp vào làm việc trước</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Khẳng định công việc sửa chữa hoàn tất, van xả cạn đóng, nguồn điện các van sẵn sàng, hệ thống bảo vệ mức nước đã test tốt.</li>
+            <li>Mở van xả khí phía nước của các bình gia nhiệt cao áp.</li>
+            <li>Mở hé van điền nước đường nước cấp để điền đầy nước vào dàn ống các bình gia nhiệt cao áp.</li>
+            <li>Khi nước trào ra liên tục ở các van xả khí thì đóng các van xả khí lại.</li>
+            <li>Mở hoàn toàn van đầu vào và van đầu ra nước cấp của cụm bình gia nhiệt cao áp.</li>
+            <li>Đóng van đi tắt (bypass) nước cấp của bình gia nhiệt cao áp lại. Kiểm tra thông số áp lực nước cấp bình thường.</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Đưa phía hơi trích vào làm việc (Sấy ấm và gia nhiệt)</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Mở van xả đọng đường ống hơi trích và mở van xả khí liên tục của các bình gia nhiệt.</li>
+            <li>Mở van cô lập đường nước ngưng tụ xả khẩn cấp về bình ngưng và đưa van điều chỉnh mức nước vào chế độ Auto.</li>
+            <li>Mở hé van trích hơi theo thứ tự từ bình áp lực thấp đến bình áp lực cao để sấy ấm từ từ với tốc độ tăng nhiệt độ &le; 2 ÷ 3℃/phút tránh sốc nhiệt.</li>
+            <li>Sau khi xả hết nước đọng, mở hoàn toàn van chặn hơi trích, mở van một chiều hơi trích.</li>
+            <li>Khi mức nước ngưng tụ trong bình hình thành bình thường, chuyển đường xả ngưng tụ sang đường xả bình thường (nối tầng) và duy trì mức nước ổn định ở chế độ Tự động.</li>
+            <li>Đưa toàn bộ liên động bảo vệ mức nước cao cấp 1, cấp 2 (Trip bình gia nhiệt) vào làm việc.</li>
+          </ol>
+        `
+      },
+      {
+        id: 18,
+        title: "Các trường hợp cấm khởi động tuabin? Nêu các trường hợp ngừng tuabin không phá hoại chân không?",
+        score: "2.5đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">A. Các trường hợp CẤM KHỞI ĐỘNG TUABIN (Vi phạm 1 trong các điều kiện sau):</h4>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>Tất cả các bộ đo tốc độ tuabin bị hỏng.</li>
+            <li>Thí nghiệm bảo vệ trip tuabin có hạng mục không bình thường.</li>
+            <li>Hệ thống bảo vệ vượt tốc bị hỏng hoặc tốc độ &gt; 3300 v/p khi sa thải phụ tải mà chưa rõ nguyên nhân.</li>
+            <li>Các van MSV, CV, RSV, IV, van 1 chiều thoát xylanh cao áp, van 1 chiều hơi trích vận hành bất thường hoặc đóng không chặt.</li>
+            <li>Mất khả năng đo lường định lượng các thông số chính: áp suất, nhiệt độ hơi chính/tái nhiệt, chân không, áp dầu EH, áp dầu chèn, di trục, tốc độ quay rôto.</li>
+            <li>Bơm dầu AC, DC, thiết bị vần trục vận hành bất thường. Chất lượng hơi, dầu không đạt chuẩn.</li>
+            <li>Bộ vần trục không hoạt động hoặc thời gian vần trục trước khi khởi động &lt; 4h.</li>
+            <li>Có tiếng va chạm kim loại hay tiếng ồn bất thường khi đang vần trục.</li>
+            <li>Độ lệch tâm Rô to &gt; 0,038 mm trong giai đoạn vần trục.</li>
+            <li>Chênh lệch nhiệt độ vách trên/dưới xilanh trong cao - trung áp &gt; 50℃ khi sấy xilanh.</li>
+            <li>Tổ máy vừa bị trip chưa xác định và loại trừ rõ nguyên nhân.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">B. Các trường hợp NGỪNG TUABIN KHÔNG PHÁ HOẠI CHÂN KHÔNG:</h4>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li>Mất khả năng điều khiển tải và tốc độ do lỗi hệ thống điều khiển tuabin.</li>
+            <li>Chân không bình ngưng giảm tới mức bảo vệ (&le; -0,254 bar khi tốc độ &ge; 300 v/p) không khôi phục được sau khi đã giảm tải về 0.</li>
+            <li>Tốc độ quay rôto &gt; 3000 v/p tác động bảo vệ vượt tốc.</li>
+            <li>Nhiệt độ hơi thoát HP &ge; 482,2℃ kéo dài quá 15 phút hoặc vượt quá 510℃.</li>
+            <li>Nhiệt độ hơi thoát LP &ge; 107,2℃.</li>
+            <li>Mức bể dầu bôi trơn tuabin &le; 406,4 mm không thể phục hồi; Áp suất dầu EH &le; 110 bar.</li>
+            <li>Màng an toàn thân tuabin hạ áp tác động mở.</li>
+            <li>Nứt vỡ nghiêm trọng trên đường hơi chính, tái nhiệt, hơi trích, dầu bôi trơn, dầu EH, nước cấp.</li>
+            <li>Áp lực hệ thống khí đo lường &lt; 4 bar; Hư hỏng các đầu dò di trục, cảm biến tốc độ; Phát hiện chất lỏng trong thân máy phát; Hư hỏng hệ thống $H_2$.</li>
+            <li>An toàn tính mạng của người vận hành bị đe dọa.</li>
+          </ul>
+        `
+      },
+      {
+        id: 19,
+        title: "Nhiệm vụ của hệ thống hơi tự dùng và các bước đưa hệ thống hơi tự dùng vào làm việc?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Nhiệm vụ của hệ thống hơi tự dùng</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Cấp hơi cho hệ thống thổi bụi bộ sấy không khí khi khởi động và ngừng lò.</li>
+            <li>Cấp hơi cho bộ sấy không khí bằng hơi (SCAPH) hệ thống gió cấp 1 và cấp 2 (áp lực &lt; 10 bar).</li>
+            <li>Cấp hơi gia nhiệt dầu FO trong quá trình khởi động hoặc đốt kèm (áp lực &lt; 10 bar).</li>
+            <li>Cấp hơi cho hệ thống hơi chèn trục tuabin khi khởi động và dự phòng khi đầy tải.</li>
+            <li>Cấp hơi sấy nóng thân tuabin phục vụ quá trình khởi động tổ máy.</li>
+            <li>Cấp hơi hóa mù dầu đốt lò trong khởi động và vận hành bình thường.</li>
+            <li>Cấp hơi gia nhiệt bình khử khí khi khởi động hoặc khi áp lực hơi trích số 4 &lt; 2 bar.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Các bước đưa hệ thống hơi tự dùng vào làm việc</h4>
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li>Kiểm tra toàn bộ hệ thống đường ống, van xả đọng, giá treo đỡ, đồng hồ đo áp suất, nhiệt độ sẵn sàng.</li>
+            <li>Mở hoàn toàn các van xả đọng trên ống góp hơi tự dùng và các nhánh cấp hơi.</li>
+            <li>Mở van cô lập trước van điều áp hơi tự dùng từ nguồn cấp (từ lò phụ hoặc tổ máy bên cạnh).</li>
+            <li>Mở hé đường đi tắt (bypass) van cấp hơi để sấy ấm đường ống từ từ; giám sát độ giãn nở nhiệt và xả sạch nước đọng.</li>
+            <li>Khi nhiệt độ và áp suất đường ống tăng ổn định, không còn tiếng thủy kích thì mở dần van cấp chính và đưa van điều áp vào vận hành tự động (duy trì áp suất ống góp 10 ÷ 15 bar, nhiệt độ ~300 ÷ 350℃).</li>
+            <li>Đóng các van xả đọng thủ công khi hơi thoát ra khô hoàn toàn; kiểm tra cấp hơi đến các hộ tiêu thụ an toàn.</li>
+          </ol>
+        `
+      },
+      {
+        id: 20,
+        title: "Các trường hợp cấm khởi động tuabin? Các trường hợp ngừng tuabin phá hoại chân không và giải thích nguyên nhân?",
+        score: "2.5đ",
+        category: "tuabin",
+        categoryName: "Tuabin & Dầu",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">A. Các trường hợp ngừng tuabin CÓ PHÁ HOẠI CHÂN KHÔNG:</h4>
+          <ol class="list-decimal pl-5 space-y-1 text-xs">
+            <li>Áp lực dầu bôi trơn tuabin giảm thấp &le; 1,21 bar.</li>
+            <li>Tốc độ quay rôto tăng &gt; 110,5% định mức mà bảo vệ vượt tốc cơ khí không tác động.</li>
+            <li>Cháy dầu bôi trơn/thủy lực mà không dập tắt được ngay.</li>
+            <li>Độ di trục rôto tuabin cao &ge; +0,89 mm hoặc &le; -0,89 mm.</li>
+            <li>Độ rung gối trục tuabin cao &ge; 0,229 mm.</li>
+            <li>Độ chênh giãn nở tương đối giữa các tầng cánh vượt phạm vi: &gt; +14,88 mm hoặc &le; -8,31 mm.</li>
+            <li>Phát hiện tiếng cọ xát, va đập kim loại trong thân Tuabin, Máy phát hoặc tia lửa phát ra từ gối trục.</li>
+            <li>Hiện tượng thủy kích trong đường hơi chính hoặc nhiệt độ hơi giảm đột ngột &ge; 50℃ trong 15 phút.</li>
+            <li>Nhiệt độ dầu hồi từ gối đỡ &gt; 82℃ hoặc có khói bốc ra từ gối trục.</li>
+            <li>Nhiệt độ gối đỡ 1-3 &gt; 127℃; gối 4-8 &gt; 121℃; gối chặn &gt; 105℃.</li>
+            <li>Cháy lớn trong gian Tuabin - Máy phát không khống chế được.</li>
+            <li>Mất toàn bộ nguồn đo lường và bảo vệ Tuabin.</li>
+            <li>Mất nguồn nước tuần hoàn làm mát không có khả năng khôi phục.</li>
+          </ol>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">B. Tại sao phải phá chân không trong các trường hợp này?</h4>
+          <div class="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl text-xs space-y-2 text-red-900 dark:text-red-200">
+            <p><strong>Mục đích cốt lõi:</strong> Phá chân không đưa không khí vào bình ngưng tạo ra môi trường khí đậm đặc để <em>tăng sức cản khí động lên các cánh tuabin hạ áp</em>, giúp <strong>hãm rôto dừng lại nhanh nhất có thể</strong> (rút ngắn thời gian quay theo quán tính từ hàng chục phút xuống vài phút).</p>
+            <p>• <strong>Bảo vệ ổ đỡ:</strong> Khi mất dầu bôi trơn, nhiệt độ gối quá cao hoặc cháy dầu, nếu trục tiếp tục quay sẽ gây nóng chảy babbitt, cháy gối và xước hỏng cổ trục vĩnh viễn.</p>
+            <p>• <strong>Ngăn ngừa phá hủy cánh:</strong> Khi rung lớn, di trục, chênh giãn nở vượt ngưỡng, cọ xát cơ khí hoặc thủy kích, việc dừng nhanh ngăn chặn tình trạng cọ xát dẫn đến gãy cánh hàng loạt, cong trục hoặc nổ vỏ tuabin.</p>
+          </div>
+        `
+      },
+      {
+        id: 21,
+        title: "Nhiệm vụ của hệ thống hơi chèn? Các bước đưa hơi chèn vào làm việc?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">1. Nhiệm vụ của hệ thống hơi chèn trục</h4>
+          <p>Hệ thống hơi chèn trục tuabin có nhiệm vụ: Ngăn chặn hơi có áp lực rò rỉ từ bên trong tuabin cao áp (HP) và trung áp (IP) thoát ra ngoài môi trường; đồng thời ngăn chặn không khí từ ngoài khí quyển lọt vào bên trong tuabin hạ áp (LP) tại khu vực chân không.</p>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-3">2. Các bước đưa hơi chèn vào làm việc</h4>
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li><strong>Kiểm tra điều kiện tiên quyết:</strong> Hệ thống dầu bôi trơn, bơm dầu nâng trục (JOP) và bộ vần trục (Turning gear) đang vận hành bình thường. <em>Tuyệt đối không cấp hơi chèn khi trục tuabin đứng yên!</em></li>
+            <li><strong>Đưa bình ngưng hơi chèn vào làm việc:</strong> Cấp nước tuần hoàn làm mát, mở đường xả ngưng, khởi động quạt hút hơi chèn tạo độ chân không nhẹ trong bình ngưng hơi chèn.</li>
+            <li><strong>Sấy ấm đường ống:</strong> Mở các van xả đọng trên đường hơi chèn, cấp hơi từ từ vào ống góp để sấy ấm đường ống và xả sạch toàn bộ nước đọng.</li>
+            <li><strong>Cấp hơi vào vành chèn trục:</strong> Mở van điều áp hơi chèn, duy trì áp suất ống góp hơi chèn ổn định khoảng <strong>0,28 bar</strong> và nhiệt độ hơi chèn khoảng <strong>250℃</strong> (phù hợp với trạng thái nhiệt xilanh).</li>
+            <li><strong>Kiểm tra hiện trường:</strong> Hơi cấp đều, không có tiếng gõ thủy kích, hai đầu cổ trục không có khói rò hơi bất thường; sẵn sàng tiến hành hút chân không bình ngưng.</li>
+          </ol>
+        `
+      },
+      {
+        id: 22,
+        title: "Vai trò, tác dụng của hệ thống nước làm mát phụ và trình tự kiểm tra, chuẩn bị khởi động?",
+        score: "2.5đ",
+        category: "mayphat",
+        categoryName: "Máy phát & Phụ",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Vai trò, tác dụng của hệ thống nước làm mát phụ (Open Cooling Water)</h4>
+          <p>Hệ thống nước làm mát phụ sử dụng nước nguồn hở (nước biển/nước sông đã qua lọc) để làm mát cho các thiết bị trao đổi nhiệt trung gian quan trọng trong nhà máy:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Lấy nhiệt từ các <strong>Bộ trao đổi nhiệt nước làm mát kín (CCW Heat Exchangers)</strong> để thải nhiệt ra môi trường.</li>
+            <li>Làm mát cho các bình làm mát dầu tuabin, dầu bôi trơn máy phát, dầu thủy lực EH.</li>
+            <li>Làm mát cho các ổ bi, động cơ phụ tải và máy nén khí khi có thiết kế sử dụng trực tiếp nguồn nước phụ.</li>
+            <li>Đảm bảo giữ nhiệt độ của các môi chất kín luôn ở dải nhiệt độ vận hành tối ưu.</li>
+          </ul>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Trình tự kiểm tra, chuẩn bị trước khi khởi động</h4>
+          <ol class="list-decimal pl-5 space-y-1.5">
+            <li>Kiểm tra hoàn tất sửa chữa, khóa phiếu công tác, khu vực sạch sẽ, người đã rút hết.</li>
+            <li>Kiểm tra cửa lấy nước, bể hút nước làm mát phụ đủ mức nước, song chắn rác và lưới chắn rác quay vận hành bình thường không bị nghẹt.</li>
+            <li>Kiểm tra cơ khí cụm bơm nước làm mát phụ: mức dầu bôi trơn gối đỡ, khớp nối, đường nước làm mát ổ bi, tiếp địa động cơ.</li>
+            <li>Kiểm tra và đưa nguồn điện điều khiển, điện động lực, liên động bảo vệ bơm vào sẵn sàng.</li>
+            <li>Mở van đầu hút của bơm cần khởi động; đóng van đầu đẩy của bơm; kiểm tra mở các van trên đường nước làm mát tới các bình trao đổi nhiệt.</li>
+            <li>Mở các van xả khí trên thân bơm và đường ống để điền đầy nước và đuổi hết khí.</li>
+            <li>Báo cáo Máy trưởng / Trưởng kíp sẵn sàng khởi động bơm.</li>
+          </ol>
+        `
+      },
+      {
+        id: 23,
+        title: "Sơ đồ tổng quan, thông số kỹ thuật máy nén khí và vai trò các thiết bị trong máy?",
+        score: "2.5đ",
+        category: "binhngung",
+        categoryName: "Bình ngưng & Khí",
+        content: `
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base">I. Bảng thông số kỹ thuật chính (Máy nén khí Atlas Copco ZR)</h4>
+          <div class="overflow-x-auto text-xs my-2">
+            <table class="w-full border-collapse border border-slate-300 dark:border-slate-700">
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-700 font-mono">
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Lưu lượng định mức</td><td class="border p-1.5 font-bold text-primary-600 dark:text-primary-400">75.1 Nm³/phút</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Công suất điện động cơ</td><td class="border p-1.5 font-bold">630 kW</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Tốc độ quay định mức</td><td class="border p-1.5">1493 v/phút</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Áp suất làm việc định mức / Max</td><td class="border p-1.5 font-bold">9 bar / 10 bar</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Dung lượng dầu bôi trơn</td><td class="border p-1.5">85 Lít</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Nhiệt độ khí đầu ra cấp áp thấp (LP)</td><td class="border p-1.5">160 ÷ 180℃</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Nhiệt độ khí đầu ra cấp áp cao (HP)</td><td class="border p-1.5">140 ÷ 175℃</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Áp suất bộ làm mát trung gian (tải)</td><td class="border p-1.5">1.8 ÷ 2.6 bar</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Nhiệt độ khí đầu ra cuối cùng</td><td class="border p-1.5">~ 25℃</td></tr>
+                <tr><td class="border p-1.5 bg-slate-50 dark:bg-slate-800 font-sans">Nhiệt độ nước làm mát vào / ra</td><td class="border p-1.5">&lt; 40℃ / &lt; 50℃</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-4">II. Vai trò của các thiết bị trong máy nén khí</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs my-2">
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Bộ lọc khí:</strong> Lọc sạch bụi bẩn không khí trước khi vào đầu nén.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Cấp nén áp thấp:</strong> Nén không khí sơ cấp lần 1 lên áp lực trung gian.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Bộ làm mát trung gian:</strong> Giảm nhiệt độ khí sau cấp 1 trước khi sang cấp 2 để tiết kiệm công nén.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Cấp nén áp cao:</strong> Nén không khí lần 2 đạt tới áp suất làm việc định mức.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Bộ làm mát cuối:</strong> Làm mát khí nén đầu ra đưa về nhiệt độ môi trường.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Bẫy nước (Tách nước):</strong> Tách và tự động xả nước ngưng đọng ra khỏi khí nén.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Elektronikon:</strong> Hệ thống vi xử lý giám sát, điều khiển tải/không tải và bảo vệ.</div>
+            <div class="p-2 border border-slate-200 dark:border-slate-800 rounded-lg"><strong>Van an toàn:</strong> Tự động xả áp khi áp lực vượt quá giới hạn thiết kế.</div>
+          </div>
+        `
+      }
+    ];
+
+    // TRẠNG THÁI TOÀN CỤC
+    let activeFilter = 'all';
+    let activeSearch = '';
+    let currentQIndex = 0;
+
+    // KHỞI ĐỘNG KHI TẢI TRANG
+    document.addEventListener('DOMContentLoaded', () => {
+      // Nhận diện Theme đã lưu
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun');
+      }
+
+      // Xử lý nút Back của điện thoại / Trình duyệt (History API)
+      window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.page === 'reader') {
+          renderReaderPage(e.state.qId, false);
+        } else {
+          renderCatalogPage(false);
+        }
+      });
+
+      renderCatalog();
+    });
+
+    // ĐỔI GIAO DIỆN SÁNG / TỐI
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const icon = document.getElementById('themeIcon');
+      if (isDark) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    // HIỂN THỊ DANH MỤC CÂU HỎI Ở NGOÀI TRANG CHỦ
+    function renderCatalog() {
+      const catalogEl = document.getElementById('catalogList');
+      const filtered = examQuestions.filter(item => {
+        const matchCategory = (activeFilter === 'all') || (item.category === activeFilter);
+        const matchSearch = activeSearch === '' || 
+          item.title.toLowerCase().includes(activeSearch) ||
+          item.id.toString() === activeSearch ||
+          item.content.toLowerCase().includes(activeSearch);
+        return matchCategory && matchSearch;
+      });
+
+      document.getElementById('labelTotalVisible').innerText = `Hiển thị ${filtered.length} / 23 câu hỏi`;
+
+      if (filtered.length === 0) {
+        catalogEl.innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="fa-solid fa-file-circle-question text-3xl mb-2 opacity-60"></i>
+            <p class="text-xs">Không tìm thấy câu hỏi phù hợp.</p>
+            <button onclick="resetSearch()" class="mt-2.5 px-3 py-1.5 text-xs font-bold bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-300 rounded-lg">Xóa tìm kiếm</button>
+          </div>
+        `;
+        return;
+      }
+
+      catalogEl.innerHTML = filtered.map(item => `
+        <div 
+          onclick="openReader(${item.id})"
+          class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer active:scale-[0.99] transition-all flex items-start gap-3"
+        >
+          <div class="shrink-0 w-7 h-7 rounded-lg bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 font-bold text-xs flex items-center justify-center border border-primary-200/50 dark:border-primary-800/50">
+            ${item.id}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${item.categoryName}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">${item.score}</span>
+            </div>
+            <h3 class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
+              ${item.title}
+            </h3>
+          </div>
+          <div class="shrink-0 self-center text-slate-300 dark:text-slate-600 text-xs">
+            <i class="fa-solid fa-chevron-right"></i>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // CHỌN CHUYÊN ĐỀ
+    function selectCategory(catKey, btn) {
+      activeFilter = catKey;
+      document.querySelectorAll('.cat-pill').forEach(pill => {
+        pill.classList.remove('active-pill', 'bg-primary-600', 'text-white', 'border-primary-600');
+        pill.classList.add('border-slate-200', 'dark:border-slate-800', 'bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300');
+      });
+      btn.classList.add('active-pill', 'bg-primary-600', 'text-white', 'border-primary-600');
+      btn.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300');
+      renderCatalog();
+    }
+
+    // TÌM KIẾM
+    function filterQuestions() {
+      const term = document.getElementById('searchBox').value.trim().toLowerCase();
+      activeSearch = term;
+      document.getElementById('btnResetSearch').classList.toggle('hidden', term === '');
+      renderCatalog();
+    }
+
+    function resetSearch() {
+      document.getElementById('searchBox').value = '';
+      activeSearch = '';
+      document.getElementById('btnResetSearch').classList.add('hidden');
+      renderCatalog();
+    }
+
+    // MỞ TRANG ĐỌC ĐÁP ÁN (MỞ TRANG MỚI TRONG CÙNG FILE)
+    function openReader(qId) {
+      history.pushState({ page: 'reader', qId: qId }, '', `#cau-${qId}`);
+      renderReaderPage(qId, false);
+    }
+
+    function renderReaderPage(qId, isReplace) {
+      const question = examQuestions.find(q => q.id === qId);
+      if (!question) return;
+
+      currentQIndex = examQuestions.findIndex(q => q.id === qId);
+
+      // Điền dữ liệu vào trang đọc
+      document.getElementById('detailIndexTag').innerText = question.id;
+      document.getElementById('detailQuestionTitle').innerText = `Câu ${question.id}: ${question.title}`;
+      document.getElementById('detailScoreBadge').innerText = question.score;
+      document.getElementById('detailCatBadge').innerText = question.categoryName;
+      document.getElementById('detailAnswerBody').innerHTML = question.content;
+
+      // Cập nhật trạng thái nút chuyển câu trước/sau
+      document.getElementById('btnPrevQuestion').disabled = currentQIndex === 0;
+      document.getElementById('btnPrevQuestion').classList.toggle('opacity-40', currentQIndex === 0);
+      document.getElementById('btnNextQuestion').disabled = currentQIndex === examQuestions.length - 1;
+      document.getElementById('btnNextQuestion').classList.toggle('opacity-40', currentQIndex === examQuestions.length - 1);
+
+      // Ẩn danh mục, mở view đọc
+      document.getElementById('viewCatalog').classList.add('hidden');
+      document.getElementById('viewReader').classList.remove('hidden');
+
+      // Đổi header sang trạng thái có nút Home & Back
+      document.getElementById('btnHome').classList.remove('hidden');
+      document.getElementById('btnBack').classList.remove('hidden');
+      document.getElementById('homeBrand').classList.add('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // QUAY VỀ TRANG HOME DANH MỤC
+    function goHome() {
+      history.pushState({ page: 'home' }, '', window.location.pathname);
+      renderCatalogPage(false);
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    function renderCatalogPage() {
+      document.getElementById('viewReader').classList.add('hidden');
+      document.getElementById('viewCatalog').classList.remove('hidden');
+
+      // Khôi phục header danh mục
+      document.getElementById('btnHome').classList.add('hidden');
+      document.getElementById('btnBack').classList.add('hidden');
+      document.getElementById('homeBrand').classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // CHUYỂN NHANH CÂU TRƯỚC / CÂU TIẾP THEO
+    function stepQuestion(direction) {
+      const targetIndex = currentQIndex + direction;
+      if (targetIndex >= 0 && targetIndex < examQuestions.length) {
+        currentQIndex = targetIndex;
+        const targetQ = examQuestions[targetIndex];
+        history.replaceState({ page: 'reader', qId: targetQ.id }, '', `#cau-${targetQ.id}`);
+        renderReaderPage(targetQ.id, true);
+      }
+    }
+
+    // SAO CHÉP ĐÁP ÁN
+    function copyAnswer() {
+      const q = examQuestions[currentQIndex];
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = q.content;
+      const copyContent = `CÂU HỎI ${q.id}: ${q.title}\n\nĐÁP ÁN:\n${tempDiv.innerText}`;
+
+      navigator.clipboard.writeText(copyContent).then(() => {
+        showToast("Đã sao chép đáp án vào bộ nhớ!");
+      }).catch(() => {
+        showToast("Không thể sao chép");
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
