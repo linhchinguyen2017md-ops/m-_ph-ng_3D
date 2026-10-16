@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mô phỏng 3D Tuabin hơi – Nhiệt điện Mông Dương 1</title>
+<style>
+:root{color-scheme:light;--bg:#dfeaf6;--pn:rgba(255,255,255,.9);--bd:#b9cadb;--tx:#12263d;--mu:#5c7893;--ac:#e0690a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:radial-gradient(ellipse at 50% 20%,#f6faff,var(--bg) 75%);color:var(--tx);font:13px/1.45 "Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.p{position:absolute;background:var(--pn);border:1px solid var(--bd);border-left:3px solid var(--ac);padding:10px 12px;backdrop-filter:blur(6px)}
+#t{top:calc(10px + env(safe-area-inset-top,0px));left:10px;max-width:300px}
+#t h1{font-size:15px;margin:0 0 4px;letter-spacing:.3px}#t small{color:var(--mu)}
+#t b{color:var(--ac)}
+#c{top:calc(10px + env(safe-area-inset-top,0px));right:10px;width:230px;max-height:calc(100% - 30px);overflow:auto}
+#c h2,#i h2{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mu);margin:8px 0 5px}#c h2:first-child{margin-top:0}
+button,select{width:100%;margin:2px 0;padding:6px 8px;background:#f2f6fb;color:var(--tx);border:1px solid var(--bd);border-radius:0;font:inherit;text-align:left;cursor:pointer}
+button:hover{border-color:var(--ac)}button.on{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+#i{left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:340px;max-width:calc(100% - 20px)}
+#i h2{margin:0 0 4px;color:var(--ac)}#in{font-size:14px;font-weight:600;margin-bottom:3px}
+@media(max-width:700px){#c{top:auto;right:0;left:0;bottom:0;width:auto;max-height:34%;border-left-width:1px}#i{bottom:auto;top:calc(80px + env(safe-area-inset-top,0px));width:auto;right:10px}#t{max-width:none;right:10px}#t small{display:none}}
+</style></head><body>
+<div class="p" id="t"><h1>TUABIN HƠI – MÔNG DƯƠNG 1</h1><small>Doosan · <b>540 MW</b> · 3.000 v/ph · HIP + 2×LP (4 dòng thoát) · cánh L-0 3.639 mm · 0,0711 bar(a)</small></div>
+<div class="p" id="c"><h2>Tháo lắp</h2><div id="b"></div><h2>Hiển thị</h2><div id="v"></div><h2>Chọn chi tiết</h2><select id="s"></select></div>
+<div class="p" id="i"><h2>Thông tin chi tiết</h2><div id="in">Nhấp vào chi tiết bất kỳ</div><div id="id" style="color:var(--mu)">Kéo để xoay · cuộn để phóng to · dùng nút bên phải để tháo rời từng cụm thiết bị.</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const T=THREE,V=(x,y,z)=>new T.Vector3(x,y,z),PI=Math.PI;
+const sc=new T.Scene(),cam=new T.PerspectiveCamera(40,1,.1,300),ren=new T.WebGLRenderer({antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));document.body.prepend(ren.domElement);
+sc.add(new T.HemisphereLight(0xffffff,0x9db4c9,1.2));
+const dl=new T.DirectionalLight(0xffffff,1.1);dl.position.set(10,25,18);sc.add(dl);
+const dl2=new T.DirectionalLight(0xdcecff,.7);dl2.position.set(-15,5,-20);sc.add(dl2);
+const gr=new T.GridHelper(80,80,0xaebfd0,0xcfdae6);gr.position.set(5.5,-11.5,0);sc.add(gr);
+const M=(c,m=.85,r=.38)=>new T.MeshStandardMaterial({color:c,metalness:m,roughness:r,side:T.DoubleSide});
+const mesh=(g,m,x=0,y=0,z=0)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);return o};
+const bx=(w,h,d,x,y,z,m)=>mesh(new T.BoxGeometry(w,h,d),m,x,y,z);
+const cy=(r,l,x,y,z,m,ax='x')=>{const g=new T.CylinderGeometry(r,r,l,40);if(ax=='x')g.rotateZ(PI/2);if(ax=='z')g.rotateX(PI/2);return mesh(g,m,x,y,z)};
+const pipe=(g,a,b,r,m)=>{const d=b.clone().sub(a),o=mesh(new T.CylinderGeometry(r,r,d.length(),32),m);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());g.add(o);g.add(mesh(new T.SphereGeometry(r,24,16),m,a.x,a.y,a.z))};
+function shell(x0,x1,r,top,m){const g=new T.Group(),L=x1-x0,cx=(x0+x1)/2,s=top?1:-1;
+ const c=new T.CylinderGeometry(r,r,L,64,1,true,top?0:PI,PI);c.rotateZ(PI/2);g.add(mesh(c,m,cx,0,0));
+ for(const sd of[-1,1])g.add(bx(L,.14,.4,cx,s*.07,sd*(r+.12),m));
+ for(const e of[x0,x1]){const d=new T.CircleGeometry(r,48,top?0:PI,PI);d.rotateY(PI/2);g.add(mesh(d,m,e,0,0))}
+ return g}
+function blades(g,x,r0,len,n,m){const im=new T.InstancedMesh(new T.BoxGeometry(.12,len,.05),m,n),o=new T.Object3D();
+ for(let i=0;i<n;i++){const a=i/n*PI*2,rr=r0+len/2;o.position.set(x,Math.cos(a)*rr,Math.sin(a)*rr);o.rotation.set(a,0,0);o.updateMatrix();im.setMatrixAt(i,o.matrix)}
+ g.add(im);g.add(cy(r0,.1,x,0,0,m))}
+const parts=[],lineM=new T.LineBasicMaterial({color:0x1c2b3b,transparent:true,opacity:.35}),pick=[];
+function mk(name,cat,info,g,off=[0,0,0],o={}){const p={name,cat,info,g,off:V(...off),spin:o.spin,shell:o.shell,mats:[]};
+ g.traverse(m=>{if(m.isMesh){m.material=m.material.clone();p.mats.push(m.material);m.userData.p=parts.length;pick.push(m);
+  if(!m.isInstancedMesh)m.add(new T.LineSegments(new T.EdgesGeometry(m.geometry,35),lineM))}});
+ if(o.shell)p.mats.forEach(m=>{m.userData.o=o.op||.22});
+ sc.add(g);parts.push(p);return p}
+/* ---- vỏ thân ---- */
+const CS=0x6c7d8e;
+const hip=(top)=>{const g=new T.Group();g.add(shell(-8.2,-5,1.25,top,M(CS,.7,.5)),shell(-5,-2.2,1.65,top,M(CS,.7,.5)));return g};
+const lp=(a,b,top)=>shell(a,b,2.2,top,M(CS,.7,.5));
+mk('Thân HIP – nửa trên (nắp)','cover','Thân cao–trung áp kết hợp trên một rotor chung. Phần cao áp 2 lớp vỏ (vỏ trong/ngoài) giảm chênh áp và ứng suất nhiệt. Dòng hơi HP và IP chảy ngược chiều để tự cân bằng lực đẩy dọc trục.',hip(1),[0,5.2,0],{shell:1});
+mk('Thân HIP – nửa dưới','low','Nửa dưới thân HIP đặt trên bệ, chứa các cửa trích hơi số 1–4 và đường tái nhiệt lạnh (CRH) thoát ra từ phần cao áp.',hip(0),[0,0,0],{shell:1});
+mk('Thân hạ áp LP-A – nửa trên','cover','Xi lanh hạ áp dòng kép đối xứng (2×7 tầng). Hơi vào chính giữa rồi rẽ hai phía xuống bình ngưng; tự triệt tiêu toàn bộ lực dọc trục.',lp(.8,5.6,1),[0,5.2,0],{shell:1});
+mk('Thân hạ áp LP-A – nửa dưới','low','Nửa dưới LP-A, liên kết cổ thoát xuống bình ngưng A. Có các cửa trích số 5–8 cấp hơi cho bình gia nhiệt hạ áp.',lp(.8,5.6,0),[0,0,0],{shell:1});
+mk('Thân hạ áp LP-B – nửa trên','cover','Xi lanh hạ áp thứ hai (LP-B), kết cấu giống LP-A, đặt nối tiếp trên cùng trục.',lp(7.2,12,1),[0,5.2,0],{shell:1});
+mk('Thân hạ áp LP-B – nửa dưới','low','Nửa dưới LP-B, thoát hơi xuống bình ngưng B. Tổng cộng 4 dòng thoát hơi hạ áp.',lp(7.2,12,0),[0,0,0],{shell:1});
+/* ---- rotor ---- */
+const rm=()=>M(0xbdc8d2,.95,.28);
+let g=new T.Group();g.add(cy(.38,9,-5.9,0,0,rm()),cy(.7,.25,-1.45,0,0,rm()),cy(.9,.15,-10,0,0,rm()));
+for(let i=0;i<9;i++)blades(g,-8+i*.35,.55,.2+i*.03,36,rm());
+for(let i=0;i<7;i++)blades(g,-4.8+i*.34,.62,.38+i*.07,36,rm());
+mk('Rotor HIP (1 tầng điều chỉnh + 8 tầng áp lực HP, 7 tầng IP)','rotor','Rotor chung cao–trung áp: tầng điều chỉnh (Impulse) + 8 tầng áp lực phần HP, 7 tầng áp lực phần IP. Đĩa chặn ở đầu trục tì vào gối chặn.',g,[0,2.6,0],{spin:1});
+const lpR=(cx,xa,xb,n)=>{const g=new T.Group();g.add(cy(.45,xb-xa,(xa+xb)/2,0,0,rm()),cy(.7,.5,cx,0,0,rm()));
+ for(const s of[-1,1])for(let i=0;i<7;i++)blades(g,cx+s*(.4+i*.33),.6,.35+i*.17,42,rm());
+ g.add(cy(.7,.25,xa+.1,0,0,rm()),cy(.7,.25,xb-.1,0,0,rm()));return g};
+mk('Rotor hạ áp LP-A (2×7 tầng)','rotor','Rotor dòng kép đối xứng, cánh dài dần theo chiều giãn nở của hơi. Cánh tầng cuối làm việc trong hơi ẩm cao.',lpR(3.2,-1.4,6.4),[0,2.6,0],{spin:1});
+mk('Rotor hạ áp LP-B (2×7 tầng)','rotor','Cánh cuối L-0 dài 3.639 mm; mép cánh bọc hợp kim Stellite (hàn đồng) chống xói mòn giọt nước.',lpR(9.6,6.4,13.3),[0,2.6,0],{spin:1});
+/* ---- gối đỡ ---- */
+const bp=[[-8.7,1],[-1.8,1],[0.2,1],[6.4,0],[12.5,0],[13.1,0]];
+bp.forEach(([x,t],i)=>{const c=t?0xc8a24a:0x5d9a8a,tx=t?'Gối tự lựa đa đệm (Tilting Pad) – dập dao động màng dầu oil whip/swirl, phù hợp vùng cao–trung áp nhiệt độ cao, giãn nở lớn.':'Gối biên dạng Elip (Elliptical) – ổn định cơ học cao, dùng ở vùng hạ áp.';
+ let a=new T.Group();a.add(bx(.9,.7,1.2,x,-.9,0,M(c,.6,.45)),bx(.9,1.4,1,x,-2.2,0,M(0x3a4654,.5,.6)));mk('Gối đỡ #'+(i+1)+' – thân dưới','static',tx,a);
+ let b=new T.Group();b.add(bx(.9,.55,1.2,x,.2,0,M(c,.6,.45)));mk('Gối đỡ #'+(i+1)+' – nắp trên','bearing',tx,b,[0,4.2,0])});
+g=new T.Group();g.add(bx(.9,1.4,1.5,-10.2,-.3,0,M(0xc8a24a,.6,.45)),bx(.9,.9,1.5,-10.2,.95,0,M(0x3a4654,.5,.6)));
+mk('Gối chặn (Thrust Bearing)','bearing','Đặt độc lập ở đầu tuabin, trước gối #1. Tấm đệm chặn tráng babbit mặt đệm đồng tăng tản nhiệt, giữ vị trí dọc trục và chịu lực dọc trục dư ở chế độ chuyển tiếp.',g,[-2.5,2.5,0]);
+/* ---- van ---- */
+const vb=0x2f6fa8;
+for(const sd of[-1,1]){const n=sd>0?'(phải)':'(trái)';
+ let g=new T.Group();g.add(cy(.45,1.8,-7.6,.2,sd*2.6,M(vb,.6,.4),'y'),cy(.25,1.2,-7.6,1.7,sd*2.6,M(0x8a97a5),'y'),cy(.22,1.5,-7.6,.2,sd*1.85,M(vb),'z'));
+ for(const x of[-6.3,-5.3])g.add(cy(.3,1.2,x,.2,sd*2.25,M(vb,.6,.4),'y'),cy(.17,1.1,x,.2,sd*1.8,M(vb),'z'),cy(.18,.9,x,1.45,sd*2.25,M(0x8a97a5),'y'));
+ mk('Van Stop chính (MSV) + van điều chỉnh (CV) '+n,'valve','Tổng 2 van MSV (ngắt nhanh khi sự cố) và 4 van CV (điều chỉnh lưu lượng theo phụ tải). Cơ cấu chấp hành là xi lanh servo dầu EH (Phosphate Ester) 110–140 bar.',g,[0,1.8,sd*3.2]);
+ g=new T.Group();for(const x of[-4.3,-3.4])g.add(cy(.5,1.4,x,.2,sd*3.0,M(vb,.6,.4),'y'),cy(.3,1,x,1.4,sd*3.0,M(0x8a97a5),'y'),cy(.25,1.8,x,.2,sd*2.1,M(vb),'z'));
+ mk('Van liên hợp tái nhiệt RSV/IV '+n,'valve','Cặp van chặn tái nhiệt (RSV) và van điều chỉnh tái nhiệt (IV) gắn liền thân, đặt trước cửa vào tuabin trung áp; nhận hơi HRH trở về từ lò.',g,[0,1.8,sd*3.6])}
+/* ---- ống liên thông ---- */
+g=new T.Group();const pm=M(0x9aa7b4,.8,.4),P=[V(-2.4,1.6,0),V(-2.4,3.4,0),V(3.2,3.4,0),V(3.2,2.3,0)];
+pipe(g,P[0],P[1],.45,pm);pipe(g,P[1],P[2],.45,pm);pipe(g,P[2],P[3],.45,pm);pipe(g,V(3.2,3.4,0),V(9.6,3.4,0),.45,pm);pipe(g,V(9.6,3.4,0),V(9.6,2.3,0),.45,pm);
+for(const x of[-.5,1,6,8])g.add(cy(.56,.25,x,3.4,0,M(0xc8a24a,.6,.4)));
+mk('Ống liên thông (Crossover Pipe)','pipe','Dẫn hơi thoát IP chia 2 nhánh sang LP-A và LP-B. Có cánh hướng dòng uốn mềm giảm tổn thất áp suất và bù giãn nở nhiệt (các vòng bù trên ống).',g,[0,5.5,0]);
+/* ---- cửa trích ---- */
+const ex=[[-6.4,1.25,'Tầng 5 xi lanh HP → bình gia nhiệt cao áp #8'],[-5.4,1.25,'Đường tái nhiệt lạnh (CRH) → bình gia nhiệt cao áp #7'],[-3.6,1.65,'Tầng 7 xi lanh IP → bình gia nhiệt cao áp #6'],[-2.5,1.65,'Cuối xi lanh IP (IP exhaust) → bình khử khí'],[2.47,2.2,'Tầng 2 LP → bình gia nhiệt hạ áp #4'],[1.81,2.2,'Tầng 4 LP → bình gia nhiệt hạ áp #3'],[1.48,2.2,'Tầng 5 LP → bình gia nhiệt hạ áp #2'],[1.15,2.2,'Tầng 6 LP → bình gia nhiệt hạ áp #1 (2 nửa bình ở cổ bình ngưng)']];
+ex.forEach(([x,r,t],i)=>{const g=new T.Group();g.add(cy(.15,1.4,x,-.6,r+.6,M(0xd0592f,.5,.45),'z'),cy(.24,.12,x,-.6,r+1.3,M(0xd0592f),'z'));mk('Cửa trích hơi số '+(i+1),'extract',t,g,[0,-1.2,2.5])});
+/* ---- chèn hơi ---- */
+[[-8.3,-1],[-2.1,1],[.7,-1],[5.7,1],[7.1,-1],[12.1,1]].forEach(([x,s],i)=>{const g=new T.Group();g.add(cy(.75,.35,x,0,0,M(0xd9b44a,.7,.35)));mk('Hộp chèn hơi trục #'+(i+1),'gland','Chèn kín khe hở trục: đầu HIP ngăn hơi áp cao rò ra gian máy; đầu LP ngăn không khí lọt vào phá chân không. Trên 70% tải chuyển sang tự chèn; hơi–khí rò được quạt hút về bình ngưng hơi chèn.',g,[s*.9,0,0])});
+/* ---- bình ngưng, vần trục, máy phát ---- */
+/* ---- bình ngưng chi tiết (A, B) ---- */
+const Lc=8.4,Wc=5.2,Y0=-7.1,Y1=-4.1,YM=(Y0+Y1)/2,sub=(...a)=>{const g=new T.Group();g.add(...a);return g};
+const tb=(w,h,d,sx,sz)=>{const g=new T.BoxGeometry(w,h,d),p=g.attributes.position;for(let i=0;i<p.count;i++)if(p.getY(i)<0){p.setX(i,p.getX(i)*sx);p.setZ(i,p.getZ(i)*sz)}g.computeVertexNormals();return g};
+const plate=(w,d,hw,hd,t)=>{const s=new T.Shape();s.moveTo(-w/2,-d/2);s.lineTo(w/2,-d/2);s.lineTo(w/2,d/2);s.lineTo(-w/2,d/2);const h=new T.Path();h.moveTo(-hw/2,-hd/2);h.lineTo(-hw/2,hd/2);h.lineTo(hw/2,hd/2);h.lineTo(hw/2,-hd/2);s.holes.push(h);const g=new T.ExtrudeGeometry(s,{depth:t,bevelEnabled:false});g.rotateX(-PI/2);return g};
+const ghost=p=>p.mats.forEach(m=>{m.transparent=true;m.opacity=.28;m.depthWrite=false});
+const CSh=()=>M(0xc3d3e3,.55,.4),SH=()=>M(0x8095ab,.85,.32);
+[[3.2,'A'],[9.6,'B']].forEach(([cx,n])=>{
+ for(const s of[1,-1])mk('Bình ngưng '+n+' – vách bên '+(s>0?'(+X)':'(−X)'),'cshell','Vách thép carbon của thân bình ngưng, chịu chân không; hai đầu là mặt sàng giữ chùm ống Titan.',sub(bx(.14,Y1-Y0,Lc,cx+s*Wc/2,YM,0,CSh())),[s*3.4,0,0],{shell:1});
+ mk('Bình ngưng '+n+' – giếng nước ngưng (hotwell)','cshell','Giếng gom nước ngưng dạng thu hẹp đáy; hai bình A và B thông nhau bằng ống cân bằng nước.',sub(mesh(tb(Wc,1.3,Lc,.45,.5),M(0xa8bdd2,.62,.42),cx,Y0-.65,0)),[0,-2.5,0],{shell:1});
+ const top=mesh(plate(Wc,Lc,4.2,3.8,.12),CSh(),cx,Y1,0),neck=mesh(tb(4.6,1.9,4.4,.913,.864),M(0xcfdcea,.55,.38),cx,-3.15,0);
+ ghost(mk('Bình ngưng '+n+' – cổ & tấm đỉnh','static','Cổ bình ngưng nối cửa thoát hơi của thân LP với thân bình; bên trong đặt hai nửa bình gia nhiệt hạ áp #1 và #2 (hiển thị trong suốt).',sub(top,neck)));
+ let g=new T.Group();const rows=12,cols=9,im=new T.InstancedMesh(new T.CylinderGeometry(.04,.04,Lc-.3,8).rotateX(PI/2),M(0xd9cba8,.92,.2),rows*cols*2),mt=new T.Matrix4();let q=0;
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)for(const s of[1,-1]){mt.makeTranslation(cx+s*(.35+c*.26),Y0+.45+r*2/11,0);im.setMatrixAt(q++,mt)}
+ g.add(im,bx(Wc-.1,Y1-Y0-.2,.16,cx,YM,Lc/2-.1,SH()),bx(Wc-.1,Y1-Y0-.2,.16,cx,YM,-Lc/2+.1,SH()));
+ mk('Bình ngưng '+n+' – chùm ống Titan','ctube','Chùm ống Titan chia hai khối, giữa là đường dẫn hơi/khí. Nước tuần hoàn chạy trong ống, hơi thoát LP ngưng bên ngoài ống; hai mặt sàng giữ ống.',g,[0,0,5]);
+ g=new T.Group();const pm=()=>M(0x6d8299,.7,.48);
+ for(const z of[-3.2,-1.6,0,1.6,3.2]){const b=bx(Wc-.4,Y1-Y0-.5,.05,cx,YM,z,pm());g.add(b)}
+ g.add(bx(1.6,.06,6,cx,Y1-.35,0,M(0x8fa3ba,.6,.5)),cy(.17,6.8,cx,Y1-.15,0,M(0xf472b6,.6,.32),'z'),cy(.14,8.8,cx,-5.6,0,M(0x34d399,.6,.34),'z'));
+ for(let i=-3;i<=3;i++)g.add(mesh(new T.ConeGeometry(.08,.26,8),M(0xf472b6),cx,Y1+.05,i*.9));
+ g.children.slice(0,5).forEach(m=>{m.material.transparent=true;m.material.opacity=.4});
+ mk('Bình ngưng '+n+' – chi tiết trong (vách đỡ, tấm chống va đập, ống bypass, ống hút khí)','cint','5 vách đỡ ống; tấm chống va đập (impingement baffle) bảo vệ chùm ống; ống xả bypass LP có vòi phun (hồng); ống hút khí không ngưng (xanh lá).',g,[0,0,-5]);
+ const wb=()=>M(0xff8a4c,.42,.42);
+ mk('Bình ngưng '+n+' – hộp nước vào/ra','cwb','Hộp nước tuần hoàn phía vào/ra, có vách chia dọc: nước vào nửa dưới, qua ống, đảo chiều rồi ra nửa trên. Có hai cổ nối ống nước.',sub(bx(Wc+.3,Y1-Y0+.2,.9,cx,-5.6,Lc/2+.55,wb()),bx(.06,Y1-Y0+.2,.9,cx,-5.6,Lc/2+.55,M(0xff6b35)),bx(Wc+.5,Y1-Y0+.4,.14,cx,-5.6,Lc/2+.12,SH()),cy(.38,.8,cx-1.2,-5.6,Lc/2+1.3,wb(),'z'),cy(.38,.8,cx+1.2,-5.6,Lc/2+1.3,wb(),'z')),[0,0,9]);
+ mk('Bình ngưng '+n+' – hộp nước đảo chiều','cwb','Hộp nước đảo chiều (reversing) ở đầu đối diện, đưa nước từ nhóm ống này sang nhóm ống ngược chiều.',sub(bx(Wc+.3,Y1-Y0+.2,.9,cx,-5.6,-Lc/2-.55,wb()),bx(Wc+.5,Y1-Y0+.4,.14,cx,-5.6,-Lc/2-.12,SH())),[0,0,-8]);
+ for(const [k,r,y,col,s] of[[1,.3,-3.65,0x4ade80,5.5],[2,.26,-2.85,0x38bdf8,-5.5]])mk('Bình gia nhiệt hạ áp #'+k+' (cổ bình ngưng '+n+')','cneck','Bình gia nhiệt hạ áp #'+k+': gồm 2 nửa bình đặt tại cổ bình ngưng, hơi trích từ tầng cuối tuabin hạ áp.',sub(cy(r,3.8,cx-.85,y,0,M(col,.55,.32),'z'),cy(r,3.8,cx+.85,y,0,M(col,.55,.32),'z')),[0,0,s]);
+});
+mk('Ống cân bằng nước (hotwell A–B)','cshell','Nối hai giếng nước ngưng để cân bằng mức giữa bình ngưng A và B.',sub(cy(.3,5,6.4,-7.8,0,M(0xa78bfa,.6,.34))),[0,-2.5,0]);
+/* ---- bình gia nhiệt (ống U, vách chữ Z) ---- */
+class UC extends T.Curve{constructor(x0,L,y,z){super();Object.assign(this,{x0,L,y,z,br:Math.abs(y)});this.tot=2*L+PI*this.br}
+ getPoint(t,o=new T.Vector3()){const s=t*this.tot,a=PI*this.br,xb=this.x0+this.L;if(s<this.L)return o.set(this.x0+s,this.y,this.z);if(s<this.L+a){const h=PI/2-(s-this.L)/this.br;return o.set(xb+this.br*Math.cos(h),this.br*Math.sin(h),this.z)}return o.set(xb-(s-this.L-a),-this.y,this.z)}}
+const tpos=(R,n)=>{const out=[],mr=.78*R,sp=Math.sqrt(PI*mr*mr*.52/n),nz=2*mr/sp+3;for(let i=0;i<mr/(sp*.866)+2;i++)for(let j=0;j<nz;j++){const y=i*sp*.866+sp*.25,z=(j-nz/2)*sp+(i%2)*sp*.5;if(Math.hypot(y,z)<=mr&&y>.1*R)out.push([y,z])}const st=out.length/n;return out.length>n?Array.from({length:n},(_,k)=>out[Math.floor(k*st)]):out};
+const oc=(r,l,x0,m,ts,tl)=>{const g=new T.CylinderGeometry(r,r,l,48,1,true,ts,tl);g.rotateZ(-PI/2);return mesh(g,m,x0+l/2,0,0)};
+const dm=(r,x,sx,ph,pl,m,rz)=>{const g=new T.SphereGeometry(r,32,16,ph,pl,0,PI/2);g.rotateZ(rz);g.scale(sx,1,1);return mesh(g,m,x,0,0)};
+const ZN={'Desuperheating':'làm nguội hơi quá nhiệt','Condensing':'ngưng tụ','Drain Cooling':'làm mát nước đọng'};
+const FW=[['LP3','13LCC30AC001',1524,10160,1373,1421.3,3.6,2.86,123.8,5,['Condensing','Drain Cooling'],'Cửa trích số 6 (tầng 4 LP) – bình gia nhiệt hạ áp #3',2],
+['LP4','13LCC40AC001',1422,9373,1297,1238,7,5.91,280.8,5,['Desuperheating','Condensing','Drain Cooling'],'Cửa trích số 5 (tầng 2 LP) – bình gia nhiệt hạ áp #4',1],
+['HP6','13LAD10AC001',1854,9906,1924,1916.4,22,18.08,214.5,7,['Desuperheating','Condensing','Drain Cooling'],'Cửa trích số 3 (tầng 7 IP) – bình gia nhiệt cao áp #6',1],
+['HP7','13LAD20AC001',1880,10312,2081,2155.3,54,43.3,343.2,7,['Desuperheating','Condensing','Drain Cooling'],'Cửa trích số 2 (CRH) – bình gia nhiệt cao áp #7',1],
+['HP8','13LAD30AC001',1727,9246,2051,1909,91,73.67,289.3,7,['Desuperheating','Condensing','Drain Cooling'],'Cửa trích số 1 (tầng 5 HP) – bình gia nhiệt cao áp #8',1]];
+FW.forEach(([nm,kks,ID,len,nt,sf,dP,oP,oT,nb,zo,src,ns],i)=>{
+ const R=ID/2000,L=len/1000,k=.6,chL=R*.95,chR=R*1.02,sm=()=>M(0x9fb2c6,.72,.4),fl=()=>M(0x8397aa,.82,.34);
+ const G=f=>{const o=new T.Group(),n=new T.Group();n.scale.setScalar(k);n.position.set(3.2,-11.5+1.95*R*k,-11.5-i*1.9);f(n);o.add(n);return o};
+ const nz=(g,r,h,x,up,m)=>g.add(cy(r,h,x,up?R+h/2:-(R+h/2),0,m,'y'),cy(r*1.5,h*.15,x,up?R+h:-(R+h),0,fl(),'y'));
+ const info=`KKS ${kks}. Vỏ ø${ID} mm, ống U dài ${len} mm, ${nt} ống (2 pass), diện tích ${sf} m². Áp suất thiết kế ${dP} bar, vận hành ${oP} bar / ${oT} °C. Vùng trao đổi: ${zo.map(z=>ZN[z]).join(' → ')}. Hơi đi zic-zắc qua ${nb} vách chữ Z (tấm cắt đáy/đỉnh xen kẽ). Nguồn hơi: ${src}.`;
+ mk('Bình '+nm+' – nửa vỏ trên (cắt bổ)','fwh',info,G(n=>{n.add(oc(R,L,0,sm(),PI,PI),dm(R,L,.92,-PI/2,PI,sm(),-PI/2));for(let j=0;j<ns;j++)nz(n,R*.22,R*.55,L*(.75-.2*j),1,M(0xc0392b,.75,.35));nz(n,R*.1,R*.3,L*.35,1,M(0x3a94b8,.78,.32))}),[0,3,0],{shell:1});
+ mk('Bình '+nm+' – nửa vỏ dưới & yên đỡ','static',info,G(n=>{n.add(oc(R,L,0,sm(),0,PI),dm(R,L,.92,PI/2,PI,sm(),-PI/2));nz(n,R*.17,R*.46,L*.18,0,M(0x7f8c8d,.7,.45));for(const x of[.18,.58,.88])n.add(bx(R*.3,R*.9,R*2.05,L*x,-R*1.42,0,M(0x6b7f94,.5,.7)),bx(R*.62,R*.1,R*2.5,L*x,-R*1.92,0,M(0x6b7f94,.5,.7)))}),[0,0,0],{shell:1});
+ mk('Bình '+nm+' – kênh nước & vách chia pass','fwh','Kênh nước đầu bình có vách chia 2 pass: nước cấp vào ống nửa dưới (xanh), qua U-bend, ra nửa trên (cam).',G(n=>{n.add(oc(chR,chL,-chL,sm(),0,2*PI),dm(chR,-chL,.78,0,2*PI,sm(),PI/2),bx(chL,.045,chR*1.9,-chL/2,0,0,M(0xe8734a,.6,.5)));nz(n,R*.3,R*.5,-chL*.55,0,M(0x1a8fc8,.78,.3));nz(n,R*.3,R*.5,-chL*.55,1,M(0xe8734a,.78,.3))}),[-4.5,0,0]);
+ mk('Bình '+nm+' – chùm ống U, mặt sàng & vách chữ Z','fwhin',info,G(n=>{n.add(cy(R*.99,R*.1,R*.05,0,0,M(0x7a8fa5,.78,.38)));
+  tpos(R,Math.min(55,Math.round(nt/24))).forEach(([y,z],j)=>n.add(mesh(new T.TubeGeometry(new UC(R*.12,L*.96,y,z),32,R*.016,5),M(j%4?0xd4a24a:0xb8883a,.85,.28))));
+  for(let b=0;b<nb;b++){const ac=PI*.4,top=b%2,x=L*.12+(b+.5)/nb*L*.83,g=new T.CylinderGeometry(R*.985,R*.985,.028*R,40,1,false,top?PI/2+ac/2:-PI/2+ac/2,2*PI-ac);g.rotateZ(-PI/2);n.add(mesh(g,M(0x8e44ad,.7,.42),x,0,0))}}),[-7,0,0]);
+});
+g=new T.Group();g.add(bx(.9,.9,.9,13.1,-.5,-1.2,M(0x7a4fa0,.5,.5)),cy(.35,1.2,13.1,-.5,-2.2,M(0x7a4fa0,.4,.5),'z'),cy(.2,.5,13.1,.1,-1.1,M(0xb8c4cf),'y'));
+mk('Bộ vần trục (Turning Gear)','aux','Đặt tại gối #6: động cơ điện + hộp giảm tốc + khớp cơ khí tự tách khi trục quay nhanh hơn tốc độ vần. Quay liên tục (≈35 A) khi sấy nóng/sau ngừng máy để chống cong võng trục.',g,[0,-.5,-3.5]);
+g=new T.Group();g.add(cy(.8,6.2,16.4,0,0,M(0xa6b2bd,.9,.3)));for(let i=0;i<8;i++)g.add(cy(.86,.18,14+i*.7,0,0,M(0x8d99a6)));
+mk('Rotor máy phát điện','aux','Rotor máy phát nối đồng trục với rotor tuabin tạo thành một trục dài, quay 3.000 v/ph, cùng chiều kim đồng hồ khi nhìn từ đầu tuabin.',g,[0,3,0],{spin:1});
+g=new T.Group();g.add(cy(1.5,5.8,16.5,0,0,M(0x3d7a5a,.6,.45)));
+mk('Stato máy phát điện','aux','Vỏ và stato máy phát (hiển thị bán trong suốt để thấy rotor bên trong).',g,[7,0,0],{shell:1,op:.4});
+/* ---- UI ---- */
+const act=new Set(),btn=[['Tháo nắp vỏ trên (HIP, LP-A, LP-B)',['cover','pipe']],['Rút rotor khỏi thân',['rotor','cover','pipe','bearing']],['Tháo nắp gối đỡ & gối chặn',['bearing']],['Tháo cụm van MSV/CV/RSV/IV',['valve']],['Tháo ống liên thông',['pipe']],['Tháo hộp chèn hơi trục',['gland']],['Tháo cửa trích hơi (1–8)',['extract']],['Tháo vách bên & giếng nước ngưng',['cshell']],['Rút chùm ống Titan bình ngưng',['ctube','cwb','cshell']],['Rút chi tiết trong bình ngưng',['cint','cwb','cshell']],['Tháo hộp nước bình ngưng',['cwb']],['Rút BGN hạ áp #1, #2 ở cổ',['cneck']],['Bổ vỏ & tháo kênh nước bình gia nhiệt',['fwh']],['Rút chùm ống U + vách chữ Z',['fwhin','fwh']],['Tháo máy phát & vần trục',['aux']]];
+const B=document.getElementById('b'),Vw=document.getElementById('v');
+function sync(){[...B.children].forEach((e,i)=>{const k=btn[i]?.[1];if(k)e.classList.toggle('on',k.every(c=>act.has(c)))})}
+btn.forEach(([n,c])=>{const e=document.createElement('button');e.textContent=n;e.onclick=()=>{const on=!c.every(x=>act.has(x));c.forEach(x=>on?act.add(x):act.delete(x));if(!on&&c[0]=='cover')act.delete('rotor');sync()};B.append(e)});
+const all=['cover','rotor','pipe','bearing','valve','gland','extract','cshell','ctube','cint','cwb','cneck','fwh','fwhin','aux'];
+const add=(el,t,f)=>{const e=document.createElement('button');e.textContent=t;e.onclick=()=>f(e);el.append(e);return e};
+add(B,'Nổ tung toàn bộ',()=>{all.forEach(c=>act.add(c));sync()});add(B,'Khôi phục nguyên trạng',()=>{act.clear();sync()});
+let spin=true,auto=false,glass=false;
+add(Vw,'Rotor đang quay: BẬT',e=>{spin=!spin;e.textContent='Rotor đang quay: '+(spin?'BẬT':'TẮT')});
+add(Vw,'Vỏ trong suốt: TẮT',e=>{glass=!glass;e.textContent='Vỏ trong suốt: '+(glass?'BẬT':'TẮT')});
+add(Vw,'Tự xoay camera: TẮT',e=>{auto=!auto;e.textContent='Tự xoay camera: '+(auto?'BẬT':'TẮT')});
+add(Vw,'Xem bình ngưng',()=>{tgg=V(6.4,-6,0);rad=22});add(Vw,'Xem bình gia nhiệt',()=>{tgg=V(6.4,-10.3,-15.5);rad=24});add(Vw,'Về góc nhìn tổng thể',()=>{tg.set(5.5,0,0);rad=34;th=1;ph=1.15});
+const S=document.getElementById('s');S.innerHTML='<option>— chọn —</option>'+parts.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');S.onchange=()=>S.value>=0&&sel(+S.value);
+let cur=-1,tg=V(5.5,0,0),tgg=null;
+function sel(i){if(cur>=0)parts[cur].mats.forEach(m=>m.emissive.setHex(0));cur=i;const p=parts[i];p.mats.forEach(m=>{m.emissive.setHex(0x7a3300)});
+ in_.textContent=p.name;id_.textContent=p.info;const b=new T.Box3().setFromObject(p.g);tgg=b.getCenter(V(0,0,0));S.value=i}
+const in_=document.getElementById('in'),id_=document.getElementById('id');
+/* ---- camera ---- */
+let th=1,ph=1.15,rad=34,dn=null,mv=0,ptr=new Map(),pd=0;
+const cv=ren.domElement;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,e);dn=e;mv=0});
+cv.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId))return;const o=ptr.get(e.pointerId);
+ if(ptr.size==2){const [a,b]=[...ptr.values()],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(pd)rad*=pd/d;pd=d;ptr.set(e.pointerId,e);return}
+ th-=(e.clientX-o.clientX)*.006;ph=Math.min(3,Math.max(.1,ph-(e.clientY-o.clientY)*.006));mv+=Math.abs(e.clientX-o.clientX)+Math.abs(e.clientY-o.clientY);ptr.set(e.pointerId,e)});
+cv.addEventListener('pointerup',e=>{ptr.delete(e.pointerId);pd=0;if(mv<5&&dn)click(e)});
+cv.addEventListener('wheel',e=>{e.preventDefault();rad=Math.min(70,Math.max(6,rad*(1+e.deltaY*.001)))},{passive:false});
+const rc=new T.Raycaster();
+function click(e){rc.setFromCamera(new T.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),cam);const h=rc.intersectObjects(pick,false)[0];if(h)sel(h.object.userData.p)}
+function rs(){ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
+/* ---- loop ---- */
+(function loop(){requestAnimationFrame(loop);
+ for(const p of parts){const t=act.has(p.cat)?p.off:V(0,0,0);p.g.position.lerp(t,.07);if(p.spin&&spin)p.g.rotation.x+=.06;
+  if(p.shell)p.mats.forEach(m=>{const o=glass?(m.userData.o||.22):1;m.transparent=o<1;m.depthWrite=o>=1;m.opacity+=(o-m.opacity)*.15})}
+ if(tgg){tg.lerp(tgg,.1);if(tg.distanceTo(tgg)<.02)tgg=null}
+ if(auto)th+=.004;
+ cam.position.set(tg.x+rad*Math.sin(ph)*Math.cos(th),tg.y+rad*Math.cos(ph),tg.z+rad*Math.sin(ph)*Math.sin(th));cam.lookAt(tg);
+ ren.render(sc,cam)})();
+</script></body></html>
