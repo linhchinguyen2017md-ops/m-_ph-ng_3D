@@ -13,6 +13,10 @@
             --hover-color: #e3f2fd;
         }
         
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -21,41 +25,42 @@
             color: var(--text-color);
             background: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
-            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.6); 
+            background: rgba(0, 0, 0, 0.65); 
             z-index: -1;
         }
 
-        /* Nút Quay lại (Back Button) góc trên bên trái */
+        /* Nút Quay lại */
         .back-btn {
             position: absolute;
             top: 20px;
             left: 20px;
             background-color: rgba(255, 255, 255, 0.15); 
             color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: all 0.25s ease;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             z-index: 10;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             cursor: pointer;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
         }
 
         .back-btn:hover {
@@ -65,24 +70,25 @@
 
         header {
             color: white;
-            padding: 3rem 0;
+            padding: 3.5rem 1rem 2.5rem;
             text-align: center;
             border-bottom: 4px solid var(--primary-light);
-            background: linear-gradient(to right, rgba(13, 71, 161, 0.8), rgba(25, 118, 210, 0.8));
+            background: linear-gradient(135deg, rgba(13, 71, 161, 0.85), rgba(25, 118, 210, 0.85));
+            backdrop-filter: blur(4px);
         }
 
         header h1 {
             margin: 0;
-            font-size: 2.8rem;
+            font-size: 2.4rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
         }
 
         header p {
-            margin: 10px 0 0 0;
-            font-size: 1.2rem;
-            opacity: 0.9;
+            margin: 12px 0 0;
+            font-size: 1.15rem;
+            opacity: 0.92;
             font-weight: 300;
         }
 
@@ -91,46 +97,46 @@
             margin: 40px auto;
             padding: 0 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 35px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            flex: 1;
         }
 
         .card {
             background-color: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            padding: 30px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            padding: 26px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-            border-bottom: 5px solid var(--primary-light);
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+            border-bottom: 4px solid var(--primary-light);
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
         }
 
         .card-header h2 {
             margin: 0;
-            font-size: 1.6rem;
+            font-size: 1.45rem;
             color: var(--primary-color);
         }
 
         .icon {
-            font-size: 2.2rem;
-            margin-right: 15px;
-            background: var(--primary-light);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
         }
 
         .link-list {
@@ -140,19 +146,19 @@
         }
 
         .link-list li {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .link-list a {
             text-decoration: none;
-            color: #444;
-            font-size: 1.15rem;
+            color: #2d3748;
+            font-size: 1.05rem;
             font-weight: 500;
             display: flex;
             align-items: center;
-            padding: 12px 15px;
+            padding: 11px 16px;
             background-color: #f8fafc;
-            border-radius: 8px;
+            border-radius: 7px;
             transition: all 0.2s ease;
             border-left: 4px solid #cbd5e1;
         }
@@ -168,30 +174,28 @@
             background-color: var(--hover-color);
             color: var(--primary-color);
             border-left-color: var(--primary-color);
-            padding-left: 20px;
-        }
-
-        .empty-state {
-            color: #718096;
-            font-style: italic;
-            padding: 10px 15px;
-            text-align: center;
+            padding-left: 22px;
         }
 
         footer {
             text-align: center;
-            padding: 20px;
-            color: white;
-            margin-top: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            font-size: 0.9rem;
+            padding: 18px;
+            color: #cbd5e1;
+            background: rgba(10, 15, 30, 0.85);
+            font-size: 0.88rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8rem; }
+            .back-btn { top: 12px; left: 12px; padding: 6px 12px; font-size: 0.85rem; }
+            .container { margin: 20px auto; gap: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Nút Quay lại sử dụng JavaScript history.back() -->
-    <button onclick="history.back()" class="back-btn">
+    <button onclick="window.history.length > 1 ? history.back() : window.location.href='index.html'" class="back-btn" title="Quay lại">
         ⬅ Quay lại
     </button>
 
@@ -200,10 +204,10 @@
         <p>Tài liệu mô tả thiết bị, hướng dẫn vận hành an toàn và xử lý sự cố</p>
     </header>
 
-    <div class="container">
+    <main class="container">
         
         <!-- Cột 1: Thiết Bị -->
-        <div class="card">
+        <section class="card">
             <div class="card-header">
                 <span class="icon">⚙️</span>
                 <h2>Thiết Bị & Hệ Thống</h2>
@@ -212,10 +216,10 @@
                 <li><a href="binhngung.html">Mô tả Bình ngưng</a></li>
                 <li><a href="binhgianhiet.html">Mô tả Bình gia nhiệt</a></li>
             </ul>
-        </div>
+        </section>
 
         <!-- Cột 2: Vận Hành -->
-        <div class="card">
+        <section class="card">
             <div class="card-header">
                 <span class="icon">📊</span>
                 <h2>Quá Trình Vận Hành</h2>
@@ -223,12 +227,14 @@
             <ul class="link-list">
                 <li><a href="khopthuyluc.html">Khớp thủy lực</a></li>
                 <li><a href="sss.html">SSS</a></li>
+                <li><a href="kk.html">Vận hành KK (Khí nén / Khởi động)</a></li>
+                <li><a href="tb.html">Vận hành TB (Tuabin / Thiết bị)</a></li>
                 <li><a href="mp3.html">Tài liệu vận hành (mp3)</a></li>
             </ul>
-        </div>
+        </section>
 
         <!-- Cột 3: Sự Cố -->
-        <div class="card">
+        <section class="card">
             <div class="card-header">
                 <span class="icon">⚠️</span>
                 <h2>Mô Phỏng Sự Cố</h2>
@@ -238,9 +244,9 @@
                 <li><a href="PTthaydoi.html">Phương thức thay đổi</a></li>
                 <li><a href="thuykichtuabin.html">Thủy kích Tuabin</a></li>
             </ul>
-        </div>
+        </section>
 
-    </div>
+    </main>
 
     <footer>
         <p>&copy; 2026 Hệ thống tài liệu nội bộ. Vận hành an toàn - Hiệu quả.</p>
