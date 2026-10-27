@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mô hình 3D máy nén khí ZR 630</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--tx:#1b1f24;--mu:#5b6570;--bd:#d8dce1;--ac:#1a73e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--panel:#1d2127;--tx:#e8eaed;--mu:#9aa4af;--bd:#333a42;--ac:#6ea8ff}}
+:root[data-theme="dark"]{--bg:#14171b;--panel:#1d2127;--tx:#e8eaed;--mu:#9aa4af;--bd:#333a42;--ac:#6ea8ff}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--panel)}
+h1{font-size:16px;margin:0}header p{margin:2px 0 0;color:var(--mu);font-size:12px}
+main{flex:1;display:flex;min-height:0}
+aside{width:230px;overflow:auto;background:var(--panel);border-right:1px solid var(--bd);padding:8px}
+aside h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:10px 4px 4px}
+.it{display:block;width:100%;text-align:left;background:none;border:0;color:var(--tx);padding:5px 8px;border-radius:6px;cursor:pointer;font:inherit}
+.it:hover{background:var(--bg)}.it.on{background:var(--ac);color:#fff}
+#vp{flex:1;position:relative;min-width:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#bar{position:absolute;left:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px}
+#bar label,#bar button{background:var(--panel);border:1px solid var(--bd);color:var(--tx);border-radius:16px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}
+#info{position:absolute;left:8px;right:8px;bottom:8px;max-width:460px;max-height:55%;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;box-shadow:0 2px 10px #0003}
+#info h2{font-size:15px;margin:0 0 2px}#info small{color:var(--ac);font-weight:600}#info p{margin:4px 0 0;color:var(--mu)}
+#info table{border-collapse:collapse;width:100%;margin-top:6px;font-size:12px}#info td{border-top:1px solid var(--bd);padding:3px 4px;vertical-align:top}
+#info .bd{display:inline-block;margin-top:6px;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#fff}
+#tools{position:absolute;right:8px;top:8px;width:215px;max-height:68%;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:12px;box-shadow:0 2px 10px #0003}#tools b{display:block;margin:7px 0 2px}
+#chips{position:absolute;inset:0;pointer-events:none;overflow:hidden}.chip{position:absolute;transform:translate(-50%,-100%);background:var(--panel);border:1px solid var(--bd);border-left:4px solid #888;border-radius:6px;padding:1px 6px;font-size:10px;white-space:nowrap;color:var(--tx);opacity:.95}
+#sim{position:absolute;right:8px;bottom:8px;width:240px;max-height:62%;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:12px;box-shadow:0 2px 10px #0003}#sim b{display:block;margin:2px 0}#sim label{display:block;margin-top:5px}#sim input[type=range]{width:100%}#sim button{margin:3px 3px 0 0;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:3px 10px;font:inherit;cursor:pointer}#sim p{color:var(--mu);margin:6px 0 0;font-size:11px}#rd{margin-top:6px;border-top:1px solid var(--bd);padding-top:4px}#rd div{display:flex;justify-content:space-between;gap:6px}#tools input[type=range],#tools select{width:100%}#tools label{display:block}#tools button{margin:2px 2px 0 0;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:2px 8px;font:inherit;cursor:pointer}
+@media (max-width:720px){#tools{top:44px}main{flex-direction:column}aside{width:auto;height:110px;border-right:0;border-bottom:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:2px}aside h3{width:100%;margin:2px 4px}.it{width:auto}}
+</style></head><body>
+<header><h1>Mô hình 3D máy nén khí Atlas Copco ZR 630</h1><p>Sơ đồ chức năng đã đối chiếu tài liệu Atlas Copco. Hình dạng chi tiết mô phỏng theo thiết bị thật, vị trí chỉ minh họa. Bấm “Đối chiếu” để xem số liệu catalogue.</p></header>
+<main>
+<aside id="list"></aside>
+<div id="vp"><canvas id="c"></canvas><div id="chips"></div>
+<div id="bar">
+<label><input type="checkbox" id="lAir" checked> Khí</label>
+<label><input type="checkbox" id="lOil" checked> Dầu</label>
+<label><input type="checkbox" id="lWat" checked> Nước</label>
+<label><input type="checkbox" id="lEnc"> Vỏ cách âm</label>
+<button id="rot">Tự xoay: tắt</button><button id="rs">Đặt lại</button><button id="spec">Đối chiếu</button><button id="tb">Công cụ</button><button id="sb">Vận hành</button>
+</div>
+<div id="sim"><b>Vận hành mô phỏng</b><div id="sst"></div><button id="go">▶ Khởi động</button><button id="stp">■ Dừng</button><button id="rst">Đặt lại</button><label>Nhu cầu dùng khí: <span id="dmv"></span><input type="range" id="dm" min="0" max="120" value="50"></label><label>Nước CCW vào: <span id="cwv"></span> °C<input type="range" id="cw" min="20" max="58" value="33"></label><label>Tốc độ mô phỏng: ×<span id="tsv"></span><input type="range" id="ts" min="5" max="40" value="10"></label><label><input type="checkbox" id="clog"> Giả lập tắc lọc dầu</label><label><input type="checkbox" id="chp" checked> Hiện đồng hồ trên mô hình</label><div id="rd"></div><p>Màu ống và hạt: nhiệt độ (xanh → đỏ). Kích thước hạt khí: áp suất. Áp mạng 7,8/8,6 bar, áp cấp thấp 1,8–2,6 bar và các ngưỡng cảnh báo lấy từ tài liệu dự án. Nhiệt độ sau bình làm mát, nhiệt độ dầu khi không tải, tỉ số truyền và tốc độ quay hình ảnh là ước tính minh họa, không phải số đo.</p></div>
+<div id="tools" hidden><b>Độ trong suốt</b><input type="range" id="op" min="8" max="100" value="100"><label><input type="checkbox" id="edg"> Viền cạnh</label><label><input type="checkbox" id="gr"> Hạt nhám kim loại</label><b>Mặt cắt</b><select id="ax"><option value="">Tắt</option><option value="y">Cắt ngang (trục Y)</option><option value="x">Cắt dọc (trục X)</option><option value="z">Cắt mặt bên (trục Z)</option></select><input type="range" id="cp" min="0" max="100" value="50"><label><input type="checkbox" id="inv"> Đảo chiều cắt</label><b>Cắt nhanh</b><button id="p1">Cụm nén</button><button id="p2">Hộp số</button><button id="p3">Bình làm mát</button><button id="p4">Động cơ</button><b>Lớp hiển thị</b><label><input type="checkbox" id="Ldrive" checked> Khung, động cơ, hộp số</label><label><input type="checkbox" id="Lcomp" checked> Cụm nén và đường khí</label><label><input type="checkbox" id="Lcool" checked> Làm mát và van nước</label><label><input type="checkbox" id="Loil" checked> Bơm, lọc dầu</label><label><input type="checkbox" id="Lctl" checked> Điều khiển, an toàn</label><p style="color:var(--mu);margin:6px 0 0">Mặt cắt không đổ đầy vật liệu. Chi tiết bên trong là mô phỏng nguyên lý.</p></div><div id="info"><h2>Chọn một chi tiết</h2><p>Bấm vào mô hình hoặc danh sách. Hạt chuyển động thể hiện dòng khí (xanh dương), dầu (vàng) và nước (xanh lục).</p></div>
+</div></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const V=(x,y,z)=>new THREE.Vector3(x,y,z),PI=Math.PI;
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,200);
+const ren=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.localClippingEnabled=true;ren.outputEncoding=THREE.sRGBEncoding;
+(function(){const c=document.createElement('canvas');c.width=256;c.height=128;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,128);
+gr.addColorStop(0,'#e6eef8');gr.addColorStop(.5,'#9aa6b4');gr.addColorStop(1,'#3a3f46');g.fillStyle=gr;g.fillRect(0,0,256,128);g.fillStyle='#fff';g.fillRect(30,18,56,16);g.fillRect(150,26,80,12);
+const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;scene.environment=new THREE.PMREMGenerator(ren).fromEquirectangular(t).texture})();
+scene.add(new THREE.HemisphereLight(0xffffff,0x667,.5));
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(6,14,8);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);
+Object.assign(dl.shadow.camera,{left:-12,right:12,top:12,bottom:-12,far:40});scene.add(dl);
+const gnd=new THREE.Mesh(new THREE.PlaneGeometry(60,60).rotateX(-PI/2),new THREE.ShadowMaterial({opacity:.28}));gnd.position.y=-.06;gnd.receiveShadow=true;scene.add(gnd);
+const gh=new THREE.GridHelper(30,30,0x8a94a0,0x8a94a0);gh.material.transparent=true;gh.material.opacity=.18;gh.position.y=-.06;scene.add(gh);
+const root=new THREE.Group();scene.add(root);
+// vật liệu: [màu, kim loại, nhám, tùy chọn]
+const STEEL=[0xd0d6dc,.95,.28],CAST=[0xa4adb8,.6,.5],BLUE=[0x1f6fae,.4,.38],DARK=[0x383d45,.6,.5],RED=[0xd62828,.3,.4],BRASS=[0xcaa22c,.85,.3],GREY=[0x808b97,.5,.55],MOT=[0x2b5d86,.45,.42],TEAL=[0x129a92,.5,.35],YEL=[0xe0a800,.4,.45],BLK=[0x15171a,.1,.9];
+const GR=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');for(let i=0;i<900;i++){g.fillStyle='hsl(0,0%,'+(30+Math.random()*50)+'%)';g.fillRect(Math.random()*64,Math.random()*64,2,2)}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);return t})();
+const M=(c,mt,r,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:mt,roughness:r},o||{}));
+const parts={},meshes=[];let G,PID;
+function part(id,name,code,sys,desc,x,y,z){G=new THREE.Group();G.position.set(x,y,z);root.add(G);parts[id]={id,name,code,sys,desc,m:[],g:G};PID=id}
+function m(geo,k,x,y,z,rx,ry,rz){const me=new THREE.Mesh(geo,k.isMaterial?k:M(...k));me.position.set(x||0,y||0,z||0);me.rotation.set(rx||0,ry||0,rz||0);
+ me.castShadow=me.receiveShadow=true;me.userData.id=PID;G.add(me);parts[PID].m.push(me);meshes.push(me);return me}
+const CY=(r,l,s)=>new THREE.CylinderGeometry(r,r,l,s||28),CX=(r,l,s)=>CY(r,l,s).rotateZ(PI/2),CZ=(r,l,s)=>CY(r,l,s).rotateX(PI/2);
+function RB(a,b,c){const r=Math.min(.035,a/4,b/4,c/4),w=(a-2*r)/2,h=(b-2*r)/2,q=Math.min(.05,w,h),s=new THREE.Shape();
+s.moveTo(-w+q,-h);s.lineTo(w-q,-h);s.quadraticCurveTo(w,-h,w,-h+q);s.lineTo(w,h-q);s.quadraticCurveTo(w,h,w-q,h);s.lineTo(-w+q,h);s.quadraticCurveTo(-w,h,-w,h-q);s.lineTo(-w,-h+q);s.quadraticCurveTo(-w,-h,-w+q,-h);
+const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(c-2*r,.001),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:2,curveSegments:3});g.translate(0,0,-(c-2*r)/2);return g}
+const DOME=r=>new THREE.SphereGeometry(r,24,10,0,PI*2,0,PI/2),BOX=RB,TOR=(r,t)=>new THREE.TorusGeometry(r,t,8,32);
+function bolts(n,R,x,y,z,ax){for(let i=0;i<n;i++){const a=i/n*PI*2,c=Math.cos(a)*R,s=Math.sin(a)*R;
+ if(ax=='x')m(CX(.03,.08,6),STEEL,x,y+c,z+s);else if(ax=='y')m(CY(.03,.08,6),STEEL,x+c,y,z+s);else m(CZ(.03,.08,6),STEEL,x+c,y+s,z)}}
+function fl(ax,r,x,y,z,n){m(ax=='x'?CX(r,.07):ax=='y'?CY(r,.07):CZ(r,.07),STEEL,x,y,z);bolts(n||8,r*.8,x,y,z,ax)}
+const dome=(r,ax,sgn,x,y,z,k,sc)=>{const g=DOME(r);if(ax=='x')g.rotateZ(-sgn*PI/2);else if(sgn<0)g.rotateX(PI);const me=m(g,k,x,y,z);if(sc){if(ax=='x')me.scale.x=sc;else me.scale.y=sc}return me};
+// ===== Khung đế =====
+part('base','Khung đế','Base','Cơ khí','Khung thép đỡ toàn bộ máy (dạng skid, không cần móng), có gối chống rung.',-.2,0,0);
+[-2.2,2.2].forEach(z=>{m(BOX(14,.28,.08),DARK,0,.16,z);m(BOX(14,.04,.26),DARK,0,.3,z);m(BOX(14,.04,.26),DARK,0,.02,z)});
+[-6,-3,0,3,6].forEach(x=>m(BOX(.2,.2,4.4),DARK,x,.15,0));m(BOX(13.8,.03,4.3),[0x6b747e,.5,.6],0,.325,0);
+[-6.5,6.5].forEach(x=>[-2.2,2.2].forEach(z=>m(CY(.2,.12),BLK,x,-.03,z)));
+// ===== Động cơ =====
+part('motor','Động cơ điện chính','M','Truyền động','Động cơ lồng sóc 630 kW (catalogue ZR 630). Cấp điện 10 kV và 1493 vòng/phút là thông số dự án; catalogue có phiên bản trung thế. Điện trở sấy chống ngưng ẩm là tùy chọn trong catalogue.',-5,1.3,0);
+m(CX(1,3.2,40),MOT);for(let i=0;i<9;i++)m(CX(1.035,.06,40),MOT,-1.4+i*.35);
+dome(1,'x',1,1.6,0,0,MOT,.3);m(CX(.95,.5,40),DARK,-1.75);m(CX(.9,.04,40),BLK,-2.02);
+for(let i=0;i<6;i++)m(BOX(.02,1.7,.05),BLK,-2.04,0,0,i*PI/6,0,0);
+m(BOX(.9,.5,.8),MOT,0,1.15,0);m(BOX(.95,.08,.85),DARK,0,1.45,0);m(CY(.1,.3),BLK,.2,1.6,0);
+[-.9,.9].forEach(x=>m(BOX(.8,.15,2.1),DARK,x,-.95,0));m(CX(.17,.7),STEEL,2.2);
+// ===== Khớp nối =====
+part('coup','Khớp nối đàn hồi','Coupling','Truyền động','Khớp nối có đệm cao su giảm chấn, nối trục động cơ với trục vào hộp số. Lồng bảo vệ vẽ trong suốt.',-2.35,1.3,0);
+[-.6,.6].forEach(x=>m(CX(.4,.4),STEEL,x));m(CX(.5,.5),BLK);m(CX(.62,1.7),[0x88aadd,.2,.3,{transparent:true,opacity:.22}]);
+// ===== Hộp số =====
+part('gear','Hộp số / đáy dầu','Gearbox, Oil Sump','Truyền động','Bánh răng nghiêng chia tỉ số truyền cho trục nén cấp thấp và cấp cao. Đáy hộp số là bể chứa dầu 85 lít, có kính thăm dầu.',0,1.4,0);
+m(BOX(3,1.2,2.4),CAST,0,-.2);m(BOX(2.7,.6,2.2),CAST,0,.7);m(BOX(2.6,.35,2.2),[0x8e98a3,.6,.5],0,-.95);
+for(let i=0;i<8;i++){m(CY(.04,.06,6),STEEL,-1.15+i*.33,1.02,1.12);m(CY(.04,.06,6),STEEL,-1.15+i*.33,1.02,-1.12)}
+[-.7,.7].forEach(x=>{m(CZ(.35,.08),STEEL,x,-.1,1.2);bolts(6,.28,x,-.1,1.24,'z')});
+m(CZ(.16,.04),[0x9fd8ee,.1,.1,{transparent:true,opacity:.7}],-1,-.95,-1.12);m(CY(.1,.2),STEEL,.6,1.1,.3);m(CY(.06,.12),BLK,1.2,-1.2,0);
+// ===== Cụm nén =====
+function element(id,name,code,desc,z,k){part(id,name,code,'Khí',desc,2.3,1,z);
+ m(CX(.6,1.6),k,-.1);[-.4,.1,.5].forEach(x=>m(CX(.65,.06),k,x));m(CX(.8,.12),k,-.85);bolts(10,.7,-.85,0,0,'x');
+ m(CX(.4,.3),k,.85);fl('x',.5,1.02,0,0);m(CY(.2,.45),k,-.1,.7,0);fl('y',.3,-.1,.95,0);
+ [.3,-.3].forEach(x=>{m(CZ(.07,.4),STEEL,x,0,.7*(z>0?1:-1)*0+.7);});}
+element('el','Cụm nén thấp áp','El','Cấp nén thứ nhất, trục vít không dầu. Có phớt Z-seal, lớp phủ rotor và áo nước làm mát (catalogue). Áp suất trung gian 1,8–2,6 bar, cảnh báo 225 °C, dừng 235 °C là số liệu dự án.',.9,CAST);
+element('eh','Cụm nén cao áp','Eh','Cấp nén thứ hai, nhận khí đã làm mát và tách ẩm từ Ci. Cùng công nghệ Z-seal, lớp phủ rotor và áo nước như cấp 1 (catalogue). Áp suất xả 8,5–10 bar theo dự án.',-.9,[0x97a1ad,.6,.5]);
+// ===== Lọc gió =====
+part('af','Bộ lọc gió','AF','Khí','Lọc khí hút từ khí quyển. Chênh áp bình thường dưới 44 mbar, cảnh báo ở −52 mbarg, ngắt ở −70 mbarg.',5.2,1,.9);
+m(BOX(1.1,1.2,1.4),GREY);m(BOX(1.2,.12,1.5),DARK,0,.66);[-.5,.5].forEach(z=>m(BOX(.06,.14,.12),STEEL,.58,.55,z*1.3));
+m(CX(.4,.4),GREY,.75);m(CX(.4,.04),BLK,.97);for(let i=0;i<5;i++)m(BOX(.02,.7,.02),STEEL,.99,0,-.3+i*.15);m(CX(.3,.4),GREY,-.7);fl('x',.38,-.9,0,0);
+// ===== Van nạp / xả =====
+part('tv','Van tiết lưu nạp','TV','Khí','Van tiết lưu có điều khiển Load/Unload, không cần khí cấp từ ngoài, liên động cơ khí với van xả (catalogue).',4,1,.9);
+m(CX(.38,.5),BLUE);fl('x',.5,-.3,0,0);fl('x',.5,.3,0,0);m(CZ(.3,.2),BLUE,0,0,.5);dome(.3,'z',1,0,0,.6,DARK).rotation.x=PI/2;m(CZ(.04,.3),STEEL,0,0,.3);m(BOX(.5,.04,.04),STEEL,0,.18,.0);
+part('uv','Van xả không tải','UV','Khí','Van xả (blow-off) liên động cơ khí với van nạp (catalogue): mở khi không tải, đóng khi có tải. Dải áp 7,8–8,6 bar là cài đặt của dự án.',4,1.75,.9);
+m(CY(.22,.45),[0xe06c3c,.5,.4]);fl('y',.3,0,-.22,0,6);fl('y',.3,0,.22,0,6);dome(.2,'y',1,0,.3,0,DARK);m(CY(.04,.2),STEEL,0,.5,0);
+part('us','Tiêu âm xả tải','US','Khí','Giảm ồn khi khí xả ra ngoài ở chế độ không tải.',4,2.5,1.5);
+m(CY(.3,.8),GREY);dome(.3,'y',1,0,.4,0,GREY);[-.3,0,.3].forEach(y=>m(CY(.32,.04),DARK,0,y));fl('y',.35,0,-.42,0,10);
+part('y1','Van điện từ Y1','Y1','Điều khiển','Đóng/mở khí điều khiển buồng màng để chuyển Load/Unload.',4.7,1.9,1.5);
+m(BOX(.3,.25,.3),BRASS);m(CY(.1,.3),BLK,0,.27);m(BOX(.15,.1,.1),RED,.2,.05);
+// ===== Bình làm mát =====
+function cooler(id,name,code,desc,z){part(id,name,code,'Khí / Nước',desc,1,3,z);
+ m(CX(.5,4.2,40),STEEL);[-1.8,1.8].forEach(x=>m(CX(.505,.04,40),DARK,x));
+ [-2.15,2.15].forEach(x=>{m(CX(.62,.1,40),STEEL,x);bolts(12,.57,x,0,0,'x')});
+ dome(.5,'x',1,2.2,0,0,BLUE,.7);dome(.5,'x',-1,-2.2,0,0,BLUE,.7);
+ [-2,2].forEach(x=>{m(CY(.16,.4),STEEL,x,.6);fl('y',.22,x,.82,0)});
+ [-1.2,1.2].forEach(x=>{m(CY(.12,.3),TEAL,x,-.6);fl('y',.18,x,-.77,0,6)});[-1.4,1.4].forEach(x=>m(BOX(.3,.18,.7),DARK,x,-.55))}
+cooler('ci','Bình làm mát trung gian','Ci','Ống inox hàn robot, có chèn nhôm hình sao tăng truyền nhiệt (catalogue). Đặt giữa El và Eh. Ngưỡng khí vào cấp 2: cảnh báo 65 °C, ngắt 70 °C (số liệu dự án).',1.1);
+cooler('ca','Bình làm mát cuối','Ca','Cùng cấu tạo ống inox và chèn nhôm như Ci. Nhiệt độ khí ra luôn cao hơn nhiệt độ nước CCW vào, nên mức 25 °C trong tài liệu dự án chỉ đúng với nước rất lạnh. Cảnh báo 50 °C là số liệu dự án.',-1.1);
+function trap(id,name,code,desc,z){part(id,name,code,'Khí',desc,-1.9,2.6,z);
+ m(CY(.25,.6),STEEL);dome(.25,'y',1,0,.3,0,STEEL);dome(.25,'y',-1,0,-.3,0,STEEL);m(CY(.06,.25),BRASS,0,-.5);m(BOX(.14,.14,.14),BLK,.17,-.45);m(CX(.1,.35),STEEL,-.3,.1)}
+trap('mti','Bẫy tách ẩm MTi','MTi','Bẫy tách ẩm kiểu mê cung (labyrinth) sau Ci, giảm lượng ẩm vào cấp 2. Nước xả qua bình chứa DRi và van xả điện tử; nếu cảm biến báo có nước quá lâu, Elektronikon ngắt máy (sổ tay ZR).',1.1);
+trap('mta','Bẫy tách ẩm MTa','MTa','Bẫy tách ẩm kiểu mê cung sau Ca, giảm lượng ẩm mang theo vào hệ thống phân phối. Xả qua DRa và van xả điện tử.',-1.1);
+part('as','Bộ giảm xung khí xả','AS','Khí','Pulsation damper sau cấp cao áp, trước Ca, giảm xung động áp lực và ồn (sổ tay ZR/ZT). Tài liệu dự án gọi là bộ tiêu âm.',3.9,1,-.9);
+m(CX(.3,.8),GREY);dome(.3,'x',1,.4,0,0,GREY);dome(.3,'x',-1,-.4,0,0,GREY);[-.2,.2].forEach(x=>m(CX(.32,.04),DARK,x));m(CY(.12,.3),GREY,0,.35);fl('y',.18,0,.52,0,6);
+part('cv','Van một chiều','CV','Khí','Ngăn khí từ mạng dội ngược vào máy khi dừng hoặc chạy không tải.',-2.7,2.6,-1.1);
+m(CX(.28,.4),[0xe06c3c,.5,.4]);fl('x',.4,-.25,0,0);fl('x',.4,.25,0,0);m(CY(.12,.3),STEEL,0,.3);dome(.12,'y',1,0,.45,0,STEEL);
+function sv(id,name,code,desc,x,y,z){part(id,name,code,'An toàn',desc,x,y,z);m(CY(.15,.2),STEEL);m(CY(.12,.35),BRASS,0,.28);
+ for(let i=0;i<4;i++)m(TOR(.1,.015),RED,0,.2+i*.07,0,PI/2);m(new THREE.SphereGeometry(.08,12,12),STEEL,0,.5);m(BOX(.3,.03,.03),STEEL,0,.57)}
+sv('svl','Van an toàn hạ áp','SVl','Bảo vệ khoang trung gian và cấp 1 khỏi quá áp.',0,3.5,1.1);
+sv('svh','Van an toàn cao áp','SVh','Bảo vệ cấp 2 khỏi quá áp (sổ tay có van an toàn cao áp). Giá trị 11 bar lấy từ tài liệu dự án, chưa đối chiếu được.',3.3,1.1,-.9);
+part('op','Bơm dầu','OP','Dầu','Bơm bánh răng, dẫn động trực tiếp từ trục chính.',0,.7,-1.6);
+m(CZ(.28,.5),CAST);m(BOX(.5,.3,.3),CAST,0,0,-.3);m(CY(.1,.2),STEEL,0,.3,-.3);
+part('co','Bình làm mát dầu','Co','Dầu / Nước','Làm mát dầu bằng nước CCW. Cảnh báo dầu 65 °C, dừng máy 70 °C.',-.6,1,-2.2);
+m(CY(.32,1,32),STEEL);dome(.32,'y',1,0,.5,0,TEAL);dome(.32,'y',-1,0,-.5,0,TEAL);[.25,-.25].forEach(y=>{m(CX(.1,.4),STEEL,.4,y);fl('x',.15,.6,y,0,6)});
+part('of','Bộ lọc dầu kép','OF','Dầu','Lọc kép (duplex) là tùy chọn của ZR 300-750; cấu hình tiêu chuẩn dùng một lọc. Nếu có, hai bình cho phép thay lõi khi máy chạy. Áp suất dầu 1,8–3,0 bar, cảnh báo thấp 1,3 barg, dừng khi dưới 1,2 barg.',1.1,1,-2.2);
+m(BOX(1.2,.25,.5),CAST,0,.55);[-.4,.4].forEach(x=>{m(CY(.25,.9),YEL,x);m(CY(.27,.06),STEEL,x,-.42);m(CY(.05,.1),STEEL,x,-.5)});m(CY(.1,.2),STEEL,0,.75);
+part('bv','Van bypass dầu','BV','Dầu','Trước phin lọc, tự mở hồi dầu về bể khi lọc nghẹt hoặc áp suất dầu tăng bất thường.',.1,.5,-2.2);
+m(BOX(.3,.3,.3),BRASS);m(CY(.1,.25),STEEL,0,.27);
+// ===== Tủ điều khiển =====
+part('ek','Bộ điều khiển Elektronikon','MK4 / MK5','Điều khiển','Màn hình màu 5,7 inch, có giao tiếp Ethernet (catalogue). Điều khiển Load/Unload, đọc cảm biến, cảnh báo hoặc ngắt máy, quản lý mốc bảo dưỡng. Tên MK4/MK5 trong tài liệu dự án là thế hệ cũ, cần xem máy thực tế.',0,1.3,2.2);
+m(BOX(1.8,1.9,.5),[0xc9d6e2,.2,.55]);m(BOX(1.7,1.8,.04),[0xb7c6d4,.2,.5],0,0,.27);
+const sc=document.createElement('canvas');sc.width=160;sc.height=100;{const g=sc.getContext('2d');g.fillStyle='#0f3a63';g.fillRect(0,0,160,100);g.fillStyle='#2fa84f';g.fillRect(0,0,160,16);g.fillStyle='#fff';g.font='11px sans-serif';g.fillText('Elektronikon',6,12);g.font='bold 14px sans-serif';g.fillText('Máy đang chạy',8,44);g.fillStyle='#4aa3ff';[0,1,2,3,4].forEach(i=>g.fillRect(10+i*28,90-10-i*9,20,10+i*9))}
+m(new THREE.PlaneGeometry(.9,.6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc)}),0,.45,.295);m(BOX(1,.7,.02),BLK,0,.45,.285);
+[-.3,-.1,.1,.3].forEach((x,i)=>m(CZ(.06,.05),[[0x2fa84f,0x1a73e8,0xe0a800,0x888888][i],.3,.4],x,-.05,.3));
+[-.25,0,.25].forEach((x,i)=>m(new THREE.SphereGeometry(.04,10,10),[[0x2fa84f,0xe0a800,0xd62828][i],.2,.3],x,-.3,.3));m(CY(.04,.4),STEEL,.75,.0,.33);[.7,-.7].forEach(y=>m(BOX(.06,.15,.04),DARK,-.88,y,.27));
+part('s2','Nút dừng khẩn cấp','S2','An toàn','Dừng máy tức thời khi có sự cố rung giật, cháy hoặc khói.',.55,1.95,2.5);
+m(CZ(.22,.04),[0xf2c200,.2,.5]);m(CZ(.13,.1),RED,0,0,.06);dome(.13,'z',1,0,0,.1,RED).rotation.x=PI/2;
+// ===== Van nước =====
+function ball(id,name,code,desc,x,y,z,ax){part(id,name,code,'Nước',desc,x,y,z);m(new THREE.SphereGeometry(.22,16,16),TEAL);
+ [-1,1].forEach(s=>{m(ax=='x'?CX(.12,.3):CY(.12,.3),STEEL,ax=='x'?s*.28:0,ax=='x'?0:s*.28,0);fl(ax,.2,ax=='x'?s*.45:0,ax=='x'?0:s*.45,0,6)});
+ m(CY(.04,.3),STEEL,0,ax=='x'?.28:0,ax=='x'?0:.28,0,0,ax=='x'?0:PI/2);m(BOX(.5,.04,.07),RED,ax=='x'?.2:0,.45,0)}
+ball('wi','Van chặn nước vào','WI','Van tay đầu vào nước CCW (áp tối đa 10 bar, dưới 40 °C).',-3.4,.6,-2.6,'x');
+ball('wo','Van chặn nước ra','WO','Van đầu ra nước làm mát, nhiệt độ nước ra dưới 50 °C.',4.6,3.9,-1.1,'y');
+// ===== Cấu tạo bên trong (mô phỏng nguyên lý, chỉ thấy khi cắt hoặc trong suốt) =====
+const SP=[],into=id=>{G=parts[id].g;PID=id},mi=(...a)=>{const me=m(...a);me.userData.inner=1;return me};
+class HX extends THREE.Curve{constructor(R,L,tn,ph){super();Object.assign(this,{R,L,tn,ph})}getPoint(t,o){const a=this.ph+t*this.tn*PI*2;return(o||new THREE.Vector3()).set((t-.5)*this.L,this.R*Math.cos(a),this.R*Math.sin(a))}}
+const ROT=[0x2e8bc0,.6,.35],ROF=[0xe07b39,.6,.35],TB=new THREE.BoxGeometry(.18,.12,.1),CU=[0xb87333,.7,.3];
+function rotor(x,y,z,R,L,n,tn,k,sp){const g0=G,pv=new THREE.Group();pv.position.set(x,y,z);g0.add(pv);G=pv;mi(CX(R*.62,L,20),k);for(let i=0;i<n;i++)mi(new THREE.TubeGeometry(new HX(R*.82,L,tn,i*PI*2/n),40,R*.2,6),k);G=g0;SP.push({o:pv,k:sp})}
+function gear(x,y,z,R,n,sp){const g0=G,pv=new THREE.Group();pv.position.set(x,y,z);g0.add(pv);G=pv;mi(CX(R,.18,32),DARK);for(let i=0;i<n;i++){const a=i/n*PI*2;mi(TB,DARK,0,(R+.04)*Math.cos(a),(R+.04)*Math.sin(a),a,0,0)}G=g0;SP.push({o:pv,k:sp})}
+into('el');rotor(-.1,.2,0,.28,1.4,4,1.2,ROT,-2.5);rotor(-.1,-.2,0,.3,1.4,6,-.8,ROF,1.67);
+into('eh');rotor(-.1,.15,0,.21,1.4,4,1.2,ROT,-2.5);rotor(-.1,-.15,0,.23,1.4,6,-.8,ROF,1.67);
+into('gear');gear(-.5,-.1,0,.7,30,1);gear(-.5,-.4,.9,.25,12,-2.5);gear(-.5,-.4,-.9,.25,12,-2.5);[.9,-.9].forEach(z=>mi(CX(.1,2,16),STEEL,.5,-.4,z));mi(CX(.14,1.4,16),STEEL,-.8,-.1,0);mi(BOX(2.4,.2,2),[0xc58a00,.1,.2,{transparent:true,opacity:.55}],0,-.88,0);
+['ci','ca'].forEach(id=>{into(id);const T=[[0,0]];for(let i=0;i<6;i++)T.push([.15*Math.cos(i*PI/3),.15*Math.sin(i*PI/3)]);for(let i=0;i<12;i++)T.push([.3*Math.cos(i*PI/6),.3*Math.sin(i*PI/6)]);
+ T.forEach(([y,z])=>mi(CX(.035,3.9,8),[0xb9c2cc,.9,.3],0,y,z));[-1.95,1.95].forEach(x=>mi(CX(.46,.04,32),STEEL,x));[-1,0,1].forEach(x=>mi(CX(.44,.025,32),GREY,x))});
+into('motor');mi(new THREE.CylinderGeometry(.88,.88,2.4,40,1,true).rotateZ(PI/2),[0x4a4f57,.7,.4,{side:THREE.DoubleSide}]);[-1.25,1.25].forEach(x=>mi(TOR(.7,.14),CU,x,0,0,0,PI/2,0));{const g0=G,pv=new THREE.Group();g0.add(pv);G=pv;mi(CX(.6,2.7,32),STEEL);mi(CX(.17,3.8),STEEL,.1);for(let i=0;i<12;i++){const a=i/12*PI*2;mi(BOX(2.6,.06,.12),CU,0,.6*Math.cos(a),.6*Math.sin(a),a,0,0)}G=g0;SP.push({o:pv,k:1})}
+into('co');for(let i=0;i<8;i++)mi(CY(.28,.02),STEEL,0,-.4+i*.11,0);
+into('af');for(let i=0;i<7;i++)mi(BOX(.02,1,1.2),[0xe8e0c8,0,.9],-.3+i*.1,0,0);
+into('tv');const tvd=mi(CX(.34,.03),STEEL,0,0,0,0,.6,0);into('coup');{const g0=G,pv=new THREE.Group();g0.add(pv);G=pv;[-.3,.3].forEach(x=>{for(let i=0;i<6;i++){const a=i/6*PI*2;m(CX(.04,.12,8),STEEL,x,.42*Math.cos(a),.42*Math.sin(a))}});G=g0;SP.push({o:pv,k:1})}
+['mti','mta'].forEach(id=>{into(id);for(let i=0;i<3;i++)mi(CY(.2,.02),GREY,0,-.12+i*.12,0)});
+// ===== Vỏ =====
+const enc=new THREE.Group();enc.add(new THREE.Mesh(new THREE.BoxGeometry(14,4.8,5.6),new THREE.MeshBasicMaterial({color:0x8899aa,transparent:true,opacity:.1,depthWrite:false})),
+ new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(14,4.8,5.6)),new THREE.LineBasicMaterial({color:0x4a90d9})));enc.position.set(-.2,2.5,0);enc.visible=false;scene.add(enc);
+// ===== Ống có góc bo =====
+function rpath(P,r){const cp=new THREE.CurvePath();let prev=P[0].clone();
+ for(let i=1;i<P.length-1;i++){const a=P[i-1],b=P[i],c=P[i+1],d1=Math.min(r,a.distanceTo(b)/2),d2=Math.min(r,b.distanceTo(c)/2);
+  const p1=b.clone().add(a.clone().sub(b).normalize().multiplyScalar(d1)),p2=b.clone().add(c.clone().sub(b).normalize().multiplyScalar(d2));
+  if(prev.distanceTo(p1)>1e-4)cp.add(new THREE.LineCurve3(prev.clone(),p1));cp.add(new THREE.QuadraticBezierCurve3(p1,b.clone(),p2));prev=p2}
+ cp.add(new THREE.LineCurve3(prev,P[P.length-1].clone()));return cp}
+const defs={
+air:[0x3b82f6,[V(5.2,1,.9),V(4,1,.9),V(2.3,1,.9),V(2.3,3,1.1),V(-1.9,3,1.1),V(-1.9,2.6,1.1),V(-1.9,2.6,0),V(3,2.6,0),V(3,1.6,-.9),V(3,1,-.9),V(3.9,1,-.9),V(3.9,3,-1.1),V(-1.9,3,-1.1),V(-2.7,2.6,-1.1),V(-3.6,2.6,-1.1)]],
+oil:[0xf5b301,[V(0,.7,-1.25),V(0,.7,-1.8),V(-.6,.7,-1.8),V(-.6,.7,-2.2),V(-.6,1.8,-2.2),V(1.1,1.8,-2.2),V(1.1,1.8,-1.25)]],
+wat:[0x14b8a6,[V(-3.4,.6,-2.6),V(2.3,.6,-2.6),V(2.3,.5,-.9),V(2.3,.5,.9),V(4.4,.5,.9),V(4.4,3,1.1),V(4.4,3,-1.1),V(4.6,3.9,-1.1)]]};
+const groups={},flow={};
+for(const k in defs){const g=new THREE.Group();groups[k]=g;root.add(g);const path=rpath(defs[k][1],.35);
+ const tg=new THREE.TubeGeometry(path,300,.08,10);tg.setAttribute('color',new THREE.BufferAttribute(new Float32Array(tg.attributes.position.count*3),3));const me=new THREE.Mesh(tg,M(0xffffff,.6,.3,{vertexColors:true}));me.castShadow=true;g.add(me);
+ const pts=[];for(let i=0;i<16;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.13,10,10),new THREE.MeshBasicMaterial({color:0xffffff}));g.add(s);pts.push(s)}flow[k]={path,pts,tg,cum:cumU(defs[k][1])}}
+function upd(t){for(const k in flow){const f=flow[k];f.pts.forEach((s,i)=>s.position.copy(f.path.getPointAt(((t*.04+i/f.pts.length)%1))))}}
+// ===== Camera =====
+const T0=V(0,1.8,0),tgt=T0.clone(),sph={r:19,th:.7,ph:1.15};let auto=false,tgtGoal=T0.clone();
+function setCam(){cam.position.set(tgt.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),tgt.y+sph.r*Math.cos(sph.ph),tgt.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));cam.lookAt(tgt)}
+const cv=document.getElementById('c');let drag=null,moved=0;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};moved=0;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;moved+=Math.abs(dx)+Math.abs(dy);sph.th-=dx*.008;sph.ph=Math.min(2.6,Math.max(.15,sph.ph-dy*.008));drag={x:e.clientX,y:e.clientY}});
+cv.addEventListener('pointerup',e=>{drag=null;if(moved<5)pick(e)});
+cv.addEventListener('wheel',e=>{e.preventDefault();sph.r=Math.min(40,Math.max(4,sph.r*(1+e.deltaY*.001)))},{passive:false});
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+function pick(e){const r=cv.getBoundingClientRect();mv.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mv,cam);const h=ray.intersectObjects(meshes).find(i=>parts[i.object.userData.id].g.visible);if(h)sel(h.object.userData.id,true)}
+// ===== Danh sách =====
+const ST={ok:'Đã xác nhận theo tài liệu Atlas Copco',prj:'Chỉ có trong tài liệu dự án',unv:'Chưa tìm thấy nguồn xác nhận'},BC={ok:'#2e7d32',prj:'#b26a00',unv:'#c62828'},STATUS={};
+'base gear el eh af tv uv ci ca mti mta as cv svl svh op co of ek'.split(' ').forEach(k=>STATUS[k]='ok');'motor coup'.split(' ').forEach(k=>STATUS[k]='prj');'us y1 bv s2 wi wo'.split(' ').forEach(k=>STATUS[k]='unv');
+const list=document.getElementById('list');let cur=null;
+['Truyền động','Khí','Khí / Nước','Dầu','Dầu / Nước','Nước','Điều khiển','An toàn','Cơ khí'].forEach(s=>{const it=Object.values(parts).filter(p=>p.sys===s);if(!it.length)return;
+ const h=document.createElement('h3');h.textContent=s;list.appendChild(h);
+ it.forEach(p=>{const b=document.createElement('button');b.className='it';b.dataset.id=p.id;b.innerHTML='<b>'+p.code.split(',')[0]+'</b> '+p.name;b.onclick=()=>sel(p.id,true);list.appendChild(b)})});
+const hl=(id,v)=>parts[id].m.forEach(x=>x.material.emissive&&x.material.emissive.setHex(v));
+function sel(id,focus){if(cur)hl(cur,0);cur=id;const p=parts[id];hl(id,0x444444);
+ document.querySelectorAll('.it').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+ document.getElementById('info').innerHTML='<small>'+p.sys+' · '+p.code+'</small><h2>'+p.name+'</h2><p>'+p.desc+'</p><span class="bd" style="background:'+BC[STATUS[id]||'unv']+'">'+ST[STATUS[id]||'unv']+'</span>';
+ if(focus)tgtGoal=p.g.position.clone();applyAll()}
+const $=id=>document.getElementById(id);
+[['lAir','air'],['lOil','oil'],['lWat','wat']].forEach(([i,k])=>$(i).onchange=e=>groups[k].visible=e.target.checked);
+$('lEnc').onchange=e=>enc.visible=e.target.checked;
+$('rot').onclick=()=>{auto=!auto;$('rot').textContent='Tự xoay: '+(auto?'bật':'tắt')};
+$('rs').onclick=()=>{sph.r=19;sph.th=.7;sph.ph=1.15;tgtGoal=T0.clone()};
+$('spec').onclick=()=>{$('info').innerHTML='<h2>Đối chiếu ZR 630 với catalogue Atlas Copco</h2><table><tr><td>Lưu lượng FAD</td><td>102,9 / 95,7 / 89,0 m³/phút tại 7,5 / 8,6 / 10 bar (ISO 1217, 0% ẩm, 1 bar, 20 °C)</td></tr><tr><td>Động cơ</td><td>630 kW (800 hp)</td></tr><tr><td>Độ ồn</td><td>75–76 dB(A), sai số ±3</td></tr><tr><td>Khối lượng</td><td>9125 kg</td></tr><tr><td>Kích thước</td><td>4060 dài × 2120 rộng × 2400 cao (mm)</td></tr><tr><td>Dự án</td><td>75,1 Nm³/phút chỉ bằng khoảng 78% FAD 95,7 ở 8,6 bar. Độ ẩm 85% và quy đổi Nm³ không giải thích hết mức chênh này, cần datasheet dự án.</td></tr></table>'};
+const LAYERS={drive:['base','motor','coup','gear'],comp:['el','eh','af','tv','uv','us','y1','as','cv','svl','svh'],cool:['ci','ca','mti','mta','co','wi','wo'],oil:['op','of','bv'],ctl:['ek','s2']};
+for(const k in LAYERS)$('L'+k).onchange=e=>LAYERS[k].forEach(id=>parts[id].g.visible=e.target.checked);
+const PLANE=new THREE.Plane(),RNG={x:[-7.5,7.2],y:[-.1,4.9],z:[-3,3]};let cutOn=false,edgesBuilt=false;
+const ind=new THREE.Mesh(new THREE.PlaneGeometry(18,18),new THREE.MeshBasicMaterial({color:0x4a90d9,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false}));ind.visible=false;scene.add(ind);
+function updCut(){const ax=$('ax').value;cutOn=!!ax;ind.visible=cutOn;if(cutOn){const[lo,hi]=RNG[ax],c=lo+(hi-lo)*$('cp').value/100,s=$('inv').checked?1:-1,n=V(0,0,0);n[ax]=s;PLANE.set(n,-s*c);ind.position.set(0,0,0);ind.position[ax]=c;ind.rotation.set(ax=='y'?-PI/2:0,ax=='x'?PI/2:0,0)}applyAll()}
+function applyAll(){const op=$('op').value/100,xr=op<.97,eg=xr||$('edg').checked;
+ if(eg&&!edgesBuilt){edgesBuilt=true;meshes.forEach(me=>{if(me.userData.inner||me.geometry.attributes.position.count>1500)return;me.geometry.computeBoundingBox();if(me.geometry.boundingBox.getSize(new THREE.Vector3()).length()<.4)return;const e=new THREE.LineSegments(new THREE.EdgesGeometry(me.geometry,30),new THREE.LineBasicMaterial({color:0x7fb2e8,transparent:true,opacity:.6}));e.userData.edge=1;me.add(e)})}
+ root.traverse(o=>{const mt=o.material;if(!mt)return;if(o.userData.edge)o.visible=eg;const gr=$('gr').checked,key=''+xr+cutOn+gr,ch=mt.userData.k!==key;mt.userData.k=key;
+  mt.clippingPlanes=cutOn?[PLANE]:[];if(mt.isMeshStandardMaterial){mt.bumpMap=gr?GR:null;mt.bumpScale=.25}mt.clipShadows=true;if(!o.isLine)mt.side=cutOn?THREE.DoubleSide:THREE.FrontSide;
+  if(o.userData.id!==undefined&&!o.userData.inner){if(o.userData.o0==null)o.userData.o0=mt.transparent?mt.opacity:1;const o0=o.userData.o0;mt.transparent=xr||o0<1;mt.opacity=o0<1?o0:(xr?(o.userData.id===cur?Math.max(op,.7):op):1);mt.depthWrite=!xr&&o0>=1}
+  if(ch)mt.needsUpdate=true})}
+$('ax').onchange=$('cp').oninput=$('inv').onchange=updCut;$('op').oninput=$('edg').onchange=$('gr').onchange=applyAll;$('tb').onclick=()=>{$('tools').hidden=!$('tools').hidden};
+function preset(ax,v,t){$('ax').value=ax;const[lo,hi]=RNG[ax];$('cp').value=(v-lo)/(hi-lo)*100;$('inv').checked=false;tgtGoal=t.clone();sph.r=9;sph.ph=.75;updCut()}
+$('p1').onclick=()=>preset('y',1,V(2.3,1,0));$('p2').onclick=()=>preset('y',1.4,V(0,1.4,0));$('p3').onclick=()=>preset('y',3,V(1,3,0));$('p4').onclick=()=>preset('y',1.3,V(-5,1.3,0));
+// ===== MÔ PHỎọNG VẬN HÀNH =====
+const S={st:'stop',pn:7,spd:0,load:false,dm:.5,cw:33,amb:30,ts:1,clog:false,trip:false,why:'',warn:[],P:{air:Array(10).fill(0),oil:Array(4).fill(0)},T:{air:Array(10).fill(30),oil:Array(4).fill(30),wat:Array(5).fill(33)}};
+const TC=new THREE.Color(),RG={air:[20,180],oil:[25,80],wat:[25,55]},SIDX={air:[0,1,2,3,5,8,10,11,12,14],oil:[0,3,4,6],wat:[0,1,3,5,7]};
+function cumU(P){const c=[0];for(let i=1;i<P.length;i++)c.push(c[i-1]+P[i].distanceTo(P[i-1]));return c.map(x=>x/c[c.length-1])}
+for(const k in flow)flow[k].U=SIDX[k].map(i=>flow[k].cum[i]);
+function prof(k,u,arr){const U=flow[k].U;if(u<=U[0])return arr[0];for(let i=1;i<U.length;i++)if(u<=U[i]){const x=(u-U[i-1])/(U[i]-U[i-1]);return arr[i-1]+(arr[i]-arr[i-1])*x}return arr[arr.length-1]}
+const tcol=(k,T,c)=>{const[a,b]=RG[k];return c.setHSL((1-Math.min(1,Math.max(0,(T-a)/(b-a))))*.62,.85,.5)};
+function paint(k){const a=flow[k].tg.attributes.color;for(let i=0;i<=300;i++){tcol(k,prof(k,i/300,S.T[k]),TC);for(let j=0;j<11;j++)a.setXYZ(i*11+j,TC.r,TC.g,TC.b)}a.needsUpdate=true}
+function targets(){const s=S.spd>.05,L=S.load&&s,cw=S.cw,am=S.amb,pn=S.pn,cool=s?cw+12:am,pm=s?(L?2.2:-.67):0,pc=s?(L?2.1:-.67):0,ph=s?(L?pn+.4:.1):0,hot=L?170:(s?75:am);
+ return{P:{air:[s?-.03:0,s?(L?-.04:-.67):0,pm,pm,pc,pc,ph,s?ph-.05:0,s?ph-.2:0,pn],oil:[0,s?2.4:0,s?2.35:0,s?(S.clog?.9:2.2):0]},T:{air:[am,am,hot,hot,cool,cool,L?160:(s?80:am),L?150:(s?75:am),cool,s?cw+10:am],oil:s?[cw+15,cw+15,cw+7,cw+7]:[am,am,am,am],wat:s?[cw,cw+3,cw+6,cw+8,cw+10]:[cw,cw,cw,cw,cw]}}}
+function step(dt){
+ if(S.st=='start'){S.spd=Math.min(1,S.spd+dt/4);S.load=false;if(S.spd>=1)S.st='run'}
+ else if(S.st=='stopping'){S.spd=Math.max(0,S.spd-dt/6);S.load=false;if(S.spd<=0)S.st='stop'}
+ else if(S.st=='run'){if(S.load&&S.pn>=8.6)S.load=false;else if(!S.load&&S.pn<=7.8)S.load=true}
+ const sup=S.load&&S.spd>.05?.14*S.spd:0;S.pn=Math.min(9.5,Math.max(0,S.pn+(sup-S.dm*.1-.002)*dt));
+ const tg=targets();for(const k in S.T){const a=S.T[k],b=tg.T[k];for(let i=0;i<a.length;i++)a[i]+=(b[i]-a[i])*Math.min(1,dt*.35)}
+ for(const k in S.P){const a=S.P[k],b=tg.P[k];for(let i=0;i<a.length;i++)a[i]+=(b[i]-a[i])*Math.min(1,dt*3)}
+ const w=[],tr=[];if(S.spd>.5){const oT=S.T.oil[0],ci=S.T.air[4],ca=S.T.air[8],lp=S.T.air[2],hp=S.T.air[6],oP=S.P.oil[3];
+  if(oT>=65)w.push('Nhiệt độ dầu cao (≥ 65 °C)');if(oT>=70)tr.push('Nhiệt độ dầu ≥ 70 °C');
+  if(ci>=65)w.push('Khí vào cấp 2 cao (≥ 65 °C)');if(ci>=70)tr.push('Khí vào cấp 2 ≥ 70 °C');
+  if(ca>50)w.push('Khí ra Ca cao (> 50 °C)');if(Math.max(lp,hp)>=225)w.push('Khí ra cấp nén ≥ 225 °C');if(Math.max(lp,hp)>=235)tr.push('Khí ra cấp nén ≥ 235 °C');
+  if(oP<1.3)w.push('Áp dầu thấp (< 1,3 barg)');if(oP<1.2)tr.push('Áp dầu < 1,2 barg')}
+ S.warn=w;if(tr.length&&(S.st=='run'||S.st=='start')){S.trip=true;S.why=tr[0];S.st='stopping'}}
+const puff=new THREE.Mesh(new THREE.SphereGeometry(.25,12,12),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));puff.position.set(4,3.15,1.5);root.add(puff);
+const scrTex=parts.ek.m.find(x=>x.material.map).material.map,lamps=parts.ek.m.filter(x=>x.geometry.type=='SphereGeometry');
+const CH=[['air',0,'Hút'],['air',1,'Sau TV'],['air',2,'Ra El'],['air',4,'Sau Ci'],['air',6,'Ra Eh'],['air',9,'Ra mạng'],['oil',0,'Dầu bể'],['oil',2,'Dầu sau Co'],['oil',3,'Sau lọc'],['wat',0,'Nước vào'],['wat',4,'Nước ra']].map(([k,j,lab])=>{const d=document.createElement('div');d.className='chip';$('chips').appendChild(d);return{k,j,lab,d,p:flow[k].path.getPointAt(flow[k].U[j]).clone().add(V(0,.45,0))}});
+const PV=new THREE.Vector3(),mdl=()=>S.trip?'NGẮT MÁY':S.st=='stop'?'Dừng':S.st=='start'?'Khởi động':S.st=='stopping'?'Đang dừng':(S.load?'Có tải':'Không tải');
+function ui(){const g=sc.getContext('2d');g.fillStyle='#0f3a63';g.fillRect(0,0,160,100);g.fillStyle=S.trip?'#c62828':S.warn.length?'#e0a800':'#2fa84f';g.fillRect(0,0,160,16);g.fillStyle='#fff';g.font='11px sans-serif';g.fillText('Elektronikon',6,12);g.font='bold 14px sans-serif';g.fillText(mdl(),8,40);g.font='bold 20px sans-serif';g.fillText(S.pn.toFixed(2)+' bar',8,68);g.font='10px sans-serif';g.fillText('Dầu '+S.P.oil[3].toFixed(1)+' bar · '+S.T.oil[0].toFixed(0)+' °C',8,88);scrTex.needsUpdate=true;
+ [[S.st=='run'||S.st=='start',0x2fa84f],[S.warn.length>0,0xe0a800],[S.trip,0xd62828]].forEach(([on,c],i)=>lamps[i]&&lamps[i].material.emissive.setHex(on?c:0));
+ $('sst').innerHTML='<b style="color:'+(S.trip?'#c62828':S.warn.length?'#b26a00':'inherit')+'">Trạng thái: '+mdl()+'</b>';
+ const r=(a,b)=>'<div><span>'+a+'</span><span>'+b+'</span></div>';
+ $('rd').innerHTML=r('Áp mạng',S.pn.toFixed(2)+' barg')+r('Động cơ',Math.round(1493*S.spd)+' v/ph')+r('Áp dầu sau lọc',S.P.oil[3].toFixed(2)+' barg')+r('Nhiệt độ dầu',S.T.oil[0].toFixed(0)+' °C')+r('Khí ra El / Eh',S.T.air[2].toFixed(0)+' / '+S.T.air[6].toFixed(0)+' °C')+r('Khí sau Ci / Ca',S.T.air[4].toFixed(0)+' / '+S.T.air[8].toFixed(0)+' °C')+r('Nước vào / ra',S.T.wat[0].toFixed(0)+' / '+S.T.wat[4].toFixed(0)+' °C')+(S.trip?'<div style="color:#c62828"><b>Ngắt: '+S.why+'</b></div>':'')+S.warn.map(x=>'<div style="color:#b26a00">Cảnh báo: '+x+'</div>').join('');
+ CH.forEach(c=>{const T=S.T[c.k][c.j],P=S.P[c.k]?S.P[c.k][c.j]:null;c.d.textContent=c.lab+': '+(P!=null?P.toFixed(2)+' bar · ':'')+T.toFixed(0)+' °C';c.d.style.borderLeftColor='#'+tcol(c.k,T,TC).getHexString()})}
+let last=0,lastUI=-1,fr=0;const phs={air:0,oil:0,wat:0};
+function sim(t){const dt=Math.min(.05,t-last)*S.ts;last=t;step(dt);fr++;
+ SP.forEach(x=>x.o.rotation.x+=x.k*7*S.spd*dt);const L=S.load&&S.spd>.05,ks=Math.min(1,dt*5);
+ tvd.rotation.y+=((L?1.45:.12)-tvd.rotation.y)*ks;const us=parts.uv.m[parts.uv.m.length-1];us.position.y+=((L?.5:.68)-us.position.y)*ks;
+ puff.material.opacity=(!L&&S.spd>.3)?.35+.15*Math.sin(t*9):0;puff.scale.setScalar(1+.3*Math.sin(t*7));
+ const sp={air:(L?1:.25)*S.spd*.06,oil:S.spd*.05,wat:S.spd*.04};
+ for(const k in flow){phs[k]=(phs[k]+sp[k]*dt)%1;const F=flow[k];F.pts.forEach((s,i)=>{const u=(phs[k]+i/F.pts.length)%1;s.position.copy(F.path.getPointAt(u));tcol(k,prof(k,u,S.T[k]),s.material.color);s.scale.setScalar(k=='air'?.6+Math.max(0,prof(k,u,S.P.air)+.7)*.12:.9)});if(fr%2==0)paint(k)}
+ if(t-lastUI>.25){lastUI=t;ui()}
+ if($('chp').checked){const w=cv.clientWidth,h=cv.clientHeight;CH.forEach(c=>{PV.copy(c.p).project(cam);c.d.style.display=PV.z>1?'none':'block';c.d.style.left=(PV.x*.5+.5)*w+'px';c.d.style.top=(-PV.y*.5+.5)*h+'px'})}}
+$('go').onclick=()=>{if(S.st=='stop'){S.trip=false;S.why='';S.st='start'}};
+$('stp').onclick=()=>{if(S.st=='run'||S.st=='start')S.st='stopping'};
+$('rst').onclick=()=>{Object.assign(S,{st:'stop',pn:7,spd:0,load:false,trip:false,why:'',warn:[]});for(const k in S.T)S.T[k].fill(k=='wat'?S.cw:S.amb);for(const k in S.P)S.P[k].fill(0)};
+$('dm').oninput=e=>{S.dm=e.target.value/100;$('dmv').textContent=e.target.value+'%'};$('cw').oninput=e=>{S.cw=+e.target.value;$('cwv').textContent=e.target.value};$('ts').oninput=e=>{S.ts=e.target.value/10;$('tsv').textContent=S.ts.toFixed(1)};
+$('clog').onchange=e=>S.clog=e.target.checked;$('chp').onchange=e=>$('chips').style.display=e.target.checked?'block':'none';$('sb').onclick=()=>{$('sim').hidden=!$('sim').hidden};
+$('dm').oninput({target:$('dm')});$('cw').oninput({target:$('cw')});$('ts').oninput({target:$('ts')});$('sim').hidden=innerWidth<720;
+function size(){const r=cv.parentElement.getBoundingClientRect();ren.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+const t0=performance.now();
+(function loop(){requestAnimationFrame(loop);const t=(performance.now()-t0)/1000;if(auto&&!drag)sph.th+=.004;tgt.lerp(tgtGoal,.08);upd=0;sim(t);setCam();ren.render(scene,cam)})();
+</script></body></html>
