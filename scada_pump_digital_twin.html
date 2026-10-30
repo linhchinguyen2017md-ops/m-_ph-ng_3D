@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng 3D Trạm Bơm Song Song Nối Cứng - SCADA Digital Twin</title>
+    <!-- Tailwind CSS for modern responsive UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js for industrial sound synthesis (Water hammer slam & alarm) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for modern industrial HUD in light theme */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0284c7;
+        }
+        .scada-panel {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 0 15px rgba(2, 132, 199, 0.06);
+        }
+        .scada-badge {
+            background: rgba(241, 245, 249, 0.92);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+        }
+        .glow-text-cyan {
+            text-shadow: 0 0 6px rgba(2, 132, 199, 0.35);
+        }
+        .glow-text-amber {
+            text-shadow: 0 0 6px rgba(217, 119, 6, 0.35);
+        }
+        .glow-text-green {
+            text-shadow: 0 0 6px rgba(22, 163, 74, 0.35);
+        }
+        .pulse-subtle {
+            animation: pulseSubtle 2.5s infinite ease-in-out;
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(0.995); }
+        }
+        .shockwave-flash {
+            animation: shockFlash 0.5s ease-out;
+        }
+        @keyframes shockFlash {
+            0% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.8), inset 0 0 20px rgba(239, 68, 68, 0.5); }
+            100% { box-shadow: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .pulse-subtle, .shockwave-flash,
+            .animate-pulse, .animate-bounce { animation: none !important; }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative flex flex-col m-0 p-0 overflow-hidden bg-slate-100 text-slate-800">
+    <!-- THREE.JS 3D CANVAS CONTAINER -->
+    <div id="canvas-container" class="absolute inset-0 z-0 w-full h-full"></div>
+
+    <!-- SCADA INDUSTRIAL HEADER BAR -->
+    <header class="relative z-10 w-full scada-panel border-b border-sky-600/20 px-4 py-2.5 flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-sky-100 border border-sky-500/50 flex items-center justify-center text-sky-700 text-lg shadow-[0_0_12px_rgba(2,132,199,0.2)]">
+                <i class="fa-solid fa-industry"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold text-slate-900 tracking-wide uppercase flex items-center gap-2">
+                    SCADA DIGITAL TWIN: TRẠM BƠM GHÉP SONG SONG NỐI CỨNG
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-400 font-bold">ONLINE</span>
+                </h1>
+                <p class="text-[11px] text-sky-700 font-mono-num font-semibold">2x90kW Centrifugal Pumps | Transient Joukowsky Surge Analysis</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4 text-xs font-mono-num flex-wrap">
+            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span class="text-slate-500 font-medium">LƯU LƯỢNG GÓP:</span>
+                <span id="header-q-total" class="font-bold text-sky-700 glow-text-cyan text-sm">576.0 m³/h</span>
+            </div>
+            <!-- System Quick Summary -->
+            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span class="text-slate-500 font-medium">CHẾ ĐỘ:</span>
+                <span id="header-mode-badge" class="font-bold text-amber-700 glow-text-amber uppercase">1 BƠM VẬN HÀNH</span>
+            </div>
+            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span class="text-slate-500 font-medium">ÁP SUẤT GÓP:</span>
+                <span id="header-h-sys" class="font-bold text-emerald-700 glow-text-green text-sm">36.8 m (3.61 bar)</span>
+            </div>
+            <!-- Dynamic Transient Surge Peak readout -->
+            <div id="surge-badge-container" class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2 border border-slate-300 transition-colors">
+                <span class="text-slate-500 flex items-center gap-1"><i class="fa-solid fa-wave-square text-rose-500"></i>ĐỈNH XUNG ÁP (ΔP):</span>
+                <span id="header-surge-peak" class="font-bold text-slate-700 font-mono-num text-sm">-- bar</span>
+            </div>
+            <!-- Physics Help Modal Trigger -->
+            <button id="btn-toggle-explain" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-sans font-medium transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-circle-question text-white"></i>
+                <span class="hidden md:inline">Giải thích vật lý</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE LAYOUT -->
+    <main class="relative z-10 flex-1 w-full pointer-events-none p-3 sm:p-5 flex flex-col justify-between overflow-hidden">
+        
+        <!-- TOP-LEFT & TOP-RIGHT FLOATING HUD WIDGETS -->
+        <div class="w-full flex justify-between items-start gap-4 flex-wrap">
+            
+            <!-- LEFT WIDGET: DCS Control & Pumps Telemetry -->
+            <div class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
+                
+                <!-- PUMP 1 CARD WITH TRIP & SLAM CONTROLS -->
+                <div id="card-pump1" class="scada-panel rounded-xl p-3 transition-all duration-300 border-l-4 border-l-emerald-500">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" id="p1-led"></span>
+                            <span class="font-bold text-sm text-slate-900 uppercase tracking-wide">Tổ Bơm 01</span>
+                            <span id="p1-nrv-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300 font-mono-num font-bold">NRV 100%</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button id="btn-trip-p1" title="Cắt khẩn cấp / Sự cố mất điện gây búa nước" class="px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-rose-600 hover:bg-rose-500 text-white shadow flex items-center gap-1 border border-rose-400">
+                                <i class="fa-solid fa-bolt text-[10px]"></i> TRIP
+                            </button>
+                            <button id="btn-toggle-p1" class="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300">
+                                DỪNG MỀM
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Data Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-1.5 text-xs font-mono-num">
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Lưu lượng (Q1)</div>
+                            <div class="text-xs font-bold text-sky-700" id="val-q1">576.0 <span class="text-[9px] text-slate-500 font-normal">m³/h</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Dòng Stator (I1)</div>
+                            <div class="text-xs font-bold text-amber-700 flex items-center justify-between" id="val-i1">
+                                <span>168.0 <span class="text-[9px] text-slate-500 font-normal">A</span></span>
+                                <span id="warn-i1" class="text-[8px] px-1 rounded bg-rose-100 text-rose-800 font-bold border border-rose-300 animate-pulse">104% QUÁ TẢI</span>
+                            </div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Tốc độ (n1)</div>
+                            <div class="text-xs font-bold text-slate-800" id="val-n1">1469 <span class="text-[9px] text-slate-500 font-normal">RPM</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Áp suất đầu đẩy (P1)</div>
+                            <div class="text-xs font-bold text-emerald-700" id="val-p1-pres">3.61 <span class="text-[9px] text-slate-500 font-normal">bar</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Mô-men cản (Mc1)</div>
+                            <div class="text-xs font-bold text-indigo-700" id="val-mc1">597.0 <span class="text-[9px] text-slate-500 font-normal">N·m</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Hệ số trượt (s1)</div>
+                            <div class="text-xs font-bold text-purple-700" id="val-s1">2.09 <span class="text-[9px] text-slate-500 font-normal">%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PUMP 2 CARD WITH TRIP & SLAM CONTROLS -->
+                <div id="card-pump2" class="scada-panel rounded-xl p-3 transition-all duration-300 border-l-4 border-l-slate-400 opacity-80">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-400" id="p2-led"></span>
+                            <span class="font-bold text-sm text-slate-900 uppercase tracking-wide">Tổ Bơm 02</span>
+                            <span id="p2-nrv-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-mono-num font-bold">NRV ĐÓNG</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button id="btn-trip-p2" title="Cắt khẩn cấp / Sự cố mất điện gây búa nước" class="px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-rose-600 hover:bg-rose-500 text-white shadow flex items-center gap-1 border border-rose-400 opacity-50 cursor-not-allowed" disabled>
+                                <i class="fa-solid fa-bolt text-[10px]"></i> TRIP
+                            </button>
+                            <button id="btn-toggle-p2" class="px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm">
+                                KHỞI ĐỘNG
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Data Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-1.5 text-xs font-mono-num">
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Lưu lượng (Q2)</div>
+                            <div class="text-xs font-bold text-slate-500" id="val-q2">0.0 <span class="text-[9px] text-slate-400 font-normal">m³/h</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Dòng Stator (I2)</div>
+                            <div class="text-xs font-bold text-slate-500 flex items-center justify-between" id="val-i2">
+                                <span>0.0 <span class="text-[9px] text-slate-400 font-normal">A</span></span>
+                                <span id="warn-i2" class="text-[8px] px-1 rounded bg-slate-200 text-slate-500 font-bold">OFF</span>
+                            </div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Tốc độ (n2)</div>
+                            <div class="text-xs font-bold text-slate-500" id="val-n2">0 <span class="text-[9px] text-slate-400 font-normal">RPM</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Áp suất đầu đẩy (P2)</div>
+                            <div class="text-xs font-bold text-slate-500" id="val-p2-pres">0.00 <span class="text-[9px] text-slate-400 font-normal">bar</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Mô-men cản (Mc2)</div>
+                            <div class="text-xs font-bold text-slate-500" id="val-mc2">0.0 <span class="text-[9px] text-slate-400 font-normal">N·m</span></div>
+                        </div>
+                        <div class="scada-badge p-1.5 rounded">
+                            <div class="text-slate-500 text-[10px] uppercase font-semibold">Hệ số trượt (s2)</div>
+                            <div class="text-xs font-bold text-slate-500" id="val-s2">0.00 <span class="text-[9px] text-slate-400 font-normal">%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRANSIENT PHYSICS CONFIGURATION PANEL -->
+                <div class="scada-panel rounded-xl p-3 pointer-events-auto space-y-2">
+                    <div class="flex items-center justify-between text-xs border-b border-slate-200 pb-1">
+                        <span class="text-sky-800 font-bold flex items-center gap-1.5 uppercase tracking-wide">
+                            <i class="fa-solid fa-gears text-sky-600"></i> Cấu hình Búa nước &amp; Van 1 chiều
+                        </span>
+                        <span class="text-[10px] text-slate-500 font-mono-num font-semibold">JOUKOWSKY ΔP=ρ·a·Δv</span>
+                    </div>
+
+                    <!-- NRV Type Selection -->
+                    <div class="grid grid-cols-3 gap-1.5 text-[10px] font-medium">
+                        <button id="nrv-type-fast" class="py-1 px-1.5 rounded bg-rose-100 border border-rose-300 text-rose-800 hover:bg-rose-200 transition text-center font-bold">
+                            Đóng Nhanh (Slam)
+                        </button>
+                        <button id="nrv-type-std" class="py-1 px-1.5 rounded bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition text-center">
+                            Tiêu Chuẩn (Std)
+                        </button>
+                        <button id="nrv-type-damped" class="py-1 px-1.5 rounded bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition text-center">
+                            Giảm Chấn (Non-slam)
+                        </button>
+                    </div>
+
+                    <!-- Valve load slider -->
+                    <div class="pt-1">
+                        <div class="flex items-center justify-between text-[11px] mb-1">
+                            <span class="text-slate-700 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-sliders text-sky-600"></i> Độ mở van tiết lưu mạng chung
+                            </span>
+                            <span id="valve-val-text" class="font-mono-num font-bold text-sky-700">80%</span>
+                        </div>
+                        <input id="slider-valve" type="range" min="30" max="100" value="80" class="w-full accent-sky-600 h-1.5 bg-slate-300 rounded-lg cursor-pointer">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT WIDGET: TRANSIENT OSCILLOSCOPE STRIP CHART & HQ DYNAMICS -->
+            <div class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
+                
+                <!-- TRANSIENT PRESSURE WAVE RECORDER (OSCILLOSCOPE) -->
+                <div class="scada-panel rounded-xl p-3 flex flex-col gap-1.5 border border-sky-400/40">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+                        <span class="font-bold text-xs uppercase text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-wave-square text-rose-600"></i>
+                            Dao Động Sóng Áp Suất P(t) [Búa Nước]
+                        </span>
+                        <span id="transient-status-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono-num font-bold">ỔN ĐỊNH</span>
+                    </div>
+                    
+                    <!-- Oscilloscope Canvas -->
+                    <div class="relative w-full h-32 bg-slate-900 rounded-lg border border-slate-300 p-1 overflow-hidden shadow-inner">
+                        <canvas id="osc-canvas" class="w-full h-full block"></canvas>
+                        <div id="cavitation-warning" class="absolute bottom-2 left-3 text-[10px] font-mono-num font-bold text-rose-200 bg-rose-900/90 px-2 py-0.5 rounded border border-rose-400 hidden animate-pulse">
+                            <i class="fa-solid fa-triangle-exclamation mr-1 text-rose-400"></i>CẢNH BÁO: ÁP SUẤT ÂM - NGUY CƠ TÁCH CỘT NƯỚC (CAVITATION)
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[10px] font-mono-num text-slate-500 font-medium">
+                        <span>Trục thời gian: Tách sóng 2L/a</span>
+                        <span class="text-rose-600 font-bold">Cực đại P_max: <span id="txt-pmax" class="text-slate-900">3.6 bar</span></span>
+                    </div>
+                </div>
+
+                <!-- HQ CHARACTERISTIC CURVE -->
+                <div class="scada-panel rounded-xl p-3 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+                        <span class="font-bold text-xs uppercase text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-sky-600"></i>
+                            Đặc Tính Thủy Lực H-Q
+                        </span>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300 font-mono-num font-bold">ĐIỂM LÀM VIỆC</span>
+                    </div>
+                    
+                    <div class="relative w-full h-32 bg-slate-900 rounded-lg border border-slate-300 p-1 overflow-hidden shadow-inner">
+                        <canvas id="hq-canvas" class="w-full h-full block"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1 text-[9px] font-mono-num text-slate-600 font-medium">
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-1 bg-sky-400 rounded"></span>
+                            <span>1 Bơm (H₁)</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-1 bg-emerald-400 rounded"></span>
+                            <span>2 Bơm (H₁+₂)</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- BOTTOM HUD: Quick Camera Views & 3D Interactive Hints -->
+        <div class="w-full flex justify-between items-end gap-3 flex-wrap">
+            <!-- 3D Camera Shortcuts -->
+            <div class="scada-panel rounded-xl p-2 px-3 pointer-events-auto flex items-center gap-2">
+                <span class="text-xs text-slate-600 font-medium mr-1 hidden sm:inline"><i class="fa-solid fa-video mr-1 text-sky-600"></i>Góc nhìn:</span>
+                <button id="cam-iso" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Phối cảnh (Iso)</button>
+                <button id="cam-coupling" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Khớp nối cứng</button>
+                <button id="cam-valves" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Ống góp &amp; Van</button>
+                <button id="cam-top" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Mặt bằng</button>
+            </div>
+
+            <!-- Real-time Flow Comparison Alert Indicator -->
+            <div id="flow-comparison-banner" class="scada-panel rounded-xl p-2.5 px-4 pointer-events-auto flex items-center gap-3 text-xs border border-amber-300 bg-amber-50/90">
+                <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base animate-bounce"></i>
+                <div>
+                    <span class="font-bold text-amber-900">Nhận xét vận hành: </span>
+                    <span id="txt-comparison-summary" class="text-slate-700">Chạy 1 bơm đơn lẻ: Điểm làm việc bị kéo dạt sang vùng Run-out, dòng điện I₁ cao nguy cơ quá tải.</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- EXPLANATION DIALOG MODAL -->
+    <div id="modal-explain" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="scada-panel max-w-2xl w-full rounded-2xl p-6 border border-slate-300 relative shadow-2xl overflow-y-auto max-h-[90vh] bg-white">
+            <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-lg w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-slate-200 pb-3">
+                <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center text-sky-700 text-xl border border-sky-300">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Cơ Chế Vật Lý: Tại Sao Dòng Giảm &amp; Tốc Độ Tăng Khi Hòa Thêm Bơm?</h2>
+                    <p class="text-xs text-sky-700 font-mono-num font-semibold">NGUYÊN LÝ CƠ ĐIỆN VÀ THỦY LỰC BƠM LY TÂM NỐI CỨNG</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-rose-700 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-burst"></i>
+                        3. Cơ chế Quá độ Thủy lực &amp; Hiện tượng Búa nước (Water Hammer)
+                    </h3>
+                    <p>
+                        Khi một tổ bơm đang chạy đầy tải bị <strong>Trip khẩn cấp</strong> (mất điện lưới đột ngột hoặc dừng khẩn cấp), mô-men quay của rotor sụt giảm rất nhanh do quán tính cơ học nhỏ. Cột áp do bơm tạo ra giảm tức thì khiến lưu lượng nước $Q$ giảm đột ngột và sinh ra sóng áp suất âm truyền dọc đường ống.
+                    </p>
+                    <p class="mt-1.5">
+                        Áp suất ống góp cao hơn đẩy ngược dòng chảy về phía bơm. Dòng chảy ngược này tác động làm đĩa <strong>Van một chiều (Check valve) đóng sập tức thì (Valve Slam)</strong>. Sự dừng dòng chất lỏng đột ngột làm biến đổi toàn bộ động năng của dòng chảy thành thế năng áp suất theo phương trình <strong>Joukowsky</strong>:
+                    </p>
+                    <div class="p-2 rounded bg-slate-100 font-mono-num text-rose-700 my-1 text-center border border-rose-200 font-bold">
+                        ΔP = ρ · a · Δv
+                    </div>
+                    <p class="text-xs text-slate-600">
+                        Trong đó <span class="text-slate-800 font-semibold">ρ ≈ 1000 kg/m³</span>, vận tốc truyền sóng áp suất trong ống thép <span class="text-slate-800 font-semibold">a ≈ 1000 - 1200 m/s</span>, và <span class="text-slate-800 font-semibold">Δv</span> là độ giảm vận tốc dòng nước. Đỉnh áp suất có thể vượt <strong>1.5 - 2.5 lần áp suất danh định</strong>, gây rung giật mạnh đường ống và nguy cơ vỡ đường ống hoặc phá hủy cánh bơm nếu van một chiều đóng chậm/đóng sập quá nhanh.
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-amber-800 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-down-wide-short"></i>
+                        1. Tại sao dòng điện Stator (I) của mỗi bơm lại GIẢM khi hòa 2 bơm?
+                    </h3>
+                    <p>
+                        Khi chỉ chạy 1 bơm đơn lẻ, tổn thất trở lực đường ống chung còn thấp, điểm làm việc của bơm trượt mạnh sang phía bên phải (<strong class="text-slate-900">Vùng Run-out</strong>). Khi đó lưu lượng qua bơm rất lớn, công suất cản trên trục <span class="font-mono-num text-sky-800 font-semibold">P = ρ·g·Q·H / η</span> tăng vọt, đòi hỏi động cơ phải ăn dòng điện lớn (I ≈ 168 A, đạt 104% định mức).
+                    </p>
+                    <p class="mt-1.5">
+                        Khi <strong>hòa thêm Bơm 2 vào chạy song song</strong>: Lưu lượng tổng qua ống góp tăng lên làm trở lực ma sát ống tăng theo hàm bậc hai ($ΔH \propto Q^2$). Áp lực ống góp tăng vọt, nén điểm làm việc của từng bơm lùi ngược về bên trái (<strong class="text-slate-900">Lưu lượng mỗi bơm giảm từ ~576 m³/h xuống ~408 m³/h</strong>). Lưu lượng qua cánh bơm giảm → Mô-men cản cơ học giảm → <strong>Dòng điện động cơ tự động hạ sâu từ ~168 A xuống ~139 A</strong>.
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-emerald-800 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        2. Tại sao tốc độ quay (n) lại TĂNG NHẸ (từ ~1469 RPM lên ~1475 RPM)?
+                    </h3>
+                    <p>
+                        Do động cơ nối cứng qua trục với bơm và cấp nguồn lưới cố định (50Hz), tốc độ quay rotor tuân theo phương trình động cơ không đồng bộ:
+                    </p>
+                    <div class="p-2 rounded bg-slate-100 font-mono-num text-sky-800 my-1 text-center border border-slate-200 font-bold">
+                        n = n₁ · (1 - s) = (60f / p) · (1 - s)
+                    </div>
+                    <p>
+                        Trong đó tốc độ từ trường quay <span class="font-mono-num font-semibold">n₁ = 1500 RPM</span> (đối với động cơ 4 cực). Tốc độ thực tế phụ thuộc duy nhất vào hệ số trượt tải <span class="font-mono-num text-amber-700 font-semibold">s</span>. Khi tải nặng (chạy 1 bơm đơn lẻ ở vùng Run-out), rotor bị lực cản níu mạnh nên trượt nhiều (<span class="font-mono-num font-semibold">s ≈ 2.09%</span>, n ≈ 1469 RPM). Khi hòa 2 bơm, tải cơ mỗi máy nhẹ đi nên độ trượt co lại (<span class="font-mono-num font-semibold">s ≈ 1.67%</span>), giúp <strong>tốc độ quay nhích tăng lên ~1475 RPM</strong>.
+                    </p>
+                    <div class="mt-2.5 p-2.5 rounded-lg bg-indigo-50/70 border border-indigo-200 text-xs">
+                        <span class="font-bold text-indigo-900 block mb-1">Mối liên hệ Mô-men cản $M_c$ và Hệ số trượt $s$:</span>
+                        Mô-men cản trục bơm được xác định theo:
+                        <div class="font-mono-num text-indigo-800 my-1 font-semibold text-center">
+                            M_c = P_trục / ω = (9550 · P_trục) / n  (N·m)
+                        </div>
+                        Khi chạy 1 bơm (vùng Run-out): $P_{\text{trục}} \approx 91.8\text{ kW} \rightarrow M_c \approx 597\text{ N}\cdot\text{m}$, kéo hệ số trượt $s$ tăng cao (~2.09%). Khi hòa thêm Bơm 2: $P_{\text{trục}}$ mỗi máy giảm còn $\approx 73.2\text{ kW} \rightarrow M_c$ giảm xuống $\approx 474\text{ N}\cdot\text{m}$, hệ số trượt $s$ co lại còn ~1.67%, làm rotor quay nhanh hơn.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-end">
+                <button id="btn-close-modal-bottom" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs tracking-wide transition shadow-md">
+                    ĐÃ HIỂU &amp; TIẾP TỤC QUAN SÁT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SIMULATION LOGIC JAVASCRIPT -->
+    <script>
+        /* =========================================================================
+           1. HYDRAULIC & ELECTRICAL & TRANSIENT PHYSICS ENGINE
+           ========================================================================= */
+        const SystemState = {
+            pump1Active: true,
+            pump2Active: false,
+            // Soft-stop ramp tracking (1.0 = full active, ramp down to 0 on soft stop)
+            pump1Ramp: 1.0,
+            pump2Ramp: 0.0,
+            pump1Stopping: false,
+            pump2Stopping: false,
+
+            valveOpening: 80, // 30% to 100%
+            
+            // Check valve type: 'fast' (Slam), 'std' (Standard), 'damped' (Non-slam dampened)
+            nrvType: 'fast',
+
+            // Steady-state hydraulic variables
+            Q1: 0,
+            Q2: 0,
+            Q_total: 0,
+            H_sys: 0,
+            
+            // Electrical variables
+            I1: 0,
+            I2: 0,
+            n1: 0,
+            n2: 0,
+            s1: 0,
+            s2: 0,
+            P1: 0,
+            P2: 0,
+            Mc1: 0, // Shaft Resistance Torque in N.m
+            Mc2: 0,
+            pf1: 0.85,
+            pf2: 0.85,
+
+            // Animation interpolation variables
+            currentQ1: 0,
+            currentQ2: 0,
+            currentH: 0,
+            currentN1: 0,
+            currentN2: 0,
+
+            // -------------------------------------------------------------
+            // TRANSIENT WATER HAMMER ENGINE VARIABLES
+            // -------------------------------------------------------------
+            transientActive: false,
+            transientTime: 0,
+            transientDuration: 4.5, // seconds of wave oscillation
+            transientPeakSurge: 0, // bar
+            transientOscP: 0, // dynamic pressure delta in bar
+            transientCavitation: false,
+            waveHistory: [], // Buffer for oscilloscope: [{t, p}]
+            historyMaxPoints: 240,
+            pipeShakeIntensity: 0, // For 3D pipe shake amplitude
+            shockwaveRadius: 0, // For 3D ring expansion
+            shockwaveOpacity: 0
+        };
+
+        // Sound synthesizer for Water Hammer Slam & Alarms
+        let synthAudioInitialized = false;
+        let slamSynth = null;
+        let alarmSynth = null;
+
+        function initAudio() {
+            if (synthAudioInitialized) return;
+            try {
+                slamSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.08,
+                    octaves: 4,
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.8 }
+                }).toDestination();
+
+                alarmSynth = new Tone.Synth({
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0.05, release: 0.2 }
+                }).toDestination();
+                synthAudioInitialized = true;
+            } catch (e) {
+                console.warn("Audio Context init deferred:", e);
+            }
+        }
+
+        async function playSlamSound(intensity) {
+            initAudio();
+            if (slamSynth) {
+                await Tone.start();
+                slamSynth.triggerAttackRelease("C1", "8n", undefined, Math.min(1.0, intensity));
+            }
+        }
+
+        // Rated constants for Motor: 4-pole, 50Hz, 380V, P_rated = 90kW, I_rated = 162A, n_sync = 1500 rpm
+        const MOTOR = {
+            n_sync: 1500,
+            U: 380, // V
+            I_rated: 162.0, // A (Realistic for 90kW 3-phase induction motor)
+            P_rated: 90.0,  // kW
+            H0: 75.0,       // Shut-off head in meters
+            a_pump: 0.000115 // Centrifugal pump curve parameter: H = H0 - a*Q^2
+        };
+
+        // Solve hydraulic operating point with fractional pump ramps (for soft stopping)
+        function solveHydraulics() {
+            const valveFactor = Math.pow(100 / SystemState.valveOpening, 1.8);
+            const k_sys = 0.000038 * valveFactor;
+            const H_static = 18.0;
+
+            const r1 = SystemState.pump1Ramp;
+            const r2 = SystemState.pump2Ramp;
+            const effectivePumps = r1 + r2;
+
+            if (effectivePumps <= 0.01) {
+                SystemState.Q1 = 0;
+                SystemState.Q2 = 0;
+                SystemState.Q_total = 0;
+                SystemState.H_sys = H_static;
+                return;
+            }
+
+            const effectiveCoeff = k_sys + (MOTOR.a_pump / (effectivePumps * effectivePumps));
+            const deltaH = MOTOR.H0 - H_static;
+            
+            const Q_total = deltaH > 0 ? Math.sqrt(deltaH / effectiveCoeff) : 0;
+            const H_point = H_static + k_sys * Math.pow(Q_total, 2);
+
+            SystemState.Q_total = Q_total;
+            SystemState.H_sys = H_point;
+
+            SystemState.Q1 = Q_total * (r1 / effectivePumps);
+            SystemState.Q2 = Q_total * (r2 / effectivePumps);
+        }
+
+        // Calculate Motor electrical & mechanical parameters from flow Q
+        // In radial centrifugal pumps: Shaft power P increases monotonically with flow Q (Run-out has maximum power)
+        function computeMotorParameters(Q, isActive, ramp) {
+            if (!isActive || Q <= 0 || ramp <= 0.01) {
+                return { I: 0, n: 0, s: 0, P: 0, Mc: 0, pf: 0 };
+            }
+
+            // Monotonic shaft power model for centrifugal pump:
+            // P_shaft = P_shutoff + (P_rated - P_shutoff) * (Q / Q_rated)^1.15
+            // At shut-off (Q=0): P ~ 35kW. At Q=450 (dual): P ~ 73.5kW. At Q=580 (run-out): P ~ 92.5kW (> 90kW)
+            const P_shutoff = 35.0; // kW
+            const Q_rated = 560.0;  // m3/h
+            const P_shaft = (P_shutoff + (MOTOR.P_rated - P_shutoff) * Math.pow(Q / Q_rated, 1.15)) * ramp;
+
+            const loadRatio = P_shaft / MOTOR.P_rated; // e.g., 1.03 at run-out, 0.81 at parallel
+            // Slip ranges from 0.008 (light load) to ~0.021 (overload)
+            const slip = Math.max(0.006, Math.min(0.035, 0.0205 * loadRatio));
+            const n_speed = MOTOR.n_sync * (1 - slip);
+
+            // Shaft resistance torque Mc = (9550 * P_shaft) / n_speed  [N.m]
+            const torque = n_speed > 0 ? (9550 * P_shaft) / n_speed : 0;
+
+            const eta_motor = 0.94;
+            const cosPhi = Math.max(0.72, Math.min(0.89, 0.72 + 0.16 * Math.min(1.1, loadRatio)));
+            const P_elec = P_shaft / eta_motor; // kW
+            const current = (P_elec * 1000) / (Math.sqrt(3) * MOTOR.U * cosPhi);
+
+            return {
+                I: current,
+                n: n_speed,
+                s: slip * 100,
+                P: P_shaft,
+                Mc: torque,
+                pf: cosPhi
+            };
+        }
+
+        function updatePhysicsCalculations() {
+            solveHydraulics();
+
+            const p1 = computeMotorParameters(SystemState.Q1, SystemState.pump1Active, SystemState.pump1Ramp);
+            SystemState.I1 = p1.I;
+            SystemState.n1 = p1.n;
+            SystemState.s1 = p1.s;
+            SystemState.P1 = p1.P;
+            SystemState.Mc1 = p1.Mc;
+            SystemState.pf1 = p1.pf;
+
+            const p2 = computeMotorParameters(SystemState.Q2, SystemState.pump2Active, SystemState.pump2Ramp);
+            SystemState.I2 = p2.I;
+            SystemState.n2 = p2.n;
+            SystemState.s2 = p2.s;
+            SystemState.P2 = p2.P;
+            SystemState.Mc2 = p2.Mc;
+            SystemState.pf2 = p2.pf;
+        }
+
+        /* -------------------------------------------------------------------------
+           JOUKOWSKY WATER HAMMER TRANSIENT TRIGGER
+           ------------------------------------------------------------------------- */
+        function triggerWaterHammerTrip(pumpIndex) {
+            initAudio();
+
+            // Calculate instantaneous flow rate that got interrupted
+            const interruptedQ = pumpIndex === 1 ? SystemState.Q1 : SystemState.Q2;
+            if (interruptedQ <= 10) {
+                if (pumpIndex === 1) { SystemState.pump1Active = false; SystemState.pump1Ramp = 0; }
+                else { SystemState.pump2Active = false; SystemState.pump2Ramp = 0; }
+                updatePhysicsCalculations();
+                return;
+            }
+
+            // Trip the electrical motor immediately without soft ramp
+            if (pumpIndex === 1) {
+                SystemState.pump1Active = false;
+                SystemState.pump1Ramp = 0;
+                SystemState.pump1Stopping = false;
+            } else {
+                SystemState.pump2Active = false;
+                SystemState.pump2Ramp = 0;
+                SystemState.pump2Stopping = false;
+            }
+            updatePhysicsCalculations();
+
+            // Water Velocity in 350mm pipe: v = Q / (3600 * pi * r^2)
+            const pipeRadius = 0.175; // meters
+            const pipeArea = Math.PI * pipeRadius * pipeRadius;
+            const flowM3s = interruptedQ / 3600;
+            const deltaV = flowM3s / pipeArea; // ~ 1.5 - 2.5 m/s
+
+            // Wave speed in steel pipe filled with water: a ~ 1050 m/s
+            const waveSpeed = 1050; // m/s
+            const rho = 1000; // kg/m3
+
+            let slamMultiplier = 1.0;
+            if (SystemState.nrvType === 'fast') slamMultiplier = 1.35; // Rapid reverse flow slammed shut!
+            else if (SystemState.nrvType === 'std') slamMultiplier = 0.85;
+            else if (SystemState.nrvType === 'damped') slamMultiplier = 0.45; // Non-slam dampened
+
+            const deltaP_Pa = rho * waveSpeed * deltaV * slamMultiplier;
+            const deltaP_bar = (deltaP_Pa / 1e5); // convert to bar
+
+            SystemState.transientPeakSurge = deltaP_bar;
+            SystemState.transientActive = true;
+            SystemState.transientTime = 0;
+            SystemState.pipeShakeIntensity = Math.min(1.0, deltaP_bar / 8.0);
+            SystemState.shockwaveRadius = 0.2;
+            SystemState.shockwaveOpacity = 1.0;
+
+            // Trigger acoustic slam shock
+            playSlamSound(Math.min(1.0, deltaP_bar / 5.0));
+
+            // Visual shockwave flash on body
+            document.body.classList.remove('shockwave-flash');
+            void document.body.offsetWidth; // reflow
+            document.body.classList.add('shockwave-flash');
+        }
+
+        // Update transient wave physics each animation frame
+        function updateTransientWave(dt) {
+            // Handle soft ramp stop decay
+            let rampChanged = false;
+            if (SystemState.pump1Stopping) {
+                SystemState.pump1Ramp = Math.max(0, SystemState.pump1Ramp - dt * 0.8);
+                if (SystemState.pump1Ramp <= 0) {
+                    SystemState.pump1Stopping = false;
+                    SystemState.pump1Active = false;
+                }
+                rampChanged = true;
+            }
+            if (SystemState.pump2Stopping) {
+                SystemState.pump2Ramp = Math.max(0, SystemState.pump2Ramp - dt * 0.8);
+                if (SystemState.pump2Ramp <= 0) {
+                    SystemState.pump2Stopping = false;
+                    SystemState.pump2Active = false;
+                }
+                rampChanged = true;
+            }
+            if (rampChanged) {
+                updatePhysicsCalculations();
+            }
+
+            const baseHeadBar = (SystemState.H_sys * 0.0981); // 1 mH2O ~ 0.0981 bar
+
+            if (SystemState.transientActive) {
+                SystemState.transientTime += dt;
+                const t = SystemState.transientTime;
+
+                // Pipe characteristic period 2L/a ~ 0.25 seconds
+                const period = 0.28;
+                const omega = (2 * Math.PI) / period;
+
+                // Natural damping coefficient
+                const damping = SystemState.nrvType === 'damped' ? 2.5 : 1.2;
+                const envelope = Math.exp(-damping * t);
+
+                // Joukowsky decaying sinusoidal wave
+                const surgeDelta = SystemState.transientPeakSurge * envelope * Math.cos(omega * t);
+                SystemState.transientOscP = surgeDelta;
+
+                // Decay pipe shake
+                SystemState.pipeShakeIntensity = Math.max(0, SystemState.pipeShakeIntensity - dt * 0.4);
+
+                // Expand shockwave visual ring
+                SystemState.shockwaveRadius += dt * 8.0;
+                SystemState.shockwaveOpacity = Math.max(0, SystemState.shockwaveOpacity - dt * 1.5);
+
+                // Cavitation check: if instantaneous pressure drops below vapor pressure (~0.03 bar)
+                const instantaneousP = baseHeadBar + surgeDelta;
+                SystemState.transientCavitation = instantaneousP <= 0.05;
+
+                if (t > SystemState.transientDuration) {
+                    SystemState.transientActive = false;
+                    SystemState.transientOscP = 0;
+                    SystemState.transientCavitation = false;
+                    SystemState.pipeShakeIntensity = 0;
+                }
+            } else {
+                SystemState.transientOscP = 0;
+                SystemState.transientCavitation = false;
+                SystemState.pipeShakeIntensity = 0;
+            }
+
+            // Current instantaneous pressure at discharge
+            const totalInstantP = Math.max(0, baseHeadBar + SystemState.transientOscP);
+
+            // Record into Wave History FIFO for Oscilloscope
+            SystemState.waveHistory.push(totalInstantP);
+            if (SystemState.waveHistory.length > SystemState.historyMaxPoints) {
+                SystemState.waveHistory.shift();
+            }
+        }
+
+        /* =========================================================================
+           2. DOM HUD UI UPDATES & EVENT LISTENERS (CLEANED & DEDUPLICATED)
+           ========================================================================= */
+        const elQTotal = document.getElementById('header-q-total');
+        const elHSys = document.getElementById('header-h-sys');
+        const elSurgePeak = document.getElementById('header-surge-peak');
+        const elSurgeBadge = document.getElementById('surge-badge-container');
+        const elModeBadge = document.getElementById('header-mode-badge');
+        const elSummary = document.getElementById('txt-comparison-summary');
+        const elTransientStatus = document.getElementById('transient-status-badge');
+        const elCavitationWarn = document.getElementById('cavitation-warning');
+        const elTxtPmax = document.getElementById('txt-pmax');
+
+        const elBtnP1 = document.getElementById('btn-toggle-p1');
+        const elBtnTripP1 = document.getElementById('btn-trip-p1');
+        const elBtnP2 = document.getElementById('btn-toggle-p2');
+        const elBtnTripP2 = document.getElementById('btn-trip-p2');
+        const elCardP1 = document.getElementById('card-pump1');
+        const elCardP2 = document.getElementById('card-pump2');
+        const elLedP1 = document.getElementById('p1-led');
+        const elLedP2 = document.getElementById('p2-led');
+        const elNrv1Badge = document.getElementById('p1-nrv-badge');
+        const elNrv2Badge = document.getElementById('p2-nrv-badge');
+
+        const elValQ1 = document.getElementById('val-q1');
+        const elValI1 = document.getElementById('val-i1');
+        const elValN1 = document.getElementById('val-n1');
+        const elValP1Pres = document.getElementById('val-p1-pres');
+        const elValMc1 = document.getElementById('val-mc1');
+        const elValS1 = document.getElementById('val-s1');
+
+        const elValQ2 = document.getElementById('val-q2');
+        const elValI2 = document.getElementById('val-i2');
+        const elValN2 = document.getElementById('val-n2');
+        const elValP2Pres = document.getElementById('val-p2-pres');
+        const elValMc2 = document.getElementById('val-mc2');
+        const elValS2 = document.getElementById('val-s2');
+
+        const sliderValve = document.getElementById('slider-valve');
+        const valveValText = document.getElementById('valve-val-text');
+
+        // NRV Type Buttons
+        const btnNrvFast = document.getElementById('nrv-type-fast');
+        const btnNrvStd = document.getElementById('nrv-type-std');
+        const btnNrvDamped = document.getElementById('nrv-type-damped');
+
+        function setNRVType(type) {
+            SystemState.nrvType = type;
+            [btnNrvFast, btnNrvStd, btnNrvDamped].forEach(b => {
+                b.className = "py-1 px-1.5 rounded bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 transition text-center text-[10px] font-medium";
+            });
+
+            if (type === 'fast') {
+                btnNrvFast.className = "py-1 px-1.5 rounded bg-rose-100 border border-rose-300 text-rose-800 hover:bg-rose-200 transition text-center text-[10px] font-bold";
+            } else if (type === 'std') {
+                btnNrvStd.className = "py-1 px-1.5 rounded bg-sky-100 border border-sky-300 text-sky-800 hover:bg-sky-200 transition text-center text-[10px] font-bold";
+            } else {
+                btnNrvDamped.className = "py-1 px-1.5 rounded bg-emerald-100 border border-emerald-300 text-emerald-800 hover:bg-emerald-200 transition text-center text-[10px] font-bold";
+            }
+        }
+
+        btnNrvFast.addEventListener('click', () => setNRVType('fast'));
+        btnNrvStd.addEventListener('click', () => setNRVType('std'));
+        btnNrvDamped.addEventListener('click', () => setNRVType('damped'));
+
+        function updateUI() {
+            // Smooth interpolation for readouts
+            SystemState.currentQ1 += (SystemState.Q1 - SystemState.currentQ1) * 0.1;
+            SystemState.currentQ2 += (SystemState.Q2 - SystemState.currentQ2) * 0.1;
+            SystemState.currentH += (SystemState.H_sys - SystemState.currentH) * 0.1;
+            SystemState.currentN1 += (SystemState.n1 - SystemState.currentN1) * 0.1;
+            SystemState.currentN2 += (SystemState.n2 - SystemState.currentN2) * 0.1;
+
+            const baseP_bar = (SystemState.currentH * 0.0981);
+            const instP_bar = Math.max(0, baseP_bar + SystemState.transientOscP);
+
+            const qTotalDisplay = (SystemState.currentQ1 + SystemState.currentQ2);
+            elQTotal.textContent = `${qTotalDisplay.toFixed(1)} m³/h`;
+            elHSys.textContent = `${SystemState.currentH.toFixed(1)} m (${baseP_bar.toFixed(2)} bar)`;
+
+            // Transient Surge Readout
+            if (SystemState.transientActive) {
+                elSurgePeak.textContent = `+${SystemState.transientPeakSurge.toFixed(1)} bar`;
+                elSurgeBadge.className = "scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2 border border-rose-400 bg-rose-100 animate-pulse";
+                elTransientStatus.textContent = "DAO ĐỘNG QUÁ ĐỘ (SURGE)";
+                elTransientStatus.className = "text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-400 font-mono-num font-bold animate-pulse";
+                elTxtPmax.textContent = `${(baseP_bar + SystemState.transientPeakSurge).toFixed(2)} bar`;
+            } else {
+                elSurgePeak.textContent = `-- bar`;
+                elSurgeBadge.className = "scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2 border border-slate-300";
+                elTransientStatus.textContent = "ỔN ĐỊNH";
+                elTransientStatus.className = "text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono-num font-bold";
+                elTxtPmax.textContent = `${baseP_bar.toFixed(2)} bar`;
+            }
+
+            // Cavitation indicator toggle
+            if (SystemState.transientCavitation) {
+                elCavitationWarn.classList.remove('hidden');
+            } else {
+                elCavitationWarn.classList.add('hidden');
+            }
+
+            // Active mode status
+            const activeCount = (SystemState.pump1Active ? 1 : 0) + (SystemState.pump2Active ? 1 : 0);
+            if (activeCount === 2) {
+                elModeBadge.textContent = "2 BƠM SONG SONG (DUAL STAGE)";
+                elModeBadge.className = "font-bold text-emerald-700 glow-text-green uppercase";
+                elSummary.innerHTML = "<strong class='text-emerald-700'>2 Bơm chạy song song:</strong> Cột áp ống góp cao (~56 m), mỗi bơm gánh ~408 m³/h → Dòng điện giảm còn ~139 A (nhẹ tải), tốc độ tăng lên ~1475 RPM. <em>Thử bấm nút TRIP để kích hoạt Búa nước Joukowsky!</em>";
+            } else if (activeCount === 1) {
+                elModeBadge.textContent = "1 BƠM VẬN HÀNH (SINGLE STAGE)";
+                elModeBadge.className = "font-bold text-amber-700 glow-text-amber uppercase";
+                elSummary.innerHTML = "<strong class='text-amber-700'>Chạy 1 bơm đơn lẻ:</strong> Điểm làm việc trượt sang Run-out (~576 m³/h, I₁≈168 A quá tải 104%, n ≈ 1469 RPM). <em>Bấm 'TRIP' để quan sát van một chiều đóng sập!</em>";
+            } else {
+                elModeBadge.textContent = "TRẠM BƠM DỪNG HOÀN TOÀN";
+                elModeBadge.className = "font-bold text-rose-700 uppercase";
+                elSummary.textContent = "Tất cả các tổ bơm đã ngừng. Hãy bấm 'Khởi động' một bơm để hòa mạng lại.";
+            }
+
+            // Pump 1 Readouts
+            if (SystemState.pump1Active) {
+                elCardP1.classList.remove('opacity-70', 'border-l-slate-400');
+                elCardP1.classList.add('border-l-emerald-500');
+                elLedP1.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]";
+                elBtnP1.className = "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300";
+                elBtnP1.textContent = SystemState.pump1Stopping ? "ĐANG DỪNG..." : "DỪNG MỀM";
+                elBtnTripP1.disabled = false;
+                elBtnTripP1.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                elNrv1Badge.textContent = "NRV MỞ 100%";
+                elNrv1Badge.className = "text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300 font-mono-num font-bold";
+
+                elValQ1.innerHTML = `${SystemState.currentQ1.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">m³/h</span>`;
+                const loadPct1 = Math.round((SystemState.I1 / MOTOR.I_rated) * 100);
+                const isOver1 = loadPct1 > 100;
+                const warnCls1 = isOver1
+                    ? "text-[8px] px-1 rounded bg-rose-100 text-rose-800 font-bold border border-rose-300 animate-pulse"
+                    : "text-[8px] px-1 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-300";
+                const warnTxt1 = isOver1 ? `${loadPct1}% QUÁ TẢI` : `${loadPct1}% ĐỊNH MỨC`;
+                elValI1.innerHTML =
+                    `<span>${SystemState.I1.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">A</span></span>` +
+                    `<span class="${warnCls1}">${warnTxt1}</span>`;
+                elValN1.innerHTML = `${Math.round(SystemState.currentN1)} <span class="text-[9px] text-slate-500 font-normal">RPM</span>`;
+                elValP1Pres.innerHTML = `${instP_bar.toFixed(2)} <span class="text-[9px] text-slate-500 font-normal">bar</span>`;
+                elValMc1.innerHTML = `${SystemState.Mc1.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">N·m</span>`;
+                elValS1.innerHTML = `${SystemState.s1.toFixed(2)} <span class="text-[9px] text-slate-500 font-normal">%</span>`;
+            } else {
+                elCardP1.classList.add('opacity-70', 'border-l-slate-400');
+                elCardP1.classList.remove('border-l-emerald-500');
+                elLedP1.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+                elBtnP1.className = "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm";
+                elBtnP1.textContent = "KHỞI ĐỘNG";
+                elBtnTripP1.disabled = true;
+                elBtnTripP1.classList.add('opacity-50', 'cursor-not-allowed');
+
+                elNrv1Badge.textContent = "NRV ĐÓNG";
+                elNrv1Badge.className = "text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 font-mono-num font-bold";
+
+                elValQ1.innerHTML = `0.0 <span class="text-[9px] text-slate-400 font-normal">m³/h</span>`;
+                elValI1.innerHTML =
+                    `<span>0.0 <span class="text-[9px] text-slate-400 font-normal">A</span></span>` +
+                    `<span class="text-[8px] px-1 rounded bg-slate-200 text-slate-500 font-bold">OFF</span>`;
+                elValN1.innerHTML = `0 <span class="text-[9px] text-slate-400 font-normal">RPM</span>`;
+                elValP1Pres.innerHTML = `0.00 <span class="text-[9px] text-slate-400 font-normal">bar</span>`;
+                elValMc1.innerHTML = `0.0 <span class="text-[9px] text-slate-400 font-normal">N·m</span>`;
+                elValS1.innerHTML = `0.00 <span class="text-[9px] text-slate-400 font-normal">%</span>`;
+            }
+
+            // Pump 2 Readouts
+            if (SystemState.pump2Active) {
+                elCardP2.classList.remove('opacity-70', 'border-l-slate-400');
+                elCardP2.classList.add('border-l-emerald-500');
+                elLedP2.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]";
+                elBtnP2.className = "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300";
+                elBtnP2.textContent = SystemState.pump2Stopping ? "ĐANG DỪNG..." : "DỪNG MỀM";
+                elBtnTripP2.disabled = false;
+                elBtnTripP2.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                elNrv2Badge.textContent = "NRV MỞ 100%";
+                elNrv2Badge.className = "text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300 font-mono-num font-bold";
+
+                elValQ2.innerHTML = `${SystemState.currentQ2.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">m³/h</span>`;
+                const loadPct2 = Math.round((SystemState.I2 / MOTOR.I_rated) * 100);
+                const isOver2 = loadPct2 > 100;
+                const warnCls2 = isOver2
+                    ? "text-[8px] px-1 rounded bg-rose-100 text-rose-800 font-bold border border-rose-300 animate-pulse"
+                    : "text-[8px] px-1 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-300";
+                const warnTxt2 = isOver2 ? `${loadPct2}% QUÁ TẢI` : `${loadPct2}% ĐỊNH MỨC`;
+                elValI2.innerHTML =
+                    `<span>${SystemState.I2.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">A</span></span>` +
+                    `<span class="${warnCls2}">${warnTxt2}</span>`;
+                elValN2.innerHTML = `${Math.round(SystemState.currentN2)} <span class="text-[9px] text-slate-500 font-normal">RPM</span>`;
+                elValP2Pres.innerHTML = `${instP_bar.toFixed(2)} <span class="text-[9px] text-slate-500 font-normal">bar</span>`;
+                elValMc2.innerHTML = `${SystemState.Mc2.toFixed(1)} <span class="text-[9px] text-slate-500 font-normal">N·m</span>`;
+                elValS2.innerHTML = `${SystemState.s2.toFixed(2)} <span class="text-[9px] text-slate-500 font-normal">%</span>`;
+            } else {
+                elCardP2.classList.add('opacity-70', 'border-l-slate-400');
+                elCardP2.classList.remove('border-l-emerald-500');
+                elLedP2.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+                elBtnP2.className = "px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm";
+                elBtnP2.textContent = "KHỞI ĐỘNG";
+                elBtnTripP2.disabled = true;
+                elBtnTripP2.classList.add('opacity-50', 'cursor-not-allowed');
+
+                elNrv2Badge.textContent = "NRV ĐÓNG";
+                elNrv2Badge.className = "text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 font-mono-num font-bold";
+
+                elValQ2.innerHTML = `0.0 <span class="text-[9px] text-slate-400 font-normal">m³/h</span>`;
+                elValI2.innerHTML =
+                    `<span>0.0 <span class="text-[9px] text-slate-400 font-normal">A</span></span>` +
+                    `<span class="text-[8px] px-1 rounded bg-slate-200 text-slate-500 font-bold">OFF</span>`;
+                elValN2.innerHTML = `0 <span class="text-[9px] text-slate-400 font-normal">RPM</span>`;
+                elValP2Pres.innerHTML = `0.00 <span class="text-[9px] text-slate-400 font-normal">bar</span>`;
+                elValMc2.innerHTML = `0.0 <span class="text-[9px] text-slate-400 font-normal">N·m</span>`;
+                elValS2.innerHTML = `0.00 <span class="text-[9px] text-slate-400 font-normal">%</span>`;
+            }
+        }
+
+        // Button Listeners for Soft Switch and Sudden Trip
+        elBtnP1.addEventListener('click', () => {
+            if (SystemState.pump1Active) {
+                // Soft stop ramp down
+                SystemState.pump1Stopping = true;
+            } else {
+                // Start up
+                SystemState.pump1Active = true;
+                SystemState.pump1Ramp = 1.0;
+                SystemState.pump1Stopping = false;
+                updatePhysicsCalculations();
+            }
+        });
+        elBtnTripP1.addEventListener('click', () => {
+            triggerWaterHammerTrip(1);
+        });
+
+        elBtnP2.addEventListener('click', () => {
+            if (SystemState.pump2Active) {
+                // Soft stop ramp down
+                SystemState.pump2Stopping = true;
+            } else {
+                // Start up
+                SystemState.pump2Active = true;
+                SystemState.pump2Ramp = 1.0;
+                SystemState.pump2Stopping = false;
+                updatePhysicsCalculations();
+            }
+        });
+        elBtnTripP2.addEventListener('click', () => {
+            triggerWaterHammerTrip(2);
+        });
+
+        sliderValve.addEventListener('input', (e) => {
+            SystemState.valveOpening = parseFloat(e.target.value);
+            valveValText.textContent = `${SystemState.valveOpening}%`;
+            updatePhysicsCalculations();
+        });
+
+        // Explanation Modal Listeners
+        const modalExplain = document.getElementById('modal-explain');
+        document.getElementById('btn-toggle-explain').addEventListener('click', () => modalExplain.classList.remove('hidden'));
+        document.getElementById('btn-close-modal').addEventListener('click', () => modalExplain.classList.add('hidden'));
+        document.getElementById('btn-close-modal-bottom').addEventListener('click', () => modalExplain.classList.add('hidden'));
+
+        /* =========================================================================
+           4. THREE.JS 3D SCENE & TRANSIENT VISUAL EFFECTS (LIGHT THEME)
+           ========================================================================= */
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe2e8f0); // Crisp light slate background
+        scene.fog = new THREE.FogExp2(0xe2e8f0, 0.018);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(12, 10, 16);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;
+        controls.minDistance = 3;
+        controls.maxDistance = 45;
+        controls.target.set(0, 1.8, 0);
+
+        // Lighting tailored for bright environment
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+        dirLight.position.set(15, 25, 12);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.bias = -0.0005;
+        scene.add(dirLight);
+
+        const blueAccentLight = new THREE.PointLight(0x0284c7, 1.5, 30);
+        blueAccentLight.position.set(0, 5, 5);
+        scene.add(blueAccentLight);
+
+        const surgeFlashLight = new THREE.PointLight(0xef4444, 0, 35);
+        surgeFlashLight.position.set(2.0, 3.5, 0);
+        scene.add(surgeFlashLight);
+
+        // Floor in bright epoxy finish
+        const floorGeo = new THREE.PlaneGeometry(60, 60);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, roughness: 0.6, metalness: 0.1 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const gridHelper = new THREE.GridHelper(50, 50, 0x0284c7, 0x94a3b8);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // Materials - Industrial clean colors for light theme
+        const motorMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.35, metalness: 0.5 });
+        const motorFinMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5, metalness: 0.4 });
+        const pumpMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.35, metalness: 0.5 });
+        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.95 });
+        const rigidCouplingMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.8 });
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8, metalness: 0.1 });
+        const pipeMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.35, metalness: 0.65 });
+        const valveMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.3, metalness: 0.7 });
+        const nrvBodyMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.3, metalness: 0.7 });
+
+        // Dynamic 3D references
+        const rotatingShafts1 = [];
+        const rotatingShafts2 = [];
+        const pressureGaugeNeedles = [];
+        const dischargePipeBranches = []; // For pipe shake simulation
+        const nrvFlaps = []; // For check-valve swing disk animation
+
+        // Shockwave Visual Mesh (Expanding Torus Ring upon Slam)
+        const shockwaveGeo = new THREE.TorusGeometry(1, 0.06, 12, 32);
+        shockwaveGeo.rotateX(Math.PI / 2);
+        const shockwaveMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0 });
+        const shockwaveMesh = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+        shockwaveMesh.position.set(1.8, 2.7, 4.0);
+        scene.add(shockwaveMesh);
+
+        /* =========================================================================
+           CANVAS 2D PLOTS: OSCILLOSCOPE & HQ CHARACTERISTIC
+           ========================================================================= */
+        const oscCanvas = document.getElementById('osc-canvas');
+        const oscCtx = oscCanvas.getContext('2d');
+        const hqCanvas = document.getElementById('hq-canvas');
+        const hqCtx = hqCanvas.getContext('2d');
+
+        function resizeCanvases() {
+            if (!oscCanvas || !hqCanvas) return;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            
+            const oscRect = oscCanvas.getBoundingClientRect();
+            if (oscRect.width > 0 && oscRect.height > 0) {
+                oscCanvas.width = oscRect.width * dpr;
+                oscCanvas.height = oscRect.height * dpr;
+            }
+
+            const hqRect = hqCanvas.getBoundingClientRect();
+            if (hqRect.width > 0 && hqRect.height > 0) {
+                hqCanvas.width = hqRect.width * dpr;
+                hqCanvas.height = hqRect.height * dpr;
+            }
+        }
+
+        function drawOscilloscope() {
+            const w = oscCanvas.width;
+            const h = oscCanvas.height;
+            if (w === 0 || h === 0) return;
+
+            oscCtx.clearRect(0, 0, w, h);
+
+            const padX = 28 * (window.devicePixelRatio || 1);
+            const padY = 16 * (window.devicePixelRatio || 1);
+            const maxP = 12.0; // max display bar
+            const minP = 0.0;
+
+            function mapY(val) {
+                const clamped = Math.max(minP, Math.min(maxP, val));
+                return h - padY - ((clamped - minP) / (maxP - minP)) * (h - 2 * padY);
+            }
+
+            // Grid lines
+            oscCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+            oscCtx.lineWidth = 1;
+            oscCtx.beginPath();
+            for (let bar = 2; bar <= 10; bar += 2) {
+                const y = mapY(bar);
+                oscCtx.moveTo(padX, y);
+                oscCtx.lineTo(w - 10, y);
+            }
+            oscCtx.stroke();
+
+            // Zero / Vapor line warning
+            const vaporY = mapY(0.05);
+            oscCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+            oscCtx.setLineDash([4, 4]);
+            oscCtx.beginPath();
+            oscCtx.moveTo(padX, vaporY);
+            oscCtx.lineTo(w - 10, vaporY);
+            oscCtx.stroke();
+            oscCtx.setLineDash([]);
+
+            // Plot line
+            const pts = SystemState.waveHistory;
+            if (pts.length < 2) return;
+
+            oscCtx.strokeStyle = SystemState.transientActive ? '#ef4444' : '#0284c7';
+            oscCtx.lineWidth = 2.0 * (window.devicePixelRatio || 1);
+            oscCtx.beginPath();
+
+            const rPad = 10 * (window.devicePixelRatio || 1);
+            const stepX = (w - padX - rPad) / (SystemState.historyMaxPoints - 1);
+            for (let i = 0; i < pts.length; i++) {
+                const x = padX + i * stepX;
+                const y = mapY(pts[i]);
+                if (i === 0) oscCtx.moveTo(x, y); else oscCtx.lineTo(x, y);
+            }
+            oscCtx.stroke();
+
+            // Glowing indicator at rightmost point
+            const lastVal = pts[pts.length - 1];
+            const lastX = padX + (pts.length - 1) * stepX;
+            const lastY = mapY(lastVal);
+            oscCtx.fillStyle = SystemState.transientActive ? '#ef4444' : '#0284c7';
+            oscCtx.beginPath();
+            oscCtx.arc(lastX, lastY, 4 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
+            oscCtx.fill();
+        }
+
+        function drawHQChart() {
+            const w = hqCanvas.width;
+            const h = hqCanvas.height;
+            if (w === 0 || h === 0) return;
+
+            const padX = 28 * (window.devicePixelRatio || 1);
+            const padY = 16 * (window.devicePixelRatio || 1);
+
+            hqCtx.clearRect(0, 0, w, h);
+
+            const maxQ = 1200;
+            const maxH = 85;
+
+            function mapX(q) { return padX + (q / maxQ) * (w - padX - 10 * (window.devicePixelRatio || 1)); }
+            function mapY(head) { return h - padY - (head / maxH) * (h - padY - 8 * (window.devicePixelRatio || 1)); }
+
+            // Grid lines
+            hqCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+            hqCtx.lineWidth = 1;
+            hqCtx.beginPath();
+            for (let q = 300; q <= 900; q += 300) {
+                hqCtx.moveTo(mapX(q), mapY(0));
+                hqCtx.lineTo(mapX(q), mapY(maxH));
+            }
+            for (let yH = 20; yH <= 60; yH += 20) {
+                hqCtx.moveTo(mapX(0), mapY(yH));
+                hqCtx.lineTo(mapX(maxQ), mapY(yH));
+            }
+            hqCtx.stroke();
+
+            // Axes
+            hqCtx.strokeStyle = '#64748b';
+            hqCtx.lineWidth = 1.2;
+            hqCtx.beginPath();
+            hqCtx.moveTo(mapX(0), mapY(0));
+            hqCtx.lineTo(mapX(maxQ), mapY(0));
+            hqCtx.moveTo(mapX(0), mapY(0));
+            hqCtx.lineTo(mapX(0), mapY(maxH));
+            hqCtx.stroke();
+
+            // Curve 1: Single Pump H1
+            hqCtx.strokeStyle = '#0284c7';
+            hqCtx.lineWidth = 1.8;
+            hqCtx.beginPath();
+            for (let q = 0; q <= 750; q += 25) {
+                const head = Math.max(0, MOTOR.H0 - MOTOR.a_pump * q * q);
+                const x = mapX(q);
+                const y = mapY(head);
+                if (q === 0) hqCtx.moveTo(x, y); else hqCtx.lineTo(x, y);
+            }
+            hqCtx.stroke();
+
+            // Curve 2: Dual Pumps Parallel H(1+2)
+            hqCtx.strokeStyle = '#10b981';
+            hqCtx.lineWidth = 1.8;
+            hqCtx.beginPath();
+            for (let q = 0; q <= 1200; q += 30) {
+                const head = Math.max(0, MOTOR.H0 - (MOTOR.a_pump / 4) * q * q);
+                const x = mapX(q);
+                const y = mapY(head);
+                if (q === 0) hqCtx.moveTo(x, y); else hqCtx.lineTo(x, y);
+            }
+            hqCtx.stroke();
+
+            // Curve 3: System Resistance Curve
+            const valveFactor = Math.pow(100 / SystemState.valveOpening, 1.8);
+            const k_sys = 0.000038 * valveFactor;
+            const H_static = 18.0;
+
+            hqCtx.strokeStyle = '#e11d48';
+            hqCtx.setLineDash([3 * (window.devicePixelRatio || 1), 3 * (window.devicePixelRatio || 1)]);
+            hqCtx.lineWidth = 1.8;
+            hqCtx.beginPath();
+            for (let q = 0; q <= 1100; q += 30) {
+                const head = H_static + k_sys * q * q;
+                if (head > maxH) break;
+                const x = mapX(q);
+                const y = mapY(head);
+                if (q === 0) hqCtx.moveTo(x, y); else hqCtx.lineTo(x, y);
+            }
+            hqCtx.stroke();
+            hqCtx.setLineDash([]);
+
+            // Draw current Operating Point
+            if (SystemState.Q_total > 5) {
+                const curX = mapX(SystemState.currentQ1 + SystemState.currentQ2);
+                const curY = mapY(SystemState.currentH + (SystemState.transientOscP / 0.0981));
+
+                hqCtx.fillStyle = 'rgba(217, 119, 6, 0.35)';
+                hqCtx.beginPath();
+                hqCtx.arc(curX, curY, 6 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
+                hqCtx.fill();
+
+                hqCtx.fillStyle = '#d97706';
+                hqCtx.beginPath();
+                hqCtx.arc(curX, curY, 3 * (window.devicePixelRatio || 1), 0, Math.PI * 2);
+                hqCtx.fill();
+            }
+        }
+
+        /* =========================================================================
+           5. BUILD DETAILED PUMP SKID 3D MODELS WITH NRV FLAPS
+           ========================================================================= */
+        function createPumpSkid(zOffset, skidIndex) {
+            const group = new THREE.Group();
+            group.position.set(0, 0, zOffset);
+
+            // 1. Concrete Base Skid
+            const skidGeo = new THREE.BoxGeometry(7.5, 0.45, 2.4);
+            const skid = new THREE.Mesh(skidGeo, baseMat);
+            skid.position.set(0, 0.225, 0);
+            skid.castShadow = true;
+            skid.receiveShadow = true;
+            group.add(skid);
+
+            const riserGeo = new THREE.BoxGeometry(2.4, 0.3, 1.8);
+            const riserMotor = new THREE.Mesh(riserGeo, baseMat);
+            riserMotor.position.set(-2, 0.55, 0);
+            group.add(riserMotor);
+
+            const riserPump = new THREE.Mesh(riserGeo, baseMat);
+            riserPump.position.set(1.8, 0.55, 0);
+            group.add(riserPump);
+
+            // 2. Motor Assembly
+            const motorGroup = new THREE.Group();
+            motorGroup.position.set(-2, 1.45, 0);
+
+            const statorGeo = new THREE.CylinderGeometry(0.75, 0.75, 2.2, 32);
+            statorGeo.rotateZ(Math.PI / 2);
+            const stator = new THREE.Mesh(statorGeo, motorMat);
+            stator.castShadow = true;
+            motorGroup.add(stator);
+
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                const finGeo = new THREE.BoxGeometry(2.1, 0.1, 0.03);
+                const fin = new THREE.Mesh(finGeo, motorFinMat);
+                fin.position.set(0, Math.sin(angle) * 0.78, Math.cos(angle) * 0.78);
+                fin.rotation.x = angle;
+                motorGroup.add(fin);
+            }
+
+            const termBoxGeo = new THREE.BoxGeometry(0.5, 0.45, 0.5);
+            const termBox = new THREE.Mesh(termBoxGeo, motorMat);
+            termBox.position.set(-0.2, 0.95, 0);
+            motorGroup.add(termBox);
+
+            const fanCoverGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.4, 32);
+            fanCoverGeo.rotateZ(Math.PI / 2);
+            const fanCover = new THREE.Mesh(fanCoverGeo, motorFinMat);
+            fanCover.position.set(-1.2, 0, 0);
+            motorGroup.add(fanCover);
+
+            group.add(motorGroup);
+
+            // 3. Volute Casing
+            const pumpGroup = new THREE.Group();
+            pumpGroup.position.set(1.8, 1.45, 0);
+
+            const voluteGeo = new THREE.TorusGeometry(0.8, 0.35, 20, 40);
+            voluteGeo.rotateY(Math.PI / 2);
+            const volute = new THREE.Mesh(voluteGeo, pumpMat);
+            volute.castShadow = true;
+            pumpGroup.add(volute);
+
+            const voluteCenterGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.6, 32);
+            voluteCenterGeo.rotateZ(Math.PI / 2);
+            const voluteCenter = new THREE.Mesh(voluteCenterGeo, pumpMat);
+            pumpGroup.add(voluteCenter);
+
+            const suctionGeo = new THREE.CylinderGeometry(0.4, 0.4, 1.2, 24);
+            suctionGeo.rotateZ(Math.PI / 2);
+            const suction = new THREE.Mesh(suctionGeo, pipeMat);
+            suction.position.set(0.9, 0, 0);
+            pumpGroup.add(suction);
+
+            const suctionFlangeGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.1, 24);
+            suctionFlangeGeo.rotateZ(Math.PI / 2);
+            const suctionFlange = new THREE.Mesh(suctionFlangeGeo, chromeMat);
+            suctionFlange.position.set(1.5, 0, 0);
+            pumpGroup.add(suctionFlange);
+
+            const dischargeGeo = new THREE.CylinderGeometry(0.35, 0.35, 1.2, 24);
+            const discharge = new THREE.Mesh(dischargeGeo, pipeMat);
+            discharge.position.set(0, 1.0, 0);
+            pumpGroup.add(discharge);
+
+            group.add(pumpGroup);
+
+            // 4. Rigid Coupling & Shafts
+            const shaftGroup = new THREE.Group();
+            shaftGroup.position.set(0, 1.45, 0);
+
+            const motorShaftGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.9, 20);
+            motorShaftGeo.rotateZ(Math.PI / 2);
+            const motorShaft = new THREE.Mesh(motorShaftGeo, chromeMat);
+            motorShaft.position.set(-0.55, 0, 0);
+            shaftGroup.add(motorShaft);
+
+            const pumpShaftGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.9, 20);
+            pumpShaftGeo.rotateZ(Math.PI / 2);
+            const pumpShaft = new THREE.Mesh(pumpShaftGeo, chromeMat);
+            pumpShaft.position.set(0.55, 0, 0);
+            shaftGroup.add(pumpShaft);
+
+            const couplingBodyGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.6, 24);
+            couplingBodyGeo.rotateZ(Math.PI / 2);
+            const couplingBody = new THREE.Mesh(couplingBodyGeo, rigidCouplingMat);
+            shaftGroup.add(couplingBody);
+
+            const markerGeo = new THREE.BoxGeometry(0.62, 0.58, 0.05);
+            const markerMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const marker = new THREE.Mesh(markerGeo, markerMat);
+            shaftGroup.add(marker);
+
+            group.add(shaftGroup);
+
+            if (skidIndex === 1) rotatingShafts1.push(shaftGroup);
+            else rotatingShafts2.push(shaftGroup);
+
+            // 5. DISCHARGE PIPE BRANCH (SUBJECT TO WATER HAMMER SHAKE)
+            const branchGroup = new THREE.Group();
+            branchGroup.position.set(1.8, 0, 0);
+
+            // Riser pipe
+            const riserPipeGeo = new THREE.CylinderGeometry(0.32, 0.32, 1.8, 24);
+            const riserPipe = new THREE.Mesh(riserPipeGeo, pipeMat);
+            riserPipe.position.set(0, 3.2, 0);
+            branchGroup.add(riserPipe);
+
+            // NON-RETURN VALVE (CHECK VALVE BODY)
+            const checkValveGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.5, 20);
+            const checkValve = new THREE.Mesh(checkValveGeo, nrvBodyMat);
+            checkValve.position.set(0, 2.7, 0);
+            branchGroup.add(checkValve);
+
+            // NRV Internal Hinged Flap/Disc (Pivot mechanism)
+            const flapPivot = new THREE.Group();
+            flapPivot.position.set(0, 2.7, -0.2); // Hinge pivot point
+            const flapDiscGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.06, 20);
+            const flapDisc = new THREE.Mesh(flapDiscGeo, chromeMat);
+            flapDisc.position.set(0, 0, 0.2);
+            flapPivot.add(flapDisc);
+            branchGroup.add(flapPivot);
+            nrvFlaps.push({ pivot: flapPivot, skid: skidIndex });
+
+            // Pressure Transmitter & Dial Gauge
+            const gaugeMountGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8);
+            gaugeMountGeo.rotateZ(Math.PI / 2);
+            const gaugeMount = new THREE.Mesh(gaugeMountGeo, chromeMat);
+            gaugeMount.position.set(0.3, 3.5, 0);
+            branchGroup.add(gaugeMount);
+
+            const gaugeDialGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.08, 24);
+            gaugeDialGeo.rotateZ(Math.PI / 2);
+            const gaugeDial = new THREE.Mesh(gaugeDialGeo, new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
+            gaugeDial.position.set(0.55, 3.5, 0);
+            branchGroup.add(gaugeDial);
+
+            const needleGeo = new THREE.BoxGeometry(0.02, 0.16, 0.02);
+            const needleMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+            const needle = new THREE.Mesh(needleGeo, needleMat);
+            needle.position.set(0.6, 3.5, 0);
+            branchGroup.add(needle);
+            pressureGaugeNeedles.push({ mesh: needle, skid: skidIndex });
+
+            // Elbow & Pipe branch into Header
+            const elbowGeo = new THREE.TorusGeometry(0.5, 0.32, 16, 24, Math.PI / 2);
+            elbowGeo.rotateX(Math.PI / 2);
+            if (zOffset > 0) elbowGeo.rotateY(Math.PI / 2); else elbowGeo.rotateY(-Math.PI / 2);
+            const elbow = new THREE.Mesh(elbowGeo, pipeMat);
+            elbow.position.set(0, 4.1, zOffset > 0 ? -0.5 : 0.5);
+            branchGroup.add(elbow);
+
+            const branchLen = Math.abs(zOffset) - 0.5;
+            const branchPipeGeo = new THREE.CylinderGeometry(0.32, 0.32, branchLen, 24);
+            branchPipeGeo.rotateX(Math.PI / 2);
+            const branchPipe = new THREE.Mesh(branchPipeGeo, pipeMat);
+            branchPipe.position.set(0, 4.6, (zOffset > 0 ? -1 : 1) * (0.5 + branchLen / 2));
+            branchGroup.add(branchPipe);
+
+            group.add(branchGroup);
+            dischargePipeBranches.push({ group: branchGroup, originX: 1.8, originZ: 0, skid: skidIndex });
+
+            scene.add(group);
+            return group;
+        }
+
+        createPumpSkid(4.0, 1);
+        createPumpSkid(-4.0, 2);
+
+        // 6. Common Discharge Header Pipe at z = 0
+        const headerGeo = new THREE.CylinderGeometry(0.48, 0.48, 12, 32);
+        headerGeo.rotateZ(Math.PI / 2);
+        const headerPipe = new THREE.Mesh(headerGeo, pipeMat);
+        headerPipe.position.set(7.5, 4.6, 0);
+        scene.add(headerPipe);
+
+        const junctionGeo = new THREE.CylinderGeometry(0.52, 0.52, 8.5, 32);
+        junctionGeo.rotateX(Math.PI / 2);
+        const junctionPipe = new THREE.Mesh(junctionGeo, pipeMat);
+        junctionPipe.position.set(1.8, 4.6, 0);
+        scene.add(junctionPipe);
+
+        const headerValveGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.6, 24);
+        headerValveGeo.rotateZ(Math.PI / 2);
+        const headerValve = new THREE.Mesh(headerValveGeo, valveMat);
+        headerValve.position.set(6.5, 4.6, 0);
+        scene.add(headerValve);
+
+        const wheelGeo = new THREE.TorusGeometry(0.45, 0.05, 12, 24);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+        const handwheel = new THREE.Mesh(wheelGeo, wheelMat);
+        handwheel.position.set(6.5, 5.5, 0);
+        handwheel.rotation.x = Math.PI / 2;
+        scene.add(handwheel);
+
+        /* =========================================================================
+           6. FLOW PARTICLES SYSTEM
+           ========================================================================= */
+        const particleCount1 = 120;
+        const particleCount2 = 120;
+        const particleCountHeader = 200;
+
+        function createFlowStream(count, colorHex) {
+            const geom = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const progress = new Float32Array(count);
+
+            for (let i = 0; i < count; i++) {
+                progress[i] = Math.random();
+                positions[i * 3 + 0] = 0;
+                positions[i * 3 + 1] = 0;
+                positions[i * 3 + 2] = 0;
+            }
+
+            geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geom.setAttribute('progress', new THREE.BufferAttribute(progress, 1));
+
+            const mat = new THREE.PointsMaterial({
+                color: colorHex,
+                size: 0.16,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending
+            });
+
+            return { particles: new THREE.Points(geom, mat), progress: progress };
+        }
+
+        const flowStream1 = createFlowStream(particleCount1, 0x38bdf8);
+        const flowStream2 = createFlowStream(particleCount2, 0x38bdf8);
+        const flowStreamHeader = createFlowStream(particleCountHeader, 0x34d399);
+
+        scene.add(flowStream1.particles);
+        scene.add(flowStream2.particles);
+        scene.add(flowStreamHeader.particles);
+
+        function updateParticleStream(stream, count, active, flowRate, pathFunc, speedFactor) {
+            const positions = stream.particles.geometry.attributes.position.array;
+            const prog = stream.progress;
+            const visible = active && flowRate > 0;
+            stream.particles.visible = visible;
+
+            if (!visible) return;
+
+            const step = (flowRate / 600) * 0.012 * speedFactor;
+
+            for (let i = 0; i < count; i++) {
+                prog[i] += step;
+                if (prog[i] > 1.0) prog[i] -= 1.0;
+                const pos = pathFunc(prog[i]);
+                positions[i * 3 + 0] = pos.x;
+                positions[i * 3 + 1] = pos.y;
+                positions[i * 3 + 2] = pos.z;
+            }
+            stream.particles.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function getPathPump1(t) {
+            if (t < 0.25) return new THREE.Vector3(3.2 - t * 4 * 1.4, 1.45, 4.0);
+            else if (t < 0.65) return new THREE.Vector3(1.8, 1.45 + ((t - 0.25) / 0.40) * 3.15, 4.0);
+            else return new THREE.Vector3(1.8, 4.6, 4.0 - ((t - 0.65) / 0.35) * 4.0);
+        }
+
+        function getPathPump2(t) {
+            if (t < 0.25) return new THREE.Vector3(3.2 - t * 4 * 1.4, 1.45, -4.0);
+            else if (t < 0.65) return new THREE.Vector3(1.8, 1.45 + ((t - 0.25) / 0.40) * 3.15, -4.0);
+            else return new THREE.Vector3(1.8, 4.6, -4.0 + ((t - 0.65) / 0.35) * 4.0);
+        }
+
+        function getPathHeader(t) {
+            return new THREE.Vector3(1.8 + t * 11.5, 4.6, 0);
+        }
+
+        /* =========================================================================
+           7. CAMERA PRESET SHORTCUTS
+           ========================================================================= */
+        function tweenCamera(targetPos, targetLookAt) {
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            let progress = 0;
+
+            function animCam() {
+                progress += 0.04;
+                if (progress <= 1.0) {
+                    camera.position.lerpVectors(startPos, targetPos, progress);
+                    controls.target.lerpVectors(startTarget, targetLookAt, progress);
+                    requestAnimationFrame(animCam);
+                } else {
+                    camera.position.copy(targetPos);
+                    controls.target.copy(targetLookAt);
+                }
+            }
+            animCam();
+        }
+
+        document.getElementById('cam-iso').addEventListener('click', () => {
+            tweenCamera(new THREE.Vector3(12, 10, 16), new THREE.Vector3(0, 1.8, 0));
+        });
+        document.getElementById('cam-coupling').addEventListener('click', () => {
+            tweenCamera(new THREE.Vector3(0.5, 2.5, 6.8), new THREE.Vector3(0, 1.45, 4.0));
+        });
+        document.getElementById('cam-valves').addEventListener('click', () => {
+            tweenCamera(new THREE.Vector3(5.5, 6.0, 5.5), new THREE.Vector3(1.8, 3.2, 2.0));
+        });
+        document.getElementById('cam-top').addEventListener('click', () => {
+            tweenCamera(new THREE.Vector3(0.1, 24, 0), new THREE.Vector3(0, 0, 0));
+        });
+
+        /* =========================================================================
+           8. ANIMATION LOOP & LIFECYCLE
+           ========================================================================= */
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            resizeCanvases();
+        });
+
+        // Initialize steady-state physics before starting animation loop
+        updatePhysicsCalculations();
+        
+        // Immediate sync interpolation state to eliminate startup flickering/jumping
+        SystemState.currentQ1 = SystemState.Q1;
+        SystemState.currentQ2 = SystemState.Q2;
+        SystemState.currentH = SystemState.H_sys;
+        SystemState.currentN1 = SystemState.n1;
+        SystemState.currentN2 = SystemState.n2;
+
+        resizeCanvases();
+
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            // 1. Advance Transient Oscillations
+            updateTransientWave(delta);
+
+            // 2. Update UI & Charts
+            updateUI();
+            drawOscilloscope();
+            drawHQChart();
+
+            // 3. Rotate Rigid Shafts
+            const visualSpeedRatio = 0.012;
+            if (SystemState.pump1Active && SystemState.currentN1 > 10) {
+                const rotDelta1 = (SystemState.currentN1 * visualSpeedRatio) * delta;
+                rotatingShafts1.forEach(s => s.rotation.x += rotDelta1);
+            }
+            if (SystemState.pump2Active && SystemState.currentN2 > 10) {
+                const rotDelta2 = (SystemState.currentN2 * visualSpeedRatio) * delta;
+                rotatingShafts2.forEach(s => s.rotation.x += rotDelta2);
+            }
+
+            // 4. NRV Flap Disc Rotation (Open ~ 60 deg when running, 0 deg closed when off)
+            nrvFlaps.forEach(f => {
+                const isActive = (f.skid === 1 && SystemState.pump1Active && SystemState.pump1Ramp > 0.05) ||
+                                 (f.skid === 2 && SystemState.pump2Active && SystemState.pump2Ramp > 0.05);
+                const targetAngle = isActive ? -0.95 : 0.0; // radians
+                f.pivot.rotation.x += (targetAngle - f.pivot.rotation.x) * 0.18;
+            });
+
+            // 5. Pipe Shake / Water Hammer Mechanical Vibration
+            if (SystemState.pipeShakeIntensity > 0.001) {
+                const shakeX = (Math.random() - 0.5) * 0.12 * SystemState.pipeShakeIntensity;
+                const shakeZ = (Math.random() - 0.5) * 0.12 * SystemState.pipeShakeIntensity;
+                dischargePipeBranches.forEach(b => {
+                    b.group.position.x = b.originX + shakeX;
+                    b.group.position.z = b.originZ + shakeZ;
+                });
+                surgeFlashLight.intensity = SystemState.pipeShakeIntensity * 3.5;
+            } else {
+                dischargePipeBranches.forEach(b => {
+                    b.group.position.x = b.originX;
+                    b.group.position.z = b.originZ;
+                });
+                surgeFlashLight.intensity = 0;
+            }
+
+            // 6. Expanding Shockwave Ring Mesh
+            if (SystemState.shockwaveOpacity > 0.01) {
+                shockwaveMesh.scale.set(SystemState.shockwaveRadius, SystemState.shockwaveRadius, SystemState.shockwaveRadius);
+                shockwaveMat.opacity = SystemState.shockwaveOpacity;
+            } else {
+                shockwaveMat.opacity = 0;
+            }
+
+            // 7. Dynamic Wobbling Pressure Gauge Needles
+            const baseHead = SystemState.currentH;
+            const transientDeltaMeters = (SystemState.transientOscP / 0.0981);
+            const totalHeadGauge = Math.max(0, baseHead + transientDeltaMeters);
+            const needleAngle = -Math.PI / 4 + (totalHeadGauge / 90) * (Math.PI * 1.5);
+            pressureGaugeNeedles.forEach(g => {
+                const isActive = (g.skid === 1 && SystemState.pump1Active) || (g.skid === 2 && SystemState.pump2Active);
+                const targetRot = isActive ? needleAngle : -Math.PI / 4;
+                g.mesh.rotation.x = targetRot;
+            });
+
+            // 8. Update Flow Particle Streams
+            updateParticleStream(flowStream1, particleCount1, SystemState.pump1Active, SystemState.currentQ1, getPathPump1, 1.0);
+            updateParticleStream(flowStream2, particleCount2, SystemState.pump2Active, SystemState.currentQ2, getPathPump2, 1.0);
+            updateParticleStream(flowStreamHeader, particleCountHeader, (SystemState.pump1Active || SystemState.pump2Active), (SystemState.currentQ1 + SystemState.currentQ2), getPathHeader, 1.2);
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onload = function() {
+            animate();
+        };
+    </script>
+</body>
+</html>
