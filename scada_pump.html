@@ -77,50 +77,164 @@
             .pulse-subtle, .shockwave-flash,
             .animate-pulse, .animate-bounce { animation: none !important; }
         }
+
+        /* ========== MOBILE OPTIMIZATION ========== */
+        .mobile-fab {
+            display: none;
+            position: fixed;
+            z-index: 40;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            transition: transform 0.2s, background 0.2s;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+        .mobile-fab:active { transform: scale(0.92); }
+
+        @media (max-width: 767px) {
+            .mobile-fab { display: flex; }
+
+            /* Header compact */
+            header.scada-panel {
+                padding: 0.5rem 0.75rem !important;
+            }
+            header h1 {
+                font-size: 0.7rem !important;
+                line-height: 1.25;
+            }
+            header .scada-badge {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.65rem !important;
+            }
+
+            /* Side panels become overlays */
+            #panel-left, #panel-right {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: min(92vw, 340px);
+                max-width: 340px;
+                z-index: 30;
+                overflow-y: auto;
+                padding: 0.75rem;
+                background: rgba(241, 245, 249, 0.97);
+                backdrop-filter: blur(16px);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 0 40px rgba(15, 23, 42, 0.2);
+            }
+            #panel-left {
+                left: 0;
+                transform: translateX(-105%);
+                border-right: 1px solid rgba(148, 163, 184, 0.4);
+            }
+            #panel-right {
+                right: 0;
+                transform: translateX(105%);
+                border-left: 1px solid rgba(148, 163, 184, 0.4);
+            }
+            #panel-left.open { transform: translateX(0); }
+            #panel-right.open { transform: translateX(0); }
+
+            /* Backdrop when panel open */
+            #mobile-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 25;
+                background: rgba(15, 23, 42, 0.35);
+            }
+            #mobile-backdrop.show { display: block; }
+
+            /* Bottom bar more compact */
+            #bottom-hud {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+            }
+            #bottom-hud .scada-panel {
+                max-width: 100%;
+            }
+            #flow-comparison-banner {
+                font-size: 0.7rem !important;
+                padding: 0.5rem 0.75rem !important;
+            }
+
+            /* Hide some less critical header badges on very small screens */
+            #surge-badge-container {
+                display: none;
+            }
+        }
+
+        @media (min-width: 768px) {
+            #mobile-backdrop, .mobile-fab { display: none !important; }
+            #panel-left, #panel-right {
+                position: relative !important;
+                transform: none !important;
+                width: auto !important;
+                max-width: none !important;
+                overflow: visible !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+        }
     </style>
 </head>
 <body class="w-screen h-screen relative flex flex-col m-0 p-0 overflow-hidden bg-slate-100 text-slate-800">
     <!-- THREE.JS 3D CANVAS CONTAINER -->
     <div id="canvas-container" class="absolute inset-0 z-0 w-full h-full"></div>
 
+    <!-- Mobile backdrop (tap to close panels) -->
+    <div id="mobile-backdrop" class="hidden"></div>
+
+    <!-- Mobile Floating Action Buttons -->
+    <button id="fab-left" class="mobile-fab bg-sky-600 text-white" style="bottom: 5.5rem; left: 0.85rem;" title="Điều khiển bơm">
+        <i class="fa-solid fa-sliders"></i>
+    </button>
+    <button id="fab-right" class="mobile-fab bg-rose-600 text-white" style="bottom: 5.5rem; right: 0.85rem;" title="Biểu đồ sóng & H-Q">
+        <i class="fa-solid fa-chart-line"></i>
+    </button>
+
     <!-- SCADA INDUSTRIAL HEADER BAR -->
-    <header class="relative z-10 w-full scada-panel border-b border-sky-600/20 px-4 py-2.5 flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-sky-100 border border-sky-500/50 flex items-center justify-center text-sky-700 text-lg shadow-[0_0_12px_rgba(2,132,199,0.2)]">
+    <header class="relative z-10 w-full scada-panel border-b border-sky-600/20 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between flex-wrap gap-2 sm:gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-sky-100 border border-sky-500/50 flex items-center justify-center text-sky-700 text-base sm:text-lg shadow-[0_0_12px_rgba(2,132,199,0.2)] shrink-0">
                 <i class="fa-solid fa-industry"></i>
             </div>
-            <div>
-                <h1 class="text-sm font-bold text-slate-900 tracking-wide uppercase flex items-center gap-2">
-                    SCADA DIGITAL TWIN: TRẠM BƠM GHÉP SONG SONG NỐI CỨNG
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-400 font-bold">ONLINE</span>
+            <div class="min-w-0">
+                <h1 class="text-[11px] sm:text-sm font-bold text-slate-900 tracking-wide uppercase flex items-center gap-1.5 sm:gap-2 truncate">
+                    <span class="hidden xs:inline sm:inline">SCADA DT: </span>TRẠM BƠM SONG SONG
+                    <span class="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-400 font-bold shrink-0">ONLINE</span>
                 </h1>
-                <p class="text-[11px] text-sky-700 font-mono-num font-semibold">2x90kW Centrifugal Pumps | Transient Joukowsky Surge Analysis</p>
+                <p class="text-[10px] sm:text-[11px] text-sky-700 font-mono-num font-semibold hidden sm:block">2x90kW Centrifugal Pumps | Transient Joukowsky Surge Analysis</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-4 text-xs font-mono-num flex-wrap">
-            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <span class="text-slate-500 font-medium">LƯU LƯỢNG GÓP:</span>
-                <span id="header-q-total" class="font-bold text-sky-700 glow-text-cyan text-sm">576.0 m³/h</span>
+        <div class="flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs font-mono-num flex-wrap">
+            <div class="scada-badge px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-2">
+                <span class="text-slate-500 font-medium hidden sm:inline">Q:</span>
+                <span id="header-q-total" class="font-bold text-sky-700 glow-text-cyan text-xs sm:text-sm">576.0 m³/h</span>
             </div>
-            <!-- System Quick Summary -->
-            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <span class="text-slate-500 font-medium">CHẾ ĐỘ:</span>
-                <span id="header-mode-badge" class="font-bold text-amber-700 glow-text-amber uppercase">1 BƠM VẬN HÀNH</span>
+            <div class="scada-badge px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-2">
+                <span class="text-slate-500 font-medium hidden sm:inline">CHẾ ĐỘ:</span>
+                <span id="header-mode-badge" class="font-bold text-amber-700 glow-text-amber uppercase text-[10px] sm:text-xs">1 BƠM</span>
             </div>
-            <div class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <span class="text-slate-500 font-medium">ÁP SUẤT GÓP:</span>
-                <span id="header-h-sys" class="font-bold text-emerald-700 glow-text-green text-sm">36.8 m (3.61 bar)</span>
+            <div class="scada-badge px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-2">
+                <span class="text-slate-500 font-medium hidden sm:inline">H:</span>
+                <span id="header-h-sys" class="font-bold text-emerald-700 glow-text-green text-xs sm:text-sm">36.8 m</span>
             </div>
-            <!-- Dynamic Transient Surge Peak readout -->
-            <div id="surge-badge-container" class="scada-badge px-3 py-1.5 rounded-lg flex items-center gap-2 border border-slate-300 transition-colors">
-                <span class="text-slate-500 flex items-center gap-1"><i class="fa-solid fa-wave-square text-rose-500"></i>ĐỈNH XUNG ÁP (ΔP):</span>
-                <span id="header-surge-peak" class="font-bold text-slate-700 font-mono-num text-sm">-- bar</span>
+            <div id="surge-badge-container" class="scada-badge px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-2 border border-slate-300 transition-colors">
+                <span class="text-slate-500 flex items-center gap-1"><i class="fa-solid fa-wave-square text-rose-500"></i><span class="hidden sm:inline">ΔP:</span></span>
+                <span id="header-surge-peak" class="font-bold text-slate-700 font-mono-num text-xs sm:text-sm">-- bar</span>
             </div>
-            <!-- Physics Help Modal Trigger -->
-            <button id="btn-toggle-explain" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-sans font-medium transition flex items-center gap-1.5 shadow-sm">
+            <button id="btn-toggle-explain" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-sans font-medium transition flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-circle-question text-white"></i>
-                <span class="hidden md:inline">Giải thích vật lý</span>
+                <span class="hidden md:inline">Giải thích</span>
             </button>
         </div>
     </header>
@@ -132,8 +246,14 @@
         <div class="w-full flex justify-between items-start gap-4 flex-wrap">
             
             <!-- LEFT WIDGET: DCS Control & Pumps Telemetry -->
-            <div class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
-                
+            <div id="panel-left" class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
+                <!-- Mobile close button (only visible on small screens via CSS) -->
+                <div class="flex items-center justify-between mb-1 md:hidden">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wide"><i class="fa-solid fa-sliders text-sky-600 mr-1"></i> Điều khiển bơm</span>
+                    <button type="button" class="btn-close-panel w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center" data-panel="left">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
                 <!-- PUMP 1 CARD WITH TRIP & SLAM CONTROLS -->
                 <div id="card-pump1" class="scada-panel rounded-xl p-3 transition-all duration-300 border-l-4 border-l-emerald-500">
                     <div class="flex items-center justify-between mb-1.5">
@@ -269,8 +389,14 @@
             </div>
 
             <!-- RIGHT WIDGET: TRANSIENT OSCILLOSCOPE STRIP CHART & HQ DYNAMICS -->
-            <div class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
-                
+            <div id="panel-right" class="w-full sm:w-80 md:w-96 flex flex-col gap-2.5 pointer-events-auto">
+                <!-- Mobile close button -->
+                <div class="flex items-center justify-between mb-1 md:hidden">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wide"><i class="fa-solid fa-chart-line text-rose-600 mr-1"></i> Biểu đồ &amp; H-Q</span>
+                    <button type="button" class="btn-close-panel w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center" data-panel="right">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
                 <!-- TRANSIENT PRESSURE WAVE RECORDER (OSCILLOSCOPE) -->
                 <div class="scada-panel rounded-xl p-3 flex flex-col gap-1.5 border border-sky-400/40">
                     <div class="flex items-center justify-between border-b border-slate-200 pb-1">
@@ -326,14 +452,14 @@
         </div>
 
         <!-- BOTTOM HUD: Quick Camera Views & 3D Interactive Hints -->
-        <div class="w-full flex justify-between items-end gap-3 flex-wrap">
+        <div id="bottom-hud" class="w-full flex justify-between items-end gap-3 flex-wrap">
             <!-- 3D Camera Shortcuts -->
-            <div class="scada-panel rounded-xl p-2 px-3 pointer-events-auto flex items-center gap-2">
-                <span class="text-xs text-slate-600 font-medium mr-1 hidden sm:inline"><i class="fa-solid fa-video mr-1 text-sky-600"></i>Góc nhìn:</span>
-                <button id="cam-iso" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Phối cảnh (Iso)</button>
-                <button id="cam-coupling" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Khớp nối cứng</button>
-                <button id="cam-valves" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Ống góp &amp; Van</button>
-                <button id="cam-top" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300">Mặt bằng</button>
+            <div class="scada-panel rounded-xl p-1.5 sm:p-2 px-2 sm:px-3 pointer-events-auto flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span class="text-[10px] sm:text-xs text-slate-600 font-medium mr-0.5 hidden sm:inline"><i class="fa-solid fa-video mr-1 text-sky-600"></i>Góc nhìn:</span>
+                <button id="cam-iso" class="px-2 sm:px-2.5 py-1.5 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold transition border border-slate-300">Iso</button>
+                <button id="cam-coupling" class="px-2 sm:px-2.5 py-1.5 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold transition border border-slate-300">Khớp nối</button>
+                <button id="cam-valves" class="px-2 sm:px-2.5 py-1.5 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold transition border border-slate-300">Ống &amp; Van</button>
+                <button id="cam-top" class="px-2 sm:px-2.5 py-1.5 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] sm:text-xs font-semibold transition border border-slate-300">Mặt bằng</button>
             </div>
 
             <!-- Real-time Flow Comparison Alert Indicator -->
@@ -865,15 +991,15 @@
             // Active mode status
             const activeCount = (SystemState.pump1Active ? 1 : 0) + (SystemState.pump2Active ? 1 : 0);
             if (activeCount === 2) {
-                elModeBadge.textContent = "2 BƠM SONG SONG (DUAL STAGE)";
+                elModeBadge.textContent = "2 BƠM SONG SONG";
                 elModeBadge.className = "font-bold text-emerald-700 glow-text-green uppercase";
                 elSummary.innerHTML = "<strong class='text-emerald-700'>2 Bơm chạy song song:</strong> Cột áp ống góp cao (~56 m), mỗi bơm gánh ~408 m³/h → Dòng điện giảm còn ~139 A (nhẹ tải), tốc độ tăng lên ~1475 RPM. <em>Thử bấm nút TRIP để kích hoạt Búa nước Joukowsky!</em>";
             } else if (activeCount === 1) {
-                elModeBadge.textContent = "1 BƠM VẬN HÀNH (SINGLE STAGE)";
+                elModeBadge.textContent = "1 BƠM VẬN HÀNH";
                 elModeBadge.className = "font-bold text-amber-700 glow-text-amber uppercase";
                 elSummary.innerHTML = "<strong class='text-amber-700'>Chạy 1 bơm đơn lẻ:</strong> Điểm làm việc trượt sang Run-out (~576 m³/h, I₁≈168 A quá tải 104%, n ≈ 1469 RPM). <em>Bấm 'TRIP' để quan sát van một chiều đóng sập!</em>";
             } else {
-                elModeBadge.textContent = "TRẠM BƠM DỪNG HOÀN TOÀN";
+                elModeBadge.textContent = "DỪNG HOÀN TOÀN";
                 elModeBadge.className = "font-bold text-rose-700 uppercase";
                 elSummary.textContent = "Tất cả các tổ bơm đã ngừng. Hãy bấm 'Khởi động' một bơm để hòa mạng lại.";
             }
@@ -1021,6 +1147,49 @@
         document.getElementById('btn-toggle-explain').addEventListener('click', () => modalExplain.classList.remove('hidden'));
         document.getElementById('btn-close-modal').addEventListener('click', () => modalExplain.classList.add('hidden'));
         document.getElementById('btn-close-modal-bottom').addEventListener('click', () => modalExplain.classList.add('hidden'));
+
+        /* =========================================================================
+           MOBILE PANEL TOGGLE (hide by default, show on demand)
+           ========================================================================= */
+        const panelLeft = document.getElementById('panel-left');
+        const panelRight = document.getElementById('panel-right');
+        const mobileBackdrop = document.getElementById('mobile-backdrop');
+        const fabLeft = document.getElementById('fab-left');
+        const fabRight = document.getElementById('fab-right');
+
+        function closeAllMobilePanels() {
+            panelLeft.classList.remove('open');
+            panelRight.classList.remove('open');
+            mobileBackdrop.classList.remove('show');
+        }
+
+        function togglePanel(panel) {
+            const isOpen = panel.classList.contains('open');
+            closeAllMobilePanels();
+            if (!isOpen) {
+                panel.classList.add('open');
+                mobileBackdrop.classList.add('show');
+            }
+        }
+
+        fabLeft.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel(panelLeft);
+        });
+        fabRight.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel(panelRight);
+        });
+        mobileBackdrop.addEventListener('click', closeAllMobilePanels);
+
+        document.querySelectorAll('.btn-close-panel').forEach(btn => {
+            btn.addEventListener('click', closeAllMobilePanels);
+        });
+
+        // Close panels when rotating to landscape / resizing past breakpoint
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) closeAllMobilePanels();
+        });
 
         /* =========================================================================
            4. THREE.JS 3D SCENE & TRANSIENT VISUAL EFFECTS (LIGHT THEME)
