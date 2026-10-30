@@ -14,7 +14,6 @@ h1{font-size:14px;margin:0}header p{margin:2px 0 0;font-size:10.5px;color:var(--
 #cv{flex:1;min-height:300px;position:relative;touch-action:none;background:linear-gradient(180deg,var(--c1),var(--c2))}
 #cv canvas{display:block;width:100%;height:100%}
 #panel{background:var(--card);border-top:1px solid var(--bd);padding:0 12px 6px;max-height:42%;overflow-y:auto}
-/* ==== TÁCH BIỆT VÙNG ĐIỀU KHIỂN & VÙNG TRẠNG THÁI ==== */
 #ctrl{position:sticky;top:0;background:var(--card);z-index:3;padding-top:4px;padding-bottom:2px}
 .ctrlhead{font-size:10.5px;font-weight:700;color:var(--acc);text-align:center;text-transform:uppercase;letter-spacing:.8px;margin:2px 0 3px}
 .divider{height:1px;background:var(--bd);margin:4px 0 2px}
@@ -69,7 +68,7 @@ try{var ec=document.createElement('canvas');ec.width=256;ec.height=128;var ex=ec
  ex.fillStyle='rgba(255,255,255,.95)';ex.fillRect(40,18,50,14);ex.fillRect(170,26,40,10);
  var et=new T.CanvasTexture(ec);et.mapping=T.EquirectangularReflectionMapping;var pm=new T.PMREMGenerator(rd);scene.environment=pm.fromEquirectangular(et).texture;pm.dispose()}catch(e){}
 
-// ================= DỮ LIỆU 43 SHEET (đọc từ bản vẽ) =================
+// ================= DỮ LIỆU 43 SHEET =================
 var ROWS=[
 '1|13LBG38AA101|BV500|300|300LB BW|A216-WCB|EQ% S.S MULTI-FLOW|316/CA40|CA15/CA40|GRAFOIL|89|1200|147|A51|CLOSE|2.5|3.5|5.6|980|2|g|BW|775|755|1350|1650|B|e',
 '2|13LCH10AA471|BV992|150|900LB BW|A217-WC6|LINEAR S.S MULTI-FLOW|316/420|410/420|GRAFOIL|57|52|225|A60|OPEN|1.2|3.0|4|520|2|a|BW|337|360|960|480|BW|l',
@@ -122,6 +121,7 @@ function mk(r,ov){var S=Object.assign({},r,ov||{});
 function byN(n){return mk(DB.filter(function(d){return d.n==n})[0])}
 function pipeOf(dn,rate){var a={300:[323.8,303],250:[273,254.5],200:[219.1,rate.indexOf('2500')==0?165.2:203],150:[168.3,rate.indexOf('900')==0?146.5:154],100:[114.3,102],80:[88.9,78],50:[60.3,51.7],25:[34.3,25]};return a[dn]}
 var FT={200:[345,270,29,8,298.5],250:[405,324,30.6,12,362],150:[280,216,25.9,8,241.3],100:[230,157,24.3,8,190.5]};
+
 // ================= VẬT LIỆU & HÀM DỰNG =================
 function mat(c,r,m){return new T.MeshStandardMaterial({color:c,roughness:r,metalness:m,side:T.DoubleSide})}
 function ghost(c){var m=new T.MeshPhysicalMaterial({color:c,roughness:.08,metalness:0,transparent:true,opacity:.2,clearcoat:1,clearcoatRoughness:.1,side:T.DoubleSide,depthWrite:false});cuts.push(m);return m}
@@ -142,6 +142,55 @@ function coil(R,w,n,p){var a=[],k=n*(LITE?6:16);for(var j=0;j<=k;j++){var t=j/k;
 function around(n,R,fn){if(LITE)n=Math.max(4,Math.ceil(n/3));for(var i=0;i<n;i++){var a=i*2*PI/n;fn(Math.cos(a)*R,Math.sin(a)*R,a)}}
 function txtTex(a,b,w,h,bg){var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,w,h);x.fillStyle='#1c2430';x.font='bold '+(h*.36|0)+'px sans-serif';x.fillText(a,10,h*.45);x.font=(h*.22|0)+'px sans-serif';x.fillText(b,10,h*.82);return new T.CanvasTexture(c)}
 function dish(R,h,sg,m,y,p){var k=h/.85,pts=[[R,0],[R*.8,.45],[R*.5,.75],[.5,.85]].map(function(q){return new T.Vector2(q[0],q[1]*k)});var o=new T.Mesh(new T.LatheGeometry(pts,LITE?16:40),m);o.scale.y=sg;o.position.y=y;p.add(o)}
+
+// ================= TEXTURE RỌ VAN (ĐỘT LỖ SẮC NÉT) =================
+var _cageTexCache = {};
+function getCageTex(type) {
+    if (!_cageTexCache[type]) {
+        var c = document.createElement('canvas'); c.width = 512; c.height = 512;
+        var x = c.getContext('2d');
+        x.fillStyle = '#fff'; x.fillRect(0, 0, 512, 512); // Nền kim loại (trắng = giữ lại)
+        
+        var rows = 16, cols = 8;
+        var stepX = 512 / cols, stepY = 512 / rows;
+        var r = stepX * 0.35; // Bán kính lỗ
+
+        for (var i = 0; i < rows; i++) {
+            for (var j = 0; j < cols; j++) {
+                var cx = j * stepX + stepX / 2 + (i % 2) * (stepX / 2);
+                var cy = i * stepY + stepY / 2;
+
+                if (type == 'cs') {
+                    x.fillStyle = '#000'; // Lỗ đen
+                    x.fillRect(cx - r, cy - r, r * 2, r * 2);
+                    x.strokeStyle = '#888'; x.lineWidth = 2; // Viền tạo khối
+                    x.strokeRect(cx - r, cy - r, r * 2, r * 2);
+                } else if (type == 'xs') {
+                    x.save(); x.translate(cx, cy); x.rotate(Math.PI / 4);
+                    x.fillStyle = '#000'; x.fillRect(-r, -r/2, r * 2, r);
+                    x.strokeStyle = '#888'; x.lineWidth = 2; x.strokeRect(-r, -r/2, r * 2, r);
+                    x.restore();
+                } else {
+                    // Vẽ viền tối (giả lập độ sâu)
+                    x.beginPath(); x.arc(cx, cy, r + 1.5, 0, Math.PI * 2);
+                    x.strokeStyle = '#666'; x.lineWidth = 3; x.stroke();
+                    // Vẽ lỗ đen
+                    x.fillStyle = '#000';
+                    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill();
+                    
+                    // Xử lý nối mép
+                    if (cx - r < 0) { x.beginPath(); x.arc(cx + 512, cy, r, 0, Math.PI * 2); x.fill(); }
+                    if (cx + r > 512) { x.beginPath(); x.arc(cx - 512, cy, r, 0, Math.PI * 2); x.fill(); }
+                }
+            }
+        }
+        _cageTexCache[type] = new T.CanvasTexture(c);
+        _cageTexCache[type].wrapS = _cageTexCache[type].wrapT = T.RepeatWrapping;
+    }
+    var t = _cageTexCache[type].clone();
+    t.needsUpdate = true;
+    return t;
+}
 
 function cfOf(r){
  var po=pipeOf(r.dn,r.rate),RO=po[0]/200,RI=po[1]/200,ang=r.kind=='a',TRV=r.trv/100,k0=.72*RO;
@@ -193,11 +242,43 @@ function build(S,x,y,lite){
   PA=[[-(Li+PL-.2),AX],[-Li,AX],[-sR*.75,AX],[-pR*1.2,yp],[0,yp],[0,yS-.2],[0,yo],[0,yo-PL+.2]];
   PR=[rp,rp,.6,.25,.4,.4,rp,rp];iu=2;idn=5;
  }
+ // ================= MÔ PHỎNG RỌ VAN (TỰ ĐỘNG CĂN CHỈNH TỶ LỆ) =================
  var rc=pR*1.333,ts=/X-STREAM/.test(S.trim)?'xs':(/CASCADE/.test(S.trim)?'cs':'mf'),ph=TRV-.05;
- edg(M3(ann(sb+.5,sb,.25,1),M.steel,0,yS-.125,0,Tm));edg(M3(ann(rc,pR+.05,c.cH),M.cage,0,yS+c.cH/2,0,Tm));
- if(ts=='mf')for(var i=0;i<12;i++){var a=i*PI/6+PI/12,rm=(rc+pR+.05)/2;M3(new T.BoxGeometry(rc-pR,ph,.22*Math.max(.5,k)),M.blk,Math.cos(a)*rm,yp,Math.sin(a)*rm,Tm).rotation.y=-a}
- else if(ts=='cs'){for(var j=0;j<3;j++)for(var i2=0;i2<(LITE?8:16);i2++){var a2=i2*PI/(LITE?4:8),rm2=(rc+pR+.05)/2;M3(new T.BoxGeometry(rc-pR,ph/4,.12*Math.max(.5,k)),M.blk,Math.cos(a2)*rm2,yp+(j-1)*ph/3,Math.sin(a2)*rm2,Tm).rotation.y=-a2}}
- else{var nd=LITE?5:12;for(var j2=0;j2<nd;j2++)M3(ann(rc+.02,pR+.08,ph/nd*.7),j2%2?M.steel:M.blk,0,yp-ph/2+(j2+.5)*ph/nd,0,Tm)}
+ edg(M3(ann(sb+.5,sb,.25,1),M.steel,0,yS-.125,0,Tm));
+
+ var cTex = getCageTex(ts);
+ // Tính toán tỷ lệ lặp (Repeat) để lỗ không bị méo
+ var circumference = 2 * Math.PI * rc;
+ var repeatX = Math.max(2, Math.round(circumference / 2)); // 2 đơn vị chiều rộng cho mỗi lần lặp
+ var repeatY = Math.max(2, Math.round(c.cH / (circumference / 4))); // giữ tỷ lệ 1:1
+ cTex.repeat.set(repeatX, repeatY);
+ 
+ var cageMat = new T.MeshStandardMaterial({
+     color: 0xffc107, // Màu vàng đồng sáng
+     metalness: 0.6, 
+     roughness: 0.4,
+     map: cTex,
+     alphaMap: cTex,
+     transparent: true, 
+     side: T.DoubleSide, 
+     alphaTest: 0.5,
+     emissive: 0x553300,
+     emissiveIntensity: 0.5
+ });
+ cageMat.userData = {isCage: true};
+ cuts.push(cageMat);
+
+ // Sử dụng nhiều segments để hình trụ tròn mịn hơn
+ var cgGeo = new T.CylinderGeometry(rc, rc, c.cH, LITE?16:64, 1, true);
+ var cageMesh = new T.Mesh(cgGeo, cageMat);
+ cageMesh.position.y = yS + c.cH / 2;
+ Tm.add(cageMesh);
+
+ // Vành gia cố trên/dưới
+ edg(M3(ann(rc + 0.05, pR, 0.15, 1), M.cage, 0, yS + c.cH - 0.075, 0, Tm));
+ edg(M3(ann(rc + 0.05, pR, 0.15, 1), M.cage, 0, yS + 0.075, 0, Tm));
+ // =========================================================
+
  if(hasD)M3(ann(pR,pR*.65,.5),M.cage,0,yS-.6,0,Tm);
  var pl=new T.Mesh(new T.LatheGeometry([[0,-.3],[sb-.05,-.3],[sb,0],[pR,.25],[pR,c.pH-.15],[.3,c.pH],[0,c.pH]].map(function(q){return new T.Vector2(q[0],q[1])}),LITE?16:40),M.plug);mvT.add(pl);edg(pl,30);
  M3(new T.TorusGeometry(pR,.06,8,LITE?16:32),M.seal,0,c.pH-.3,0,mvT).rotation.x=PI/2;
@@ -294,12 +375,6 @@ function flowOf(s,u){if(s.chc=='lin')return Math.max(0,u);var R=50;return Math.m
 function targets(){V.forEach(function(v){var s=v.s;if(s.prv){v.P=0;v.tu=1;return}
  if(airOn)v.P=s.lo+sig*(s.hi-s.lo);else v.P=s.lock?v.Ph*Math.exp(-simT/s.tau):0;v.tu=uOf(s,v.P)})}
 function f1(n){return n.toFixed(1)}
-function specHTML(S){var ac=S.acc,l=[];l.push('ABB TZID-C (4–20 mA, single acting)');l.push('lọc-giảm áp Rotork YT-200BN210 (0–8,4 bar)');if(ac.indexOf('B')>=0)l.push('booster Young Tech NYT-300');if(ac.indexOf('L')>=0)l.push('lock-up Weir WVC-400');if(ac.indexOf('S')>=0)l.push('van từ + LS + JB');if(ac.indexOf('W')>=0)l.push('water seal DN8');if(ac.indexOf('D')>=0)l.push('diffuser');
- if(S.prv)return '<h3>'+S.tag+' / '+S.t2+'</h3><small>Van giảm áp P.R.V · DN50 600LB SW · A216-WCB</small>Trim: FULL PORT · 316/Buna-N<br>Cv 7,7 · góc 90° · màng Jorlon tác động trực tiếp<br>Kích thước: 190,5 × 238 × 425 (trên) / 100 (dưới) · '+S.wt+' kg × '+S.qty+'<br>';
- return '<h3>'+S.tag+(S.t2?' / '+S.t2:'')+(S.hyp?' (giả định)':'')+'</h3><small>Sheet '+S.n+' · '+S.mdl+' · DN'+S.dn+' · '+S.rate+' · '+S.mat+(S.dup?' · (trùng mã trên bản vẽ)':'')+'</small>'+
- 'Trim: <span>'+S.trim+'</span> · Ty/Plug '+S.sp+' · Guide/Seat '+S.gs+'<br>Packing '+S.pack+' · '+(S.kind=='a'?'thân góc':'thân globe')+' · '+S.end+'<br>'+
- 'Chấp hành: <span>'+S.code+' '+S.A+' in² '+(S.piston?'piston đơn':'màng '+(S.dir>0?'R/A':'D/A'))+'</span> · khí '+S.air+' bar · lò xo '+S.lo+'–'+S.hi+'<br>'+
- 'Fail: <span>'+S.fail+'</span> · '+S.wt+' kg × '+S.qty+(l.length?'<br>Phụ kiện: '+l.join(', '):'')+'<br>'}
 function ui(){
  $('loss').className='danger'+(airOn?'':' on');$('loss').textContent=airOn?'Mất khí cấp':'Cấp lại khí';
  $('p').disabled=!airOn;$('t').disabled=airOn;
@@ -313,13 +388,41 @@ function ui(){
 }
 // ================= CHẾ ĐỘ HIỂN THỊ / MẶT CẮT / LỚP =================
 var EMo={solid:.3,glass:.5,xray:.8};
-function applyTM(){cuts.forEach(function(x){if(tmode=='solid'){x.opacity=1;x.transparent=false;x.depthWrite=true;x.metalness=.7;x.roughness=.38}else{x.transparent=true;x.depthWrite=false;x.opacity=tmode=='glass'?.2:.07;x.metalness=0;x.roughness=tmode=='glass'?.08:.3}x.needsUpdate=true});EM.opacity=EMo[tmode]}
+function applyTM(){
+    cuts.forEach(function(x){
+        if (x.userData && x.userData.isCage) {
+            if (tmode == 'solid') { 
+                x.alphaTest = 0.5; x.opacity = 1; x.transparent = false; x.metalness = 0.8; x.roughness = 0.2; x.emissiveIntensity = 0.2;
+            } else if (tmode == 'glass') { 
+                x.alphaTest = 0.5; x.opacity = 1.0; x.transparent = true; x.metalness = 0.5; x.roughness = 0.2; x.emissiveIntensity = 0.6; 
+            } else { 
+                x.alphaTest = 0.1; x.opacity = 0.6; x.transparent = true; x.metalness = 0.1; x.roughness = 0.3; x.emissiveIntensity = 1.0; 
+            }
+            x.needsUpdate = true;
+            return;
+        }
+        if(tmode=='solid'){x.opacity=1;x.transparent=false;x.depthWrite=true;x.metalness=.7;x.roughness=.38}else{x.transparent=true;x.depthWrite=false;x.opacity=tmode=='glass'?.2:.07;x.metalness=0;x.roughness=tmode=='glass'?.08:.3}x.needsUpdate=true
+    });
+    EM.opacity=EMo[tmode]
+}
 var plane=new T.Plane(new T.Vector3(0,0,-1),0),flip=1;
 function applySec(){var a=$('sa').value,p=+$('sp').value/10;$('spv').textContent=a=='n'?'':f1(p*100)+' mm';
  if(a=='n'){rd.clippingPlanes=[];return}
  plane.normal.set(a=='x'?-flip:0,a=='y'?-flip:0,a=='z'?-flip:0);plane.constant=flip*p;rd.clippingPlanes=[plane]}
 function applyLay(){['B','T','A','X','F'].forEach(function(k){var on=$('L_'+k).checked;built.forEach(function(g){g.userData[k].visible=on})})}
-function clearScene(){built.forEach(function(g){scene.remove(g);g.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material&&o.material.map)o.material.map.dispose()})});built=[];V=[];cuts.length=0}
+function clearScene(){
+    built.forEach(function(g){
+        scene.remove(g);
+        g.traverse(function(o){
+            if(o.geometry)o.geometry.dispose();
+            if(o.material){
+                if(o.material.map)o.material.map.dispose();
+                if(o.material.alphaMap)o.material.alphaMap.dispose(); 
+            }
+        })
+    });
+    built=[];V=[];cuts.length=0;
+}
 var tgt=new T.Vector3(0,5,0),th=.2,ph=1.3,dist=150;
 function show(list,lay,cam0){clearScene();var lite=list.length>6;
  list.forEach(function(S,i){var p=lay(i),v=(S.prv?buildPRV:build)(S,p[0],p[1],lite);built.push(v.G);V.push(v);
@@ -342,7 +445,6 @@ vs.onchange=function(){setView(this.value)};
 $('tm').onchange=function(){tmode=this.value;applyTM()};
 $('sa').onchange=applySec;$('sp').oninput=applySec;$('fl').onclick=function(){flip=-flip;applySec()};
 ['B','T','A','X','F'].forEach(function(k){$('L_'+k).onchange=applyLay});
-/* ==== ĐIỀU KHIỂN TÍN HIỆU: slider + stepper, đồng bộ & dự phòng ==== */
 function setSigPct(v){v=Math.max(0,Math.min(100,Math.round(v)));$('p').value=v;sig=v/100;targets();ui()}
 $('p').oninput=function(){sig=+this.value/100;targets();ui()};
 $('p').onchange=function(){sig=+this.value/100;targets();ui()};
