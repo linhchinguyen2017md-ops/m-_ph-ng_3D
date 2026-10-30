@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Bơm Nhà Máy Nhiệt Điện Mông Dương 1 (2x540MW)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        scada: {
+                            bg: '#0a0f1d',
+                            panel: '#0f172a',
+                            border: '#1e293b',
+                            accent: '#06b6d4',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            success: '#10b981',
+                            card: '#131e36',
+                            highlight: '#1e3a8a'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Consolas', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0f1d; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; border: 1px solid #334155; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+        .scada-glow { box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+        .scada-border { border: 1px solid #1e293b; }
+        .pulse-live { animation: pulse-op 2s infinite ease-in-out; }
+        @keyframes pulse-op {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body class="bg-scada-bg text-slate-200 min-h-screen font-sans flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-400 font-bold text-xl shadow-lg shadow-cyan-950/50">
+                    <i class="fa-solid fa-industry"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-live"></span> DCS OVATION & MARK VIe
+                        </span>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white font-mono uppercase">HỆ THỐNG BƠM NHIỆT ĐIỆN MÔNG DƯƠNG 1</h1>
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono">Quy mô 2 x 540 MW | 4 Lò CFBC Foster Wheeler + 2 Tuabin Doosan Cận Tới Hạn</p>
+                </div>
+            </div>
+
+            <!-- Header Quick Stats & Navigation Links -->
+            <div class="flex items-center gap-3 text-xs font-mono">
+                <button onclick="scrollToSection('deep-analysis-section')" class="px-3 py-1.5 rounded bg-blue-950/80 text-blue-300 border border-blue-500/40 hover:bg-blue-900 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-graduation-cap"></i> Phân Tích Chuyên Sâu
+                </button>
+                <div class="hidden sm:flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded border border-slate-800">
+                    <span class="text-slate-400">ĐẦU MỤC:</span>
+                    <span id="stat-total" class="font-bold text-cyan-400 text-sm">26</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- Controls Toolbar: Filter Tabs & Search -->
+        <div class="bg-scada-panel p-4 rounded-xl scada-border shadow-xl space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <!-- Filter Tabs -->
+                <div class="flex flex-wrap gap-2 text-sm font-mono">
+                    <button onclick="setFilter('all')" id="btn-tab-all" class="filter-tab active px-4 py-2 rounded-lg font-semibold transition border border-cyan-500 bg-cyan-950/60 text-cyan-300">
+                        <i class="fa-solid fa-layer-group mr-1.5"></i>Tất Cả (<span id="count-all">0</span>)
+                    </button>
+                    <button onclick="setFilter('turbine')" id="btn-tab-turbine" class="filter-tab px-4 py-2 rounded-lg font-semibold transition border border-slate-700 bg-slate-900 text-slate-400 hover:text-cyan-300">
+                        <i class="fa-solid fa-fan mr-1.5 text-blue-400"></i>Bên Máy / Tuabin (<span id="count-turbine">0</span>)
+                    </button>
+                    <button onclick="setFilter('boiler')" id="btn-tab-boiler" class="filter-tab px-4 py-2 rounded-lg font-semibold transition border border-slate-700 bg-slate-900 text-slate-400 hover:text-amber-300">
+                        <i class="fa-solid fa-fire-burner mr-1.5 text-amber-500"></i>Bên Lò / CFBC (<span id="count-boiler">0</span>)
+                    </button>
+                    <button onclick="setFilter('chemical')" id="btn-tab-chemical" class="filter-tab px-4 py-2 rounded-lg font-semibold transition border border-slate-700 bg-slate-900 text-slate-400 hover:text-emerald-300">
+                        <i class="fa-solid fa-flask-vial mr-1.5 text-emerald-400"></i>Bên Hóa / WTP (<span id="count-chemical">0</span>)
+                    </button>
+                </div>
+
+                <!-- Instant Search Bar -->
+                <div class="relative w-full md:w-80">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Tìm tên bơm, mã KKS, kiểu loại..." 
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono transition">
+                </div>
+            </div>
+
+            <!-- View Switcher & Legend -->
+            <div class="flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-slate-800 gap-2">
+                <div class="flex items-center space-x-4">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-blue-500/80 inline-block"></span> Phân Mảng Máy</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-amber-500/80 inline-block"></span> Phân Mảng Lò</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500/80 inline-block"></span> Phân Mảng Hóa</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-slate-400 font-sans">Chế độ hiển thị:</span>
+                    <button onclick="setViewMode('cards')" id="btn-view-cards" class="px-2.5 py-1 rounded bg-slate-800 text-cyan-400 border border-cyan-500/50">
+                        <i class="fa-solid fa-table-cells-large mr-1"></i>Thẻ Grid
+                    </button>
+                    <button onclick="setViewMode('table')" id="btn-view-table" class="px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200">
+                        <i class="fa-solid fa-table-list mr-1"></i>Bảng Tổng Hợp
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+        <!-- Comparative Table View -->
+        <div id="tableView" class="hidden bg-scada-panel rounded-xl scada-border overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono border-collapse">
+                    <thead class="bg-slate-950 text-slate-300 uppercase tracking-wider border-b border-slate-800">
+                        <tr>
+                            <th class="p-3.5">Mã KKS & Tên Thiết Bị</th>
+                            <th class="p-3.5">Mảng</th>
+                            <th class="p-3.5">Cấu Hình & Dự Phòng</th>
+                            <th class="p-3.5">Kiểu Loại Thủy Lực</th>
+                            <th class="p-3.5">Lưu Lượng / Cột Áp</th>
+                            <th class="p-3.5">Động Cơ / Dẫn Động</th>
+                            <th class="p-3.5 text-center">Chi Tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty Results Alert -->
+        <div id="emptyState" class="hidden text-center py-16 bg-scada-panel rounded-xl scada-border">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-4xl mb-3"></i>
+            <h3 class="text-base font-bold text-white uppercase font-mono">Không tìm thấy thiết bị bơm phù hợp</h3>
+            <p class="text-xs text-slate-400 mt-1">Vui lòng điều chỉnh lại bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
+        </div>
+
+        <!-- DEEP ENGINEERING ANALYSIS SECTION -->
+        <div id="deep-analysis-section" class="bg-scada-panel p-6 rounded-xl scada-border shadow-2xl space-y-6 mt-8">
+            <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded bg-blue-950 border border-blue-500 flex items-center justify-center text-blue-400 font-bold">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white font-mono uppercase">CHUYÊN ĐỀ PHÂN TÍCH KỸ THUẬT & ĐỐI CHỨNG CÔNG NGHỆ</h2>
+                        <p class="text-xs text-slate-400 font-mono">Luận chứng lựa chọn công nghệ và logic điều khiển nâng cao tại NMNĐ Mông Dương 1</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-mono leading-relaxed">
+                
+                <!-- Topic 1: BFPM vs BFPT -->
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2.5">
+                    <h3 class="text-cyan-400 font-bold text-sm uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-arrows-split-up-and-left text-cyan-500"></i>
+                        1. Phương Thức Truyền Động Bơm Cấp: Tại Sao Chọn 100% Bơm Điện (BFPM)?
+                    </h3>
+                    <p class="text-slate-300 text-justify font-sans">
+                        Ở tổ máy nhiệt điện cấp 500 - 600 MW, việc sử dụng tuabin hơi phụ (BFPT) thường cho hiệu suất chu trình nhiệt cao hơn do dẫn động trực tiếp. Tuy nhiên, <strong>Mông Dương 1 sở hữu sơ đồ khối độc thù: 02 Lò CFBC cấp chung cho 01 Tuabin 540 MW</strong>.
+                    </p>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 font-sans">
+                        <li><strong class="text-slate-200">Độc lập khi vận hành lệch lò:</strong> Nhà máy thường xuyên khởi động trước 1 lò, lò kia vào sau, hoặc chạy 1 lò khi lò còn lại bảo dưỡng. Dùng tuabin phụ BFPT trích hơi sẽ gặp nguy cơ tụt áp nguồn hơi trích nghiêm trọng khi chuyển đổi lò.</li>
+                        <li><strong class="text-slate-200">Khớp nối thủy lực Voith:</strong> Động cơ điện 10kV (11.000 kW) kết hợp bộ truyền động bánh răng tăng tốc và khớp biến tốc Voith cho phép dải điều tốc từ 25% đến 100%, đem lại tính linh hoạt tương đương BFPT nhưng cấu trúc vận hành tinh gọn hơn.</li>
+                    </ul>
+                </div>
+
+                <!-- Topic 2: Limestone Delivery Technology -->
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2.5">
+                    <h3 class="text-amber-400 font-bold text-sm uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-cubes text-amber-500"></i>
+                        2. Công Nghệ Khử Lưu Huỳnh CFB: Phun Đá Vôi Khô vs Bơm Bùn Đá Vôi (FGD)
+                    </h3>
+                    <p class="text-slate-300 text-justify font-sans">
+                        Nhiều kỹ sư nhầm lẫn về sự thiếu vắng của cụm <em>"Bơm bùn đá vôi (Limestone Slurry Pump)"</em> tại Mông Dương 1. Cần khẳng định rõ: <strong>Nhà máy không sử dụng tháp khử lưu huỳnh ướt (Wet-FGD)</strong>.
+                    </p>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 font-sans">
+                        <li><strong class="text-slate-200">Cơ chế khử SO₂ nội tại:</strong> Lò CFB có nhiệt độ buồng đốt lý tưởng (850 - 900°C), đá vôi được nghiền bột mịn và cấp trực tiếp vào lò để phân hủy thành CaO hấp phụ SO₂ ngay trong buồng lửa và cyclone.</li>
+                        <li><strong class="text-slate-200">Hệ thống cấp khí nén khô:</strong> Toàn bộ quá trình vận chuyển đá vôi sử dụng máy nghiền bi (Tube Mill), bunke đá vôi, quạt thổi đá vôi cao áp (Limestone Blowers) và van quay khí nén, hoàn toàn không sử dụng môi chất lỏng bùn ướt.</li>
+                    </ul>
+                </div>
+
+                <!-- Topic 3: Liquid Ring vs Steam Ejector -->
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2.5">
+                    <h3 class="text-emerald-400 font-bold text-sm uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-compress text-emerald-500"></i>
+                        3. Bơm Chân Không Vòng Nước (CVP) Đối Chứng Ejector Hơi
+                    </h3>
+                    <p class="text-slate-300 text-justify font-sans">
+                        Đối chứng công nghệ trong hút chân không bình ngưng là giữa Bơm vòng chất lỏng (LRVP) và Ejector hơi phụ trợ (Steam Ejector):
+                    </p>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 font-sans">
+                        <li><strong class="text-slate-200">Độc lập nguồn nhiệt khi Cold Start:</strong> Ejector hơi đòi hỏi phải có sẵn nguồn hơi tự dùng ổn định từ lò phụ. Bơm vòng nước Gardner Denver chỉ cần điện tự dùng hạ áp 400V là có thể rút chân không ngay từ đầu.</li>
+                        <li><strong class="text-slate-200">Tự động hóa hoàn toàn trên Ovation:</strong> Chuyển tiếp linh hoạt giữa chế độ rút nhanh (Hogging - chạy 2 bơm) sang duy trì (Holding - chạy 1 bơm) chỉ bằng 1 lệnh soft-switch trên màn hình DCS.</li>
+                    </ul>
+                </div>
+
+                <!-- Topic 4: DCS Runback & Interlock -->
+                <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2.5">
+                    <h3 class="text-rose-400 font-bold text-sm uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-rose-500"></i>
+                        4. Logic Liên Động Tự Động & Bảo Vệ Runback Khẩn Cấp
+                    </h3>
+                    <p class="text-slate-300 text-justify font-sans">
+                        Hệ thống điều khiển Ovation cài đặt các tầng bảo vệ dự phòng tự động cực kỳ nghiêm ngặt nhằm tránh sự cố mất nước bao hơi gây phá hủy dàn ống:
+                    </p>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 font-sans">
+                        <li><strong class="text-slate-200">Bơm nước ngưng (CEP):</strong> Cấu hình 3 x 50%. Bơm dự phòng nhảy vào làm việc sau 5s khi áp lực ống góp chung giảm &lt; 22 bar hoặc khi bơm đang chạy bị trip.</li>
+                        <li><strong class="text-slate-200">Bơm cấp (BFP) &amp; Runback:</strong> Khi tải tổ máy &gt; 385 MW, nếu 1 bơm cấp trip mà bơm dự phòng không vào làm việc trong vòng <strong>8 giây</strong>, DCS lập tức kích hoạt Runback tổ máy về 310 MW (68.1% Boiler Master) hoặc MFT 1 nhánh lò hơi để bảo vệ bao hơi.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Detailed Pump Modal / SCADA Faceplate -->
+    <div id="pumpModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-slate-900 border border-cyan-500/50 rounded-xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl scada-glow overflow-hidden" onclick="event.stopPropagation()">
+            
+            <!-- Modal Header -->
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span id="modalCategoryBadge" class="text-xs px-2.5 py-1 rounded font-mono font-bold uppercase border"></span>
+                    <div>
+                        <h2 id="modalPumpName" class="text-lg font-bold text-white font-mono flex items-center gap-2"></h2>
+                        <span id="modalKksCode" class="text-xs text-cyan-400 font-mono tracking-wider font-semibold"></span>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-6 space-y-6 overflow-y-auto text-sm text-slate-300">
+                
+                <!-- Quick Specs Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-500 block">CẤU HÌNH DỰ PHÒNG</span>
+                        <span id="modalConfig" class="text-white font-bold text-xs sm:text-sm"></span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-500 block">LƯU LƯỢNG / CỘT ÁP</span>
+                        <span id="modalFlowHead" class="text-cyan-400 font-bold text-xs sm:text-sm"></span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-500 block">ĐỘNG CƠ / DẪN ĐỘNG</span>
+                        <span id="modalMotor" class="text-amber-400 font-bold text-xs sm:text-sm"></span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-500 block">NHÀ SẢN XUẤT</span>
+                        <span id="modalMaker" class="text-emerald-400 font-bold text-xs sm:text-sm"></span>
+                    </div>
+                </div>
+
+                <!-- Deep Engineering Analysis Details -->
+                <div class="space-y-4">
+                    
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="text-cyan-400 font-mono font-bold text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-microchip"></i> 1. Phân Tích Kỹ Thuật: Tại Sao Lại Dùng Chủng Loại Này?
+                        </h4>
+                        <p id="modalRationale" class="text-slate-300 leading-relaxed text-xs sm:text-sm text-justify font-sans"></p>
+                    </div>
+
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="text-amber-400 font-mono font-bold text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-diagram-project"></i> 2. Chức Năng Chu Trình & Môi Chất Làm Việc
+                        </h4>
+                        <p id="modalFunction" class="text-slate-300 leading-relaxed text-xs sm:text-sm text-justify font-sans"></p>
+                    </div>
+
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="text-rose-400 font-mono font-bold text-xs sm:text-sm flex items-center gap-2 uppercase tracking-wide">
+                            <i class="fa-solid fa-shield-virus"></i> 3. Logic Bảo Vệ Chính & Điều Kiện Liên Động Tự Động (DCS)
+                        </h4>
+                        <div id="modalInterlocks" class="text-xs sm:text-sm text-slate-300 space-y-1.5 font-mono"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs font-mono text-slate-400">
+                <span>Dữ liệu chuẩn hóa theo tài liệu vận hành NMNĐ Mông Dương 1</span>
+                <button onclick="closeModal()" class="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white rounded font-bold transition">
+                    Đóng (Esc)
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Engine JavaScript -->
+    <script>
+        const pumpsDatabase = [
+            /* =================== PHÂN MẢNG BÊN MÁY (TURBINE & BOP) =================== */
+            {
+                id: 'mbfp',
+                category: 'turbine',
+                name: 'Bơm Nước Cấp Chính (MBFP)',
+                kks: '13/23LAC21/22/23AP001',
+                config: '3 x 50% / Tổ máy (2 Vận hành, 1 Dự phòng)',
+                type: 'Ly tâm trục ngang, 4 tầng cánh, vỏ kiểu barrel áp lực cao',
+                flow: '1250 m³/h',
+                head: '2315 mH₂O (~230 - 280 bar)',
+                motor: '10kV, 11000 kW, 1490 v/ph qua khớp nối thủy lực Voith (Bơm quay 5060 v/ph)',
+                maker: 'HHI (Hyundai Heavy Industries) / Hàn Quốc',
+                rationale: 'Hệ lò CFB cận tới hạn đòi hỏi áp suất nước cấp lên tới 230 - 280 bar. Vỏ barrel đúc nguyên khối chịu áp cực lớn. Cấu hình dùng bơm điện 10kV kết hợp khớp nối thủy lực Voith cho phép điều khiển tốc độ linh hoạt từ 25% - 100%, hấp thụ rung động xoắn và hoàn toàn độc lập với nguồn hơi trích tuabin, tương thích tối đa với sơ đồ "2 Lò CFB đi chung 1 Tuabin 540MW".',
+                function: 'Cung cấp nước cấp từ đầu đẩy bơm tăng áp qua các bình gia nhiệt cao áp số 6, 7, 8 và bộ hâm nước vào bao hơi. Có trích tầng cánh trung gian cấp nước giảm ôn quá nhiệt trung gian (RH) và Bypass HP.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy khi bơm làm việc trip hoặc lưu lượng đầu hút > 1450 t/h.',
+                    'Khi mang tải > 385 MW, nếu 1 bơm cấp trip mà bơm dự phòng không vào trong 8 giây: DCS kích hoạt Runback tổ máy về 310 MW (68.1% Boiler Master) hoặc MFT 1 nhánh lò hơi có lưu lượng thấp hơn.',
+                    'Trip bơm khi áp lực dầu bôi trơn thấp thấp < 0.8 bar (sau 20s).',
+                    'Trip bơm khi nhiệt độ gối trục bơm > 95°C, gối chặn > 100°C, cuộn dây động cơ > 135°C (sau 3s).',
+                    'Trip bơm khi nhiệt độ dầu làm việc khớp nối thủy lực > 130°C (sau 3s).',
+                    'Trip nếu độ rung gối trục bơm > 150 µm p-p, độ rung động cơ > 228 - 245 µm p-p (sau 3s).'
+                ]
+            },
+            {
+                id: 'bfbp',
+                category: 'turbine',
+                name: 'Bơm Tăng Áp Nước Cấp (BFBP)',
+                kks: '13/23LAC11/12/13AP001',
+                config: '3 x 50% / Tổ máy (Đồng trục động cơ chính)',
+                type: 'Ly tâm nằm ngang, 1 tầng cánh, hút đơn',
+                flow: '1250 m³/h',
+                head: '89 mH₂O (Tăng áp ~8.9 bar)',
+                motor: 'Nối cứng trục đối diện động cơ 10kV 11000kW (1490 v/ph)',
+                maker: 'HHI / Hàn Quốc',
+                rationale: 'Nước sau bình khử khí ở trạng thái sôi bão hòa (181.2°C), cột áp NPSHa tự nhiên rất nhỏ. Nếu nạp trực tiếp vào bơm cấp quay 5060 v/ph sẽ bị xâm thực phá hủy ngay. Bơm tăng áp quay chậm 1490 v/ph có NPSH yêu cầu rất thấp, tạo áp sơ bộ 8.9 bar nạp vào cửa hút bơm chính, triệt tiêu hoàn toàn bọt khí xâm thực.',
+                function: 'Hút nước cấp từ bể chứa nước khử khí (Deaerator Storage Tank), tăng áp sơ bộ và nạp trực tiếp vào cửa hút của Bơm cấp chính (MBFP). Có trang bị van an toàn cơ 26.4 bar trên đường ống liên kết.',
+                interlocks: [
+                    'Khóa liên động cơ - điện tuyệt đối cùng động cơ bơm cấp chính (chạy/dừng đồng bộ).',
+                    'Trip bơm khi nhiệt độ gối trục bơm tăng áp > 95°C (sau 3s).',
+                    'Trip bơm khi nhiệt độ nước chèn cơ khí từ vành chèn ra bộ làm mát > 95°C (sau 3s).',
+                    'Trip bơm khi độ rung gối trục bơm tăng áp phương X/Y > 150 µm p-p (sau 3s).'
+                ]
+            },
+            {
+                id: 'fw-warmup',
+                category: 'turbine',
+                name: 'Bơm Sấy Nóng / Điền Đầy Nước Cấp',
+                kks: '13/23LCA40AP001',
+                config: '1 x 100% / Tổ máy (Đặt dưới bình khử khí)',
+                type: 'Ly tâm nằm ngang, 1 tầng cánh',
+                flow: '100 m³/h',
+                head: '50 mH₂O',
+                motor: '30 kW, 400V, 1470 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Trước khi khởi động bơm cấp, chênh lệch nhiệt độ vỏ trên/dưới không được quá 40°C và chênh lệch vỏ bơm với nước khử khí không quá 70°C để tránh cong trục hoặc kẹt cơ khí. Bơm tuần hoàn chịu trách nhiệm điền đầy đường ống, sấy nóng ban đầu và hỗ trợ khử khí sơ bộ.',
+                function: 'Lấy nước từ bể chứa nước cấp tuần hoàn về đầu vào bình khử khí để khử khí sơ bộ bằng hơi tự dùng khi khởi động, đồng thời cấp nước sấy đều thân bơm cấp dự phòng.',
+                interlocks: [
+                    'Cho phép khởi động khi mức nước bình khử khí đạt trên ngưỡng -715 mm.',
+                    'Tự động ngắt khi mức nước bể khử khí tụt mức thấp thấp LL (-1825 mm).',
+                    'Bảo vệ quá dòng động cơ và chênh áp phin lọc đầu hút > 0.2 bar.'
+                ]
+            },
+            {
+                id: 'cep',
+                category: 'turbine',
+                name: 'Bơm Nước Ngưng Chính (CEP)',
+                kks: '13/23LCB11/12/13AP001',
+                config: '3 x 50% / Tổ máy (2 Chạy, 1 Dự phòng)',
+                type: 'Ly tâm trục đứng lồng ống (Vertical Can Type), 7 tầng cánh',
+                flow: '810 m³/h (Max run-out 1330 t/h)',
+                head: '280 mH₂O (~28 bar)',
+                motor: '10kV, 980 kW, 1489 v/ph (Model VWDB7M)',
+                maker: 'HHI / Hàn Quốc',
+                rationale: 'Rốn bình ngưng làm việc ở áp suất chân không sâu (~0.07 bar), nước ngưng sát điểm sôi chân không. Kết cấu trục đứng dạng Can (thùng bao sâu 9.95m dưới sàn) cho phép đặt tầng cánh thứ nhất ở độ sâu lớn, tạo ra cột áp thủy tĩnh nhân tạo cần thiết chống bọt khí xâm thực.',
+                function: 'Hút nước ngưng tụ từ rốn 2 nửa bình ngưng (Condenser Hotwell), đẩy qua bình ngưng hơi chèn (GSC), 4 cấp bình gia nhiệt hạ áp LP #1 - #4 và đẩy lên bình khử khí ở cao trình 23m.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy sau 5s khi bơm đang vận hành bị trip hoặc áp lực ống góp đầu đẩy giảm < 22 bar.',
+                    'Trip bơm khi mức rốn bình ngưng thấp thấp < 250 mm (sau 3s).',
+                    'Trip bơm khi nhiệt độ gối động cơ > 100°C hoặc gối chặn bơm > 95°C (sau 3s).',
+                    'Trip khi độ rung gối trục động cơ > 7.1 mm/s, độ rung gối chặn > ±339 µm p-p.',
+                    'Trip bơm nếu sau lệnh chạy mà van điện đầu đẩy không mở sau 3s.'
+                ]
+            },
+            {
+                id: 'cmp',
+                category: 'turbine',
+                name: 'Bơm Bổ Sung Nước Ngưng (CMP)',
+                kks: '13/23LCP11/12AP001',
+                config: '2 x 100% / Tổ máy',
+                type: 'Ly tâm trục ngang, 1 tầng cánh',
+                flow: '170 m³/h',
+                head: '55 m',
+                motor: '45 kW, 400V, 1480 v/ph',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Trong chu trình nhiệt luôn có sự thất thoát nước (thổi bụi, xả đáy lò, rò rỉ). Khi lực hút chân không tự nhiên của bình ngưng không đủ để tự hút nước bù, bơm bổ sung CMP sẽ cưỡng bức cấp nước ngưng sạch vào hệ thống.',
+                function: 'Bơm nước từ bể chứa nước ngưng (Condensate Storage Tank) bù vào rốn bình ngưng để giữ mức 950 mm, hoặc điền đầy ban đầu cho bể giãn nở nước làm mát kín (CCW Head Tank).',
+                interlocks: [
+                    'Tự động khởi động khi mức rốn bình ngưng giảm thấp mà van bù tự hút mở 100% không duy trì được mức.',
+                    'Dừng bơm khi mức bể chứa nước ngưng tụt mức thấp thấp LL.',
+                    'Bơm dự phòng tự động chuyển tiếp khi bơm chính mất áp đầu đẩy.'
+                ]
+            },
+            {
+                id: 'cwp',
+                category: 'turbine',
+                name: 'Bơm Nước Tuần Hoàn Chính (CWP)',
+                kks: '13/23PAC11/12AP001',
+                config: '2 x 50% / Tổ máy (Hút nước biển)',
+                type: 'Bơm cánh nâng hỗn lưu trục đứng, 1 tầng cánh',
+                flow: '36.500 m³/h (Tổng 73.000 m³/h/tổ máy)',
+                head: '19.6 mH₂O',
+                motor: '10kV, 2650 kW, 375 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Giải nhiệt lượng hơi thoát khổng lồ từ tuabin hạ áp ngưng tụ thành nước đòi hỏi lưu lượng nước làm mát cực lớn nhưng cột áp đẩy thấp. Dạng cánh nâng trục đứng đặt ngập trực tiếp trong hố hút nước biển đem lại hiệu suất thủy lực cao nhất và không bao giờ mất mồi.',
+                function: 'Cung cấp toàn bộ lưu lượng nước biển làm mát đi qua 2 nửa bình ngưng A & B của tổ máy, đồng thời cấp nước cho hệ thống nước làm mát phụ (ACW) và bể nước vận chuyển tro xỉ.',
+                interlocks: [
+                    'Trip bơm sau 3s khi nhiệt độ gối động cơ > 95°C, gối chặn > 111°C, cuộn dây > 140°C.',
+                    'Trip bơm khi độ rung gối trục động cơ > 9.5 mm/s, độ rung gối chặn > ±1100 µm p-p (sau 3s).',
+                    'Trip bơm sau 10s nếu chạy mà van thủy lực/van điện đầu đẩy chưa mở.',
+                    'Trip bơm khi áp lực đầu đẩy tăng vọt > 2.3 bar duy trì quá 60s.'
+                ]
+            },
+            {
+                id: 'cw-fill',
+                category: 'turbine',
+                name: 'Bơm Điền Đầy Tuyến Nước Tuần Hoàn',
+                kks: '03PAA10/11AP001',
+                config: '2 x 100% / Toàn nhà máy',
+                type: 'Ly tâm trục đứng',
+                flow: '375 m³/h',
+                head: '25 mH₂O',
+                motor: '55 kW, 400V, 1480 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Đường ống nước tuần hoàn có đường kính hơn 2 mét kéo dài từ trạm bơm biển vào nhà tuabin. Nếu khởi động bơm chính 36.500 m³/h khi ống rỗng sẽ gây ra búa nước phá vỡ tuyến ống. Bơm điền đầy có lưu lượng vừa phải dùng để lấp đầy nước từ từ trước khi hòa bơm chính.',
+                function: 'Điền đầy nước biển vào toàn bộ tuyến ống tuần hoàn, hộp nước bình ngưng sau đại tu; cấp nước nguồn cho bơm tăng áp châm Clo khử hà rêu.',
+                interlocks: [
+                    'Liên động mở các van xả khí hộp nước bình ngưng khi chạy bơm điền đầy.',
+                    'Dừng bơm khi các van xả khí hộp nước đóng lại (nước đã lấp đầy tuyến ống).'
+                ]
+            },
+            {
+                id: 'screen-wash',
+                category: 'turbine',
+                name: 'Bơm Rửa Lưới Quay Cửa Nhận Nước',
+                kks: '03PAB11/12AP001',
+                config: '2 x 100% / Toàn nhà máy',
+                type: 'Ly tâm trục ngang, 1 tầng cánh',
+                flow: '140 m³/h',
+                head: '25 mH₂O',
+                motor: '30 kW, 400V, 2950 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Nước biển ven bờ Quảng Ninh chứa nhiều rác hữu cơ, rong rêu và sinh vật biển bám vào lưới chắn rác di động. Bơm áp lực rửa lưới đảm bảo tia nước áp lực cao thổi sạch rác bám trên mắt lưới rơi vào máng xả rác.',
+                function: 'Bơm nước biển áp lực rửa sạch các tấm lưới chắn rác quay tại trạm bơm tuần hoàn thô, ngăn ngừa rác lọt vào làm tắc ống bình ngưng.',
+                interlocks: [
+                    'Tự động khởi động khi chênh áp qua lưới quay (DP) vượt ngưỡng cài đặt.',
+                    'Chạy đồng bộ cùng động cơ quay lưới cào rác tự động.'
+                ]
+            },
+            {
+                id: 'ctcs-pump',
+                category: 'turbine',
+                name: 'Bơm Tuần Hoàn Bóng Làm Sạch Bình Ngưng',
+                kks: '13/23PAH30/40AP001',
+                config: '2 bộ / Tổ máy (Condenser A & B)',
+                type: 'Ly tâm hở chuyên dụng không xé rách bóng',
+                flow: 'Theo thiết kế cụm CTCS',
+                head: '12 - 15 m',
+                motor: '15 kW, 400V',
+                maker: 'Taprogge / Đức',
+                rationale: 'Bề mặt truyền nhiệt của ống titan bình ngưng bị bùn vi sinh và muối biển bám cặn làm giảm độ chân không. Hệ thống CTCS liên tục phóng các quả bóng cao su xốp qua lòng ống để lau cặn cơ học. Bơm tuần hoàn bóng được thiết kế cánh đặc biệt để luân chuyển bóng an toàn.',
+                function: 'Thu hồi các quả bóng xốp từ bộ bẫy bóng ở đầu ra bình ngưng và bơm tuần hoàn đẩy ngược lại đầu vào dòng nước tuần hoàn làm mát.',
+                interlocks: [
+                    'Khóa liên động với lưới thu hồi bóng và bộ đếm bóng trên DCS.',
+                    'Cảnh báo chênh áp bẫy bóng cao khi lưới bị kẹt rác.'
+                ]
+            },
+            {
+                id: 'cvp',
+                category: 'turbine',
+                name: 'Bơm Hút Chân Không Bình Ngưng (CVP)',
+                kks: '13/23MAJ11/12AP001',
+                config: '2 x 100% / Tổ máy (1 Chạy, 1 Dự phòng)',
+                type: 'Vòng chất lỏng (Liquid Ring Vacuum Pump)',
+                flow: '891.98 m³/h (Khí/hơi)',
+                head: 'Chân không hút sâu tới 0.05 - 0.07 bara',
+                motor: '110 kW, 400V, 489 v/ph (Model HLE4 350-30E)',
+                maker: 'Gardner Denver / Nash',
+                rationale: 'Khí rút từ bình ngưng chứa hơi nước bão hòa. Bơm vòng chất lỏng sử dụng chính nước làm kín tạo vành chất lỏng nén khí đẳng nhiệt, không ma sát kim loại trong buồng nén, loại bỏ hoàn toàn nguy cơ cháy nổ hay hư hại cơ khí do giọt nước ngưng tụ.',
+                function: 'Rút sạch không khí khi khởi động (Hogging) và hút liên tục các khí không ngưng lọt vào bình ngưng trong quá trình phát điện (Holding) để duy trì độ chân không tuabin tối ưu.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy khi độ chân không bình ngưng suy giảm dưới ngưỡng cài đặt.',
+                    'Tự ngắt khi nhiệt độ nước làm kín buồng bơm quá cao hoặc mất nước bổ sung bình tách.',
+                    'Cắt bơm khi có lệnh mở van phá chân không bình ngưng trong trường hợp dừng khẩn cấp.'
+                ]
+            },
+            {
+                id: 'priming-pump',
+                category: 'turbine',
+                name: 'Bơm Mồi Chân Không Hộp Nước Bình Ngưng',
+                kks: '13/23PAC10AP001/002',
+                config: '2 x 100% / Tổ máy',
+                type: 'Vòng chất lỏng (Nash-Elmo)',
+                flow: 'Theo dải bình tích áp',
+                head: 'Chân không hút túi khí',
+                motor: '18.5 kW, 400V',
+                maker: 'Nash-Elmo / USA',
+                rationale: 'Đỉnh hộp nước bình ngưng nằm cao hơn mực nước xả. Không khí thoát ra từ nước biển tích tụ ở đỉnh hộp nước sẽ phá vỡ dòng chảy xiphông, gây giảm lưu lượng nước làm mát và tăng tải cho bơm CWP. Bơm mồi rút liên tục túi khí này để bảo toàn hiệu ứng xiphông.',
+                function: 'Hút xả toàn bộ túi khí đọng lại ở đỉnh các hộp nước của bình ngưng chính, duy trì hiệu ứng xiphông liên tục cho vòng tuần hoàn nước biển.',
+                interlocks: [
+                    'Chạy/dừng tự động theo tín hiệu áp suất chân không đo tại bình tích chân không (13PAC10CP101/102).',
+                    'Dừng bơm khi van phao báo mức nước dâng cao chống nước tràn vào buồng bơm.'
+                ]
+            },
+            {
+                id: 'mop',
+                category: 'turbine',
+                name: 'Bơm Dầu Bôi Trơn Chính Tuabin (MOP/BPM)',
+                kks: '13/23MAV20AP001/002',
+                config: '2 x 100% / Tổ máy (1 Chạy, 1 Dự phòng)',
+                type: 'Trục đứng, nhúng chìm trong bể dầu',
+                flow: '364 m³/h',
+                head: '5.78 bar',
+                motor: '132 kW, 400V, 1452 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Trục tuabin quay 3000 v/ph nặng hàng chục tấn, gối trục thủy động đòi hỏi lưu lượng dầu bôi trơn ISO VG32 cực kỳ ổn định. Kết cấu nhúng chìm hoàn toàn trong bể dầu chính triệt tiêu 100% nguy cơ lọt khí vào đường hút, đảm bảo không bao giờ bị mất mồi.',
+                function: 'Cung cấp dầu bôi trơn và làm mát cho 6 gối trục tuabin - máy phát, gối chặn, khớp nối trục, bộ vần trục và cấp dầu nguồn sang hệ thống dầu chèn trục máy phát.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy tức thì khi áp lực ống góp dầu bôi trơn giảm < 1.7 bar hoặc bơm chính bị trip.',
+                    'Trip Tuabin khi áp lực dầu bôi trơn giảm thấp thấp ≤ 1.21 bar.',
+                    'Trip Tuabin khi mức dầu bể bôi trơn giảm thấp ≤ 406 mm.'
+                ]
+            },
+            {
+                id: 'ebpm',
+                category: 'turbine',
+                name: 'Bơm Dầu Bôi Trơn Sự Cố DC (EBPM)',
+                kks: '13/23MAV20AP003',
+                config: '1 x 100% / Tổ máy (Nguồn điện 220VDC)',
+                type: 'Trục đứng, nhúng chìm trong bể dầu',
+                flow: '232 m³/h',
+                head: '2.4 bar',
+                motor: 'Động cơ điện một chiều DC 220V, công suất ~40 kW',
+                maker: 'Hàn Quốc',
+                rationale: 'Khi mất điện toàn nhà máy (Blackout), cả 2 bơm AC chính đều mất điện trong khi roto tuabin quay theo quán tính mất hơn 30-45 phút mới dừng hẳn. Bơm DC ăn trực tiếp vào thanh cái ắc quy khẩn cấp đảm bảo cấp dầu bôi trơn không gián đoạn, ngăn ngừa cháy rơ-le gối đỡ và cong võng trục.',
+                function: 'Duy trì bôi trơn khẩn cấp cho các gối trục tuabin - máy phát trong thời gian tổ máy ngừng chạy đà tự do khi toàn bộ nguồn điện tự dùng AC bị cô lập.',
+                interlocks: [
+                    'Tự động chạy tức thì khi áp lực dầu bôi trơn giảm < 1.5 bar hoặc mất điện tự dùng AC.',
+                    'Chỉ dừng bằng tay sau khi xác nhận tốc độ tuabin về 0 v/ph và nhiệt độ kim loại gối ổn định.'
+                ]
+            },
+            {
+                id: 'eh-pump',
+                category: 'turbine',
+                name: 'Bơm Dầu Thủy Lực Điều Khiển Tuabin (EH Pump)',
+                kks: '13/23MAX10AP001/002',
+                config: '2 x 100% / Tổ máy',
+                type: 'Bơm piston áp lực cao, biến đổi lưu lượng',
+                flow: 'Tự điều chỉnh theo nhu cầu cơ cấu chấp hành',
+                head: '165 bar (Áp suất siêu cao)',
+                motor: '30 kW, 400V, 1475 v/ph',
+                maker: 'Rexroth / Hãng chuyên dụng thủy lực',
+                rationale: 'Các van hơi chính (MSV, CV) và van tái nhiệt (RSV, IV) chịu áp lực hơi hàng trăm tấn. Cần dầu kháng cháy este photphat ở áp suất 165 bar để kích hoạt các xy lanh thủy lực đóng/mở van siêu tốc (dưới 0.15s khi trip). Bơm piston thay đổi thể tích giữ áp lực liên tục với tổn thất nhiệt nhỏ nhất.',
+                function: 'Cung cấp dầu thủy lực điều khiển chống cháy (dầu EH) áp suất cao để vận hành hệ thống van điều chỉnh hơi và van bảo vệ tuabin.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy khi áp suất dầu EH giảm < 130 bar.',
+                    'Trip Tuabin khẩn cấp khi áp lực dầu thủy lực tụt sâu ≤ 110 bar.',
+                    'Trip Tuabin khi mức bồn dầu EH tụt thấp ≤ 282 mm.'
+                ]
+            },
+            {
+                id: 'msop-esop',
+                category: 'turbine',
+                name: 'Cụm Bơm Dầu Chèn Trục Máy Phát (MSOP & ESOP)',
+                kks: '13/23MKW03AP001/002 & MKW19AP001',
+                config: '2 Bơm AC chính (2x100%) + 1 Bơm DC sự cố (1x100%)',
+                type: 'Trục vít kiểu quay (Rotary Screw Pump)',
+                flow: 'MSOP: 33.72 m³/h | ESOP: 31.29 m³/h',
+                head: 'Chênh áp 10.96 bar (cao hơn áp suất Hydro 0.6 - 0.8 bar)',
+                motor: 'MSOP: 18.75 kW (400VAC) | ESOP: 15 kW (220VDC)',
+                maker: 'Korea Fluid Co., Ltd.',
+                rationale: 'Máy phát điện làm mát bằng khí Hydro (H2) áp suất ~3-4 bar. Dầu chèn trục phải duy trì áp lực cao hơn áp lực khí Hydro một khoảng chính xác 0.6 bar ở mọi thời điểm để Hydro không rò rỉ ra ngoài gây nổ. Bơm trục vít cho dòng chảy êm dịu, áp suất ổn định tuyệt đối không gợn sóng.',
+                function: 'Bơm dầu vào các vành chèn trục máy phát để cô lập hoàn toàn khí Hydro bên trong vỏ máy phát với môi trường không khí bên ngoài.',
+                interlocks: [
+                    'Bơm MSOP-B tự động khởi động khi bơm A trip hoặc chênh áp dầu/H2 giảm.',
+                    'Bơm khẩn cấp ESOP (nguồn DC) tự động chạy khi mất điện AC hoặc tụt sâu áp suất dầu chèn.',
+                    'Cảnh báo chênh áp Dầu chèn - Hydro cao/thấp lệch chuẩn.'
+                ]
+            },
+            {
+                id: 'stator-pump',
+                category: 'turbine',
+                name: 'Bơm Nước Làm Mát Cuộn Dây Stator (SCWP)',
+                kks: '13/23MKF02/03AP001',
+                config: '2 x 100% / Tổ máy',
+                type: 'Ly tâm trục ngang bằng thép không gỉ (Inox SUS304)',
+                flow: '66 m³/h',
+                head: '4.5 - 5.5 bar',
+                motor: '15 kW, 400V, 2950 v/ph',
+                maker: 'Hàn Quốc',
+                rationale: 'Dòng điện hàng nghìn Ampe chạy qua cuộn dây Stator máy phát tỏa nhiệt cực lớn. Nước làm mát đi trực tiếp bên trong thanh dẫn rỗng bằng đồng phải là nước khử khoáng siêu tinh khiết (độ dẫn điện cực thấp 0.1 - 0.3 µS/cm). Bơm buộc phải làm hoàn toàn bằng Inox để không bị rỉ sét ion hóa nước gây phóng điện.',
+                function: 'Bơm nước khử khoáng qua bộ trao đổi nhiệt, bộ lọc vi sinh và đưa trực tiếp vào làm mát lõi rỗng của các thanh dẫn cuộn dây Stator máy phát điện 540MW.',
+                interlocks: [
+                    'Tự động khởi động bơm dự phòng khi bơm chính trip hoặc lưu lượng làm mát < 50 m³/h.',
+                    'Trip máy phát khi lưu lượng nước làm mát stator giảm thấp tới hạn hoặc độ dẫn điện tăng vọt > 9.9 µS/cm.'
+                ]
+            },
+            {
+                id: 'ccwp',
+                category: 'turbine',
+                name: 'Bơm Nước Làm Mát Kín (CCWP)',
+                kks: '13/23PGC11/12AP001',
+                config: '2 x 100% / Tổ máy (1 Chạy, 1 Dự phòng)',
+                type: 'Ly tâm nằm ngang, hút kép (Double Suction)',
+                flow: '4000 m³/h',
+                head: '50 m',
+                motor: '10kV, 730 kW, 990 v/ph (Model HRQ3455-68E)',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Hàng chục thiết bị phụ trợ (gối đỡ tuabin, khớp nối thủy lực, máy nén khí, quạt lò) cần giải nhiệt liên tục. Dùng một vòng tuần hoàn nước khử khoáng kín (đã châm hóa chất kiềm hóa pH 9.5) giúp chống cáu cặn và ăn mòn tuyệt đối cho thiết bị đắt tiền.',
+                function: 'Tuần hoàn nước khử khoáng trong chu trình kín, nhận nhiệt từ tất cả các bộ làm mát dầu, khí, gối trục gian máy và lò hơi rồi đẩy qua bộ làm mát trao đổi nhiệt CCWC bằng titan.',
+                interlocks: [
+                    'Bơm dự phòng tự động chạy khi bơm làm việc trip điện hoặc áp lực đầu đẩy gom < 5 bar.',
+                    'Trip bơm khi độ rung gối trục động cơ/bơm > 7.1 - 8 mm/s.',
+                    'Trip bơm khi nhiệt độ cuộn dây > 130°C, gối trục > 95 - 100°C (sau 3s).',
+                    'Cảnh báo mức bể giãn nở CCW Head Tank cao (> 1555mm) hoặc thấp (< 333mm).'
+                ]
+            },
+            {
+                id: 'acwbp',
+                category: 'turbine',
+                name: 'Bơm Tăng Áp Nước Làm Mát Phụ (ACWBP)',
+                kks: '13/23PCC10/20AP001',
+                config: '2 x 100% / Tổ máy',
+                type: 'Ly tâm nằm ngang, hút kép (Model DS 600x500-8F)',
+                flow: '2500 - 2700 m³/h',
+                head: '35 m',
+                motor: '350 kW, 400V, 745 v/ph',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Nước làm mát kín CCW sau khi hấp thụ nhiệt cần được giải nhiệt thải ra môi trường. Bơm ACWBP trích nước biển từ đầu đẩy bơm tuần hoàn CWP nén qua bộ làm mát dạng tấm (PHE bằng titan) để làm mát cho nước khử khoáng CCW.',
+                function: 'Tăng áp lực nước biển lấy từ ống góp tuần hoàn, đẩy qua các bộ trao đổi nhiệt dạng tấm (CCW Coolers) để hấp thụ nhiệt từ chu trình nước làm mát kín rồi thải ra kênh xả biển.',
+                interlocks: [
+                    'Liên động tự khởi động bơm dự phòng khi áp lực đầu đẩy của bơm chính suy giảm.',
+                    'Khóa liên động với các van chặn động cơ (MOV) đầu vào/ra của bộ trao đổi nhiệt titan.'
+                ]
+            },
+
+            /* =================== PHÂN MẢNG BÊN LÒ (BOILER & CFBC) =================== */
+            {
+                id: 'hfo-unload',
+                category: 'boiler',
+                name: 'Bơm Dỡ / Tải Dầu FO Cầu Cảng',
+                kks: '04EGD11AP001/002',
+                config: '2 x 100% / Toàn nhà máy',
+                type: 'Trục vít kiểu quay (Rotary Three-screw)',
+                flow: '50 m³/h',
+                head: '19.7 barg',
+                motor: '45 kW, 400V, 975 v/ph',
+                maker: 'Korea Fluid Co., Ltd.',
+                rationale: 'Dầu nặng FO vận chuyển bằng sà lan có độ nhớt cực cao và nhiệt độ thay đổi theo thời tiết. Bơm trục vít có khả năng tự mồi mạnh mẽ, đẩy được chất lỏng đặc quánh với áp lực gần 20 bar qua đường ống dài từ cảng về bồn chứa bãi dầu.',
+                function: 'Bốc dỡ dầu FO từ tàu/sà lan tại cảng bến chuyên dụng, đẩy qua bộ gia nhiệt dầu bốc dỡ (nâng nhiệt từ 50 lên 60°C) và nạp vào 2 bồn chứa dầu FO dung tích 1500 m³.',
+                interlocks: [
+                    'Bảo vệ quá áp đường ống bằng van an toàn cơ 04EGD11CP502 đầu đẩy.',
+                    'Dừng bơm khi mức bồn chứa dầu tiếp nhận đạt mức cao cao HH.',
+                    'Khóa liên động khi van chặn đầu hút chưa mở hoàn toàn.'
+                ]
+            },
+            {
+                id: 'hfo-supply',
+                category: 'boiler',
+                name: 'Bơm Cấp Dầu FO Chính Lò Hơi',
+                kks: '14/24EGC11/12AP001',
+                config: '2 x 100% / Tổ máy (Tổng 4 bộ)',
+                type: 'Bơm trục vít áp lực cao (Rotary Three-screw)',
+                flow: '50.2 - 59.2 m³/h',
+                head: '21.3 bar',
+                motor: '55 kW, 400V, 975 v/ph',
+                maker: 'KRAL AG / Áo hoặc Korea Fluid',
+                rationale: 'Đốt dầu bổ trợ trong lò CFB đòi hỏi tia dầu phải được xé tơi thành hạt sương siêu nhỏ qua vòi phun áp lực. Bơm trục vít cung cấp áp lực nén 21 bar liên tục, êm ái, chịu được nhiệt độ dầu sấy nóng lên tới 80 - 130°C mà không bị rò rỉ.',
+                function: 'Hút dầu FO từ bồn chứa, đẩy qua 2 cấp gia nhiệt dầu FO Level 1 và Level 2 (dùng hơi tự dùng gia nhiệt lên 130°C) để cấp vào các vòi phun dầu khởi động buồng đốt lò hơi.',
+                interlocks: [
+                    'Tự động khởi động bơm dự phòng khi áp lực dầu cấp lên lò bị tụt áp.',
+                    'Trip bơm khi nhiệt độ dầu cấp vào quá cao hoặc mất lưu lượng đầu hút.',
+                    'Liên động với van điều khiển áp suất dầu hồi bồn.'
+                ]
+            },
+            {
+                id: 'do-supply',
+                category: 'boiler',
+                name: 'Bơm Cấp Dầu DO Chính Mồi Lửa',
+                kks: '14/24EGC20/21AP001',
+                config: '2 x 100% / Tổ máy',
+                type: 'Bơm trục vít kiểu quay',
+                flow: '55 m³/h (Loại phụ 1.7 m³/h)',
+                head: '220 m (~22 bar)',
+                motor: '37 kW, 400V, 975 v/ph',
+                maker: 'Korea Fluid Co., Ltd.',
+                rationale: 'Dầu DO được sử dụng để sấy lò và đánh lửa mồi ban đầu cho mỏ đốt than lò tầng sôi CFB. Cần áp lực rất cao (22 bar) để tạo xoáy sương tối ưu cho buồng đốt khởi động nguội.',
+                function: 'Cấp dầu DO sạch từ bồn chứa DO sang các mỏ đốt đánh lửa mồi lò hơi và cung cấp nhiên liệu mồi cho lò hơi phụ.',
+                interlocks: [
+                    'Khóa liên động với hệ thống quản lý mỏ đốt BMS (Burner Management System).',
+                    'Dừng bơm khi mức bồn dầu DO giảm tới hạn thấp thấp LL.'
+                ]
+            },
+            {
+                id: 'scah-pump',
+                category: 'boiler',
+                name: 'Bơm Xả Nước Đọng Bộ Sấy Không Khí (SCAH)',
+                kks: '11/12/21/22HCB..AP001',
+                config: '1 bơm / Bộ trao đổi nhiệt SCAH',
+                type: 'Ly tâm trục ngang, gối đỡ đường tâm (Centerline Mounted)',
+                flow: '24.5 m³/h',
+                head: '40 m',
+                motor: '7.5 kW, 400V, 1470 v/ph',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Hơi gia nhiệt sơ cấp cho bộ sấy không khí ngưng tụ thành nước nóng áp suất cao. Nếu không thoát kịp sẽ gây ngập chùm ống và thủy kích. Bơm xả đọng thu hồi ngay lượng nước này về chu trình để tận dụng nhiệt.',
+                function: 'Bơm nước ngưng nhiệt độ cao ngưng tụ từ các ống nhiệt SCAH xả ngược về bình ngưng hoặc bồn thu gom nước đọng để tái sử dụng.',
+                interlocks: [
+                    'Chạy/dừng tự động theo mức nước bồn gom nước đọng SCAH.',
+                    'Cảnh báo nhiệt độ và chống chạy khô khi cạn nước.'
+                ]
+            },
+            {
+                id: 'fan-lube-pumps',
+                category: 'boiler',
+                name: 'Trạm Bơm Dầu Bôi Trơn Quạt Lò (IDF, PAF, SAF)',
+                kks: '11/12/21/22HNA.. / HLA.. AP001/002',
+                config: '2 x 100% / Cụm trạm quạt (1 Chạy, 1 Dự phòng)',
+                type: 'Bơm bánh răng thủy lực ăn khớp',
+                flow: '15 - 35 l/phút',
+                head: '3 - 5 bar',
+                motor: '3.0 - 5.5 kW, 400V, 1450 v/ph',
+                maker: 'Voith / Rexroth',
+                rationale: 'Các quạt khói (IDF 2850kW), quạt gió sơ cấp (PAF), quạt gió thứ cấp (SAF) làm việc liên tục trong môi trường nhiệt độ cao và bụi rung. Bơm bánh răng đơn giản, bền bỉ, tạo áp bôi trơn cưỡng bức nuôi màng dầu gối đỡ bạc lót chống cháy gối.',
+                function: 'Tuần hoàn dầu bôi trơn liên tục qua phin lọc kép và bộ làm mát dầu để làm mát ổ đỡ quạt khói và quạt gió lò hơi.',
+                interlocks: [
+                    'Điều kiện tiên quyết: Phải có bơm dầu bôi trơn quạt hoạt động và áp lực dầu > 2.3 kg/cm² mới cho phép khởi động quạt chính.',
+                    'Tự động chuyển bơm dự phòng sau 3s khi áp lực dầu bôi trơn suy giảm < 1.8 bar.',
+                    'Trip quạt lò khi áp lực dầu bôi trơn tụt sâu < 1.2 bar kéo dài 10s.'
+                ]
+            },
+            {
+                id: 'ash-vacuum-pump',
+                category: 'boiler',
+                name: 'Bơm Chân Không Hút Tro Bay (Fly Ash Vacuum Pump)',
+                kks: '11/12/21/22HEA..AP001-006',
+                config: '3 x 50% / Lò (Tổng 12 bơm toàn nhà máy)',
+                type: 'Bơm hút chân không vòng nước (Water Ring Type)',
+                flow: 'Lưu lượng khí chân không lớn',
+                head: 'Áp suất âm sâu (-0.4 đến -0.6 bar)',
+                motor: '55 - 75 kW, truyền động đai V-belt',
+                maker: 'Nash / Gardner Denver',
+                rationale: 'Hút tro bay hạt mịn từ phễu gom lọc bụi tĩnh điện ESP bằng áp lực âm giúp hệ thống kín tuyệt đối, nếu đường ống có rò rỉ thì không khí bên ngoài lọt vào chứ tro bụi độc hại không bị thổi bay ra gian lò.',
+                function: 'Tạo chân không hút tro bay từ các phễu hứng tro lọc bụi tĩnh điện (ESP), phễu bộ hâm và bộ sấy không khí về các bồn chứa tro trung gian.',
+                interlocks: [
+                    'Khóa liên động với trình tự rũ tro và van xả phễu tro tự động trên hệ thống PLC tro xỉ.',
+                    'Cắt bơm khi mất nước cấp làm kín vòng nước của bơm.'
+                ]
+            },
+            {
+                id: 'ash-slurry-pump',
+                category: 'boiler',
+                name: 'Bơm Bùn Tro Xỉ Thải Ra Đập',
+                kks: '00HFA..AP001/002',
+                config: '2 x 100% / Hệ thống thải xỉ ướt',
+                type: 'Ly tâm trục ngang cánh hở, hợp kim siêu cứng chống mài mòn',
+                flow: '1210 m³/h',
+                head: '45 - 60 m',
+                motor: 'Động cơ hạ áp 250 kW, truyền động đai hoặc hộp số',
+                maker: 'Warman / Weir Minerals',
+                rationale: 'Xỉ đáy lò CFB và tro bay có hàm lượng thạch anh, hạt góc cạnh rất sắc nhọn và nồng độ chất rắn cao. Bơm bùn chịu mài mòn chuyên dụng cánh hở và vỏ bọc hợp kim High-Chrome là giải pháp duy nhất không bị mài thủng buồng bơm.',
+                function: 'Bơm hỗn hợp vữa tro xỉ hòa trộn với nước biển từ hố thu gom trong nhà máy theo đường ống dài hơn 4 km thải ra hồ chứa đập thải xỉ.',
+                interlocks: [
+                    'Phải khởi động bơm nước rửa chèn làm kín trục (Gland Seal) trước khi chạy bơm bùn.',
+                    'Trip bơm khi áp lực đầu đẩy tăng quá cao báo hiệu tắc đường ống vữa xỉ.'
+                ]
+            },
+            {
+                id: 'ash-return-pump',
+                category: 'boiler',
+                name: 'Trạm Bơm Nước Ngược Đập Thải Xỉ',
+                kks: '00HFA..AP101/102',
+                config: '2 x 100% / Đặt tại trạm bơm hồ thải xỉ',
+                type: 'Ly tâm trục ngang / trục đứng',
+                flow: '1000 - 1200 m³/h',
+                head: '40 m',
+                motor: '160 kW, 400V',
+                maker: 'Hàn Quốc',
+                rationale: 'Nước thải xỉ ra đập có chứa kiềm tro. Để bảo vệ môi trường biển Vịnh Bái Tử Long, nhà máy không được xả thải trực tiếp. Nước sau khi lắng trong ở hồ chứa xỉ được bơm ngược 4km trở lại nhà máy tạo thành chu trình tuần hoàn kín.',
+                function: 'Thu hồi nước sau lắng từ đập thải xỉ, bơm ngược trở lại bể nước cao áp trong nhà máy để tái sử dụng cho việc xáo trộn vận chuyển xỉ.',
+                interlocks: [
+                    'Tự động chạy/dừng theo phao mức nước hồ lắng đập xỉ.',
+                    'Liên động với hệ thống châm hóa chất trung hòa pH trước khi bơm hồi lưu.'
+                ]
+            },
+
+            /* =================== PHÂN MẢNG BÊN HÓA (WTP & WWTP) =================== */
+            {
+                id: 'filtered-water',
+                category: 'chemical',
+                name: 'Bơm Nước Lọc Sơ Bộ (Filtered Water Pump)',
+                kks: '05GHA10/11AP001',
+                config: '2 x 100% / Trạm xử lý nước thô',
+                type: 'Ly tâm trục ngang, 1 tầng cánh',
+                flow: '360 m³/h',
+                head: '35 m',
+                motor: '55 kW, 400V, 1480 v/ph',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Nước thô từ hồ Thác Thầy có độ đục và cặn lơ lửng cao. Bơm nước lọc có lưu lượng lớn đẩy nước qua các tháp lọc áp lực than - cát đa tầng để làm trong nước trước khi sang chu trình trao đổi ion.',
+                function: 'Bơm nước đã keo tụ lắng trong từ bể chứa nước lọc qua các bồn lọc áp lực sang phục vụ hệ thống nước khử khoáng Demin.',
+                interlocks: [
+                    'Tự động chạy/dừng theo mức nước bồn chứa nước lọc và bồn chứa nước Demi.',
+                    'Khóa liên động dừng bơm khi các tháp lọc chuyển sang chu trình rửa ngược.'
+                ]
+            },
+            {
+                id: 'demin-transfer',
+                category: 'chemical',
+                name: 'Bơm Nước Chuyển Tiếp Khử Khoáng (Demin Transfer Pump)',
+                kks: '05GHB11/12AP001',
+                config: '2 x 100% / Trạm nước Demi',
+                type: 'Ly tâm nằm ngang (Model ISBF)',
+                flow: '175.5 m³/h',
+                head: '50 m',
+                motor: '37 kW, 400V, 1475 v/ph',
+                maker: 'CW-Hydro / Hàn Quốc',
+                rationale: 'Nước Demin là nước siêu tinh khiết đã tách sạch khoáng chất hòa tan. Bơm vận chuyển phải chế tạo bằng vật liệu inox hoặc lót cao su đặc biệt để không làm tái nhiễm bẩn ion kim loại vào nguồn nước cấp chu trình.',
+                function: 'Vận chuyển nước khử khoáng từ bể chứa Demi Tank (2 x 1500 m³) cấp bù cho bồn nước ngưng, bồn giãn nở CCW, hệ thống làm mát stator và chuẩn bị điền nước ban đầu cho lò hơi.',
+                interlocks: [
+                    'Dừng bơm khi mức nước bể chứa Demin Storage Tank xuống mức thấp thấp LL.',
+                    'Tự động khởi động khi có tín hiệu yêu cầu nạp nước từ DCS khối tổ máy.'
+                ]
+            },
+            {
+                id: 'regen-pump',
+                category: 'chemical',
+                name: 'Bơm Hoàn Nguyên Hạt Nhựa (Regeneration Pump)',
+                kks: '05GHC21/22AP001',
+                config: '2 x 100% / Trạm trao đổi ion',
+                type: 'Ly tâm trục ngang bằng thép không gỉ SUS316',
+                flow: '80 m³/h',
+                head: '45 m',
+                motor: '18.5 kW, 400V',
+                maker: 'Hàn Quốc',
+                rationale: 'Hạt nhựa Cation và Anion sau chu kỳ lọc sẽ no ion khoáng và mất tác dụng. Quá trình hoàn nguyên đòi hỏi lưu lượng nước sạch ổn định để hòa trộn dung dịch Axit HCl và Xút NaOH đưa vào cột lọc tái sinh hạt nhựa.',
+                function: 'Bơm nước khử khoáng cung cấp lưu lượng nước đẩy rửa ngược, tái sinh và thông rửa cho các cột trao đổi ion Cation, Anion và Mixed Bed.',
+                interlocks: [
+                    'Điều khiển hoàn toàn tự động theo chu trình PLC tái sinh hạt nhựa.',
+                    'Khóa liên động an toàn ngăn không cho bơm chạy khi chưa mở van cấp hóa chất hoàn nguyên.'
+                ]
+            },
+            {
+                id: 'chemical-dosing',
+                category: 'chemical',
+                name: 'Các Cụm Bơm Định Lượng Hóa Chất (Dosing Pumps)',
+                kks: '05GHD..AP001-010',
+                config: 'Mỗi hệ thống gồm 2 bơm (1 Chạy, 1 Dự phòng)',
+                type: 'Bơm màng định lượng vi sai (Diaphragm Metering Pump)',
+                flow: 'Chỉnh dải cực nhỏ: 10 - 288 l/h',
+                head: '10 - 25 bar (Tùy điểm châm)',
+                motor: '0.75 - 2.2 kW, động cơ vi bước',
+                maker: 'Milton Roy / Prominent',
+                rationale: 'Hóa chất châm vào lò (Amoniac điều chỉnh pH, Hydrazine khử oxy, Phosphate chống đóng cặn, PAC keo tụ) có tính ăn mòn hóa học cao hoặc rất đắt tiền. Bơm màng kín tuyệt đối không rò rỉ và cho phép định lượng chính xác đến từng mililit dung dịch theo tín hiệu DCS.',
+                function: 'Định lượng chính xác nồng độ hóa chất xử lý nước cấp, nước ngưng, nước bao hơi và hóa chất xử lý nước thải công nghiệp.',
+                interlocks: [
+                    'Liên động điều chỉnh tần số nhịp màng bơm theo lưu lượng nước cấp và thông số máy đo pH/Oxy hòa tan online.',
+                    'Báo động cạn bồn dung dịch hóa chất và tự động ngắt bơm chống màng chạy khô.'
+                ]
+            },
+            {
+                id: 'sump-pump',
+                category: 'chemical',
+                name: 'Hệ Thống Bơm Thoát Sàn Hố Thu (Sump Pumps)',
+                kks: '00UMA..AP001-020',
+                config: '2 bơm / Mỗi hố thu (Chạy so le/tự động)',
+                type: 'Bơm chìm hoặc bơm trục đứng (Vertical Sump Pump)',
+                flow: '20 - 50 m³/h',
+                head: '15 - 25 m',
+                motor: '3.7 - 7.5 kW, 400V',
+                maker: 'Dukji Industrial / Hàn Quốc',
+                rationale: 'Trong các tầng hầm gian máy, rãnh xả khu bồn dầu và nhà hóa chất luôn có nước rò rỉ kỹ thuật, nước vệ sinh sàn. Cần bơm chìm tự động để không làm ngập các động cơ và thiết bị lắp đặt dưới cốt 0.00m.',
+                function: 'Tự động bơm cạn các hố thu nước thải sàn, gom nước chuyển về trạm xử lý nước thải công nghiệp hoặc trạm phân ly dầu API.',
+                interlocks: [
+                    'Tự động khởi động bơm khi phao báo mức nước cao (Level High).',
+                    'Khởi động đồng thời cả 2 bơm và phát chuông cảnh báo về DCS khi mức nước ngập cao cao (Level High-High).',
+                    'Tự động dừng khi cạn nước đến phao mức thấp (Level Low).'
+                ]
+            }
+        ];
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentView = 'cards';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCounts();
+            renderPumps();
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        });
+
+        function updateCounts() {
+            document.getElementById('count-all').innerText = pumpsDatabase.length;
+            document.getElementById('count-turbine').innerText = pumpsDatabase.filter(p => p.category === 'turbine').length;
+            document.getElementById('count-boiler').innerText = pumpsDatabase.filter(p => p.category === 'boiler').length;
+            document.getElementById('count-chemical').innerText = pumpsDatabase.filter(p => p.category === 'chemical').length;
+            document.getElementById('stat-total').innerText = pumpsDatabase.length;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.remove('active', 'border-cyan-500', 'bg-cyan-950/60', 'text-cyan-300');
+                btn.classList.add('border-slate-700', 'bg-slate-900', 'text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`btn-tab-${filter}`);
+            activeBtn.classList.add('active', 'border-cyan-500', 'bg-cyan-950/60', 'text-cyan-300');
+            activeBtn.classList.remove('border-slate-700', 'bg-slate-900', 'text-slate-400');
+
+            renderPumps();
+        }
+
+        function handleSearch() {
+            currentSearch = document.getElementById('searchInput').value.trim().toLowerCase();
+            renderPumps();
+        }
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setViewMode(mode) {
+            currentView = mode;
+            const btnCards = document.getElementById('btn-view-cards');
+            const btnTable = document.getElementById('btn-view-table');
+            const cardsView = document.getElementById('cardsView');
+            const tableView = document.getElementById('tableView');
+
+            if (mode === 'cards') {
+                btnCards.className = "px-2.5 py-1 rounded bg-slate-800 text-cyan-400 border border-cyan-500/50";
+                btnTable.className = "px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200";
+                cardsView.classList.remove('hidden');
+                tableView.classList.add('hidden');
+            } else {
+                btnTable.className = "px-2.5 py-1 rounded bg-slate-800 text-cyan-400 border border-cyan-500/50";
+                btnCards.className = "px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200";
+                tableView.classList.remove('hidden');
+                cardsView.classList.add('hidden');
+            }
+        }
+
+        function renderPumps() {
+            const filtered = pumpsDatabase.filter(pump => {
+                const matchCategory = (currentFilter === 'all') || (pump.category === currentFilter);
+                const matchSearch = currentSearch === '' || 
+                    pump.name.toLowerCase().includes(currentSearch) ||
+                    pump.kks.toLowerCase().includes(currentSearch) ||
+                    pump.type.toLowerCase().includes(currentSearch) ||
+                    pump.motor.toLowerCase().includes(currentSearch);
+                return matchCategory && matchSearch;
+            });
+
+            const emptyState = document.getElementById('emptyState');
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Cards Grid View
+            const cardsContainer = document.getElementById('cardsView');
+            cardsContainer.innerHTML = filtered.map(pump => {
+                let badgeColor = '';
+                let catName = '';
+                let borderAccent = '';
+
+                if (pump.category === 'turbine') {
+                    badgeColor = 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+                    catName = 'Bên Máy';
+                    borderAccent = 'hover:border-blue-500/60';
+                } else if (pump.category === 'boiler') {
+                    badgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+                    catName = 'Bên Lò';
+                    borderAccent = 'hover:border-amber-500/60';
+                } else {
+                    badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+                    catName = 'Bên Hóa';
+                    borderAccent = 'hover:border-emerald-500/60';
+                }
+
+                return `
+                    <div onclick="openModal('${pump.id}')" class="bg-scada-card rounded-xl p-5 scada-border ${borderAccent} transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <span class="text-xs px-2.5 py-0.5 rounded font-mono font-bold border ${badgeColor}">
+                                    ${catName}
+                                </span>
+                                <span class="text-xs font-mono text-cyan-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                                    ${pump.kks.split(' ')[0]}
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-white text-base group-hover:text-cyan-300 transition font-mono mb-2">
+                                ${pump.name}
+                            </h3>
+                            <div class="space-y-1.5 text-xs text-slate-300 font-mono">
+                                <p class="text-slate-400"><i class="fa-solid fa-cogs mr-1 text-slate-500"></i> ${pump.type}</p>
+                                <p><span class="text-slate-400">Q / H:</span> <span class="text-cyan-400 font-semibold">${pump.flow} | ${pump.head}</span></p>
+                                <p class="line-clamp-2"><span class="text-slate-400">Động cơ:</span> <span class="text-slate-300">${pump.motor}</span></p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400 group-hover:text-slate-300">
+                            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>${pump.config.split('/')[0]}</span>
+                            <span class="text-cyan-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Chi tiết SCADA <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Table View
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = filtered.map(pump => {
+                let badgeClass = pump.category === 'turbine' ? 'text-blue-400' : (pump.category === 'boiler' ? 'text-amber-400' : 'text-emerald-400');
+                let catLabel = pump.category === 'turbine' ? 'Máy' : (pump.category === 'boiler' ? 'Lò' : 'Hóa');
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3.5">
+                            <div class="font-bold text-white">${pump.name}</div>
+                            <div class="text-slate-400 text-[11px]">${pump.kks}</div>
+                        </td>
+                        <td class="p-3.5 font-bold ${badgeClass}">${catLabel}</td>
+                        <td class="p-3.5 text-slate-300">${pump.config}</td>
+                        <td class="p-3.5 text-slate-300 max-w-xs truncate" title="${pump.type}">${pump.type}</td>
+                        <td class="p-3.5 text-cyan-400 font-semibold">${pump.flow} <br> ${pump.head}</td>
+                        <td class="p-3.5 text-slate-300 max-w-xs truncate" title="${pump.motor}">${pump.motor}</td>
+                        <td class="p-3.5 text-center">
+                            <button onclick="openModal('${pump.id}')" class="px-2.5 py-1 rounded bg-cyan-950 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900 transition">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openModal(pumpId) {
+            const pump = pumpsDatabase.find(p => p.id === pumpId);
+            if (!pump) return;
+
+            const modal = document.getElementById('pumpModal');
+            document.getElementById('modalPumpName').innerText = pump.name;
+            document.getElementById('modalKksCode').innerText = `MÃ KKS: ${pump.kks}`;
+            
+            const catBadge = document.getElementById('modalCategoryBadge');
+            if (pump.category === 'turbine') {
+                catBadge.className = "text-xs px-2.5 py-1 rounded font-mono font-bold uppercase border bg-blue-500/20 text-blue-400 border-blue-500/40";
+                catBadge.innerText = "Phân Mảng Bên Máy";
+            } else if (pump.category === 'boiler') {
+                catBadge.className = "text-xs px-2.5 py-1 rounded font-mono font-bold uppercase border bg-amber-500/20 text-amber-400 border-amber-500/40";
+                catBadge.innerText = "Phân Mảng Bên Lò";
+            } else {
+                catBadge.className = "text-xs px-2.5 py-1 rounded font-mono font-bold uppercase border bg-emerald-500/20 text-emerald-400 border-emerald-500/40";
+                catBadge.innerText = "Phân Mảng Bên Hóa";
+            }
+
+            document.getElementById('modalConfig').innerText = pump.config;
+            document.getElementById('modalFlowHead').innerText = `${pump.flow} / ${pump.head}`;
+            document.getElementById('modalMotor').innerText = pump.motor;
+            document.getElementById('modalMaker').innerText = pump.maker;
+
+            document.getElementById('modalRationale').innerText = pump.rationale;
+            document.getElementById('modalFunction').innerText = pump.function;
+
+            const interlocksContainer = document.getElementById('modalInterlocks');
+            interlocksContainer.innerHTML = pump.interlocks.map(item => `
+                <div class="flex items-start space-x-2 py-1 border-b border-slate-900 last:border-0">
+                    <i class="fa-solid fa-angle-right text-rose-500 mt-1"></i>
+                    <span>${item}</span>
+                </div>
+            `).join('');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('pumpModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 200);
+        }
+    </script>
+</body>
+</html>
