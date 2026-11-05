@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<title>Mô Phỏng 3D Tuabin + Dầu Bôi Trơn – Gộp Tháo Đại Tu Bơm Dầu · Mông Dương 1</title>
+<title>Mô Phỏng 3D Tuabin + Dầu Bôi Trơn + Quạt Hút Hơi Dầu + Tháo Đại Tu Bơm Dầu · Mông Dương 1</title>
 <style>
 
 *,*::before,*::after{box-sizing:border-box}
@@ -163,6 +163,17 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
   body.light .sheet-close{background:rgba(224,242,254,.92);color:#0369a1;border-color:rgba(2,132,199,.5)}
   #nav .theme-btn{display:none}
 }
+/* ==== Hide/show side panels (desktop): per-side hide buttons + edge tabs ==== */
+@media (min-width:861px){.side-hidden{display:none!important}}
+.side-hide-btn{display:block;margin-left:auto;margin-bottom:.4rem;padding:.3rem .65rem;min-height:30px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(100,116,139,.55);background:rgba(30,41,59,.85);color:#cbd5e1;cursor:pointer}
+.side-hide-btn:active{filter:brightness(1.5)}
+body.light .side-hide-btn{background:rgba(255,255,255,.88);color:#334155}
+.edge-tab{position:absolute;top:50%;transform:translateY(-50%);z-index:45;display:none;padding:.75rem .42rem;font-size:11px;font-weight:700;letter-spacing:.03em;writing-mode:vertical-rl;background:rgba(15,23,42,.93);border:1px solid rgba(56,189,248,.5);color:#7dd3fc;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer}
+.edge-tab.show{display:block}
+.edge-l{left:0;border-radius:0 .7rem .7rem 0;border-left:none}
+.edge-r{right:0;border-radius:.7rem 0 0 .7rem;border-right:none}
+body.light .edge-tab{background:rgba(255,255,255,.95);color:#0369a1;border-color:rgba(2,132,199,.5)}
+@media (max-width:860px){.side-hide-btn{display:none!important}.edge-tab{display:none!important}}
 </style>
 </head>
 <body class="relative">
@@ -185,12 +196,23 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
 
 <!-- Left: controls -->
 <div id="panel-left1" class="absolute left-3 top-20 bottom-3 w-64 z-20 glass rounded-2xl p-3 overflow-y-auto space-y-3 text-xs">
+  <button id="hideL1" class="side-hide-btn" onclick="toggleSidePanel('panel-left1','edgeL1',false)">◀ Ẩn panel</button>
   <div>
     <div class="sec">Kịch bản bơm dầu</div>
     <div class="grid grid-cols-1 gap-1.5">
       <button id="btn-trip1" class="btn" onclick="tripAC1()">Trip bơm AC #1 (đang chạy)</button>
       <button id="btn-tripboth" class="btn warn" onclick="tripBoth()">Trip cả 2 bơm AC</button>
       <button id="btn-reset" class="btn on" onclick="resetAll()">Khôi phục trạng thái bình thường</button>
+    </div>
+  </div>
+  <div>
+    <div class="sec">Quạt hút hơi dầu (13MAV20AN001A/B)</div>
+    <div class="grid grid-cols-1 gap-1.5">
+      <button id="vxA" class="btn on" onclick="vxClick('a')">Quạt A</button>
+      <button id="vxB" class="btn" onclick="vxClick('b')">Quạt B</button>
+      <button id="vxTrip" class="btn warn" onclick="vxTrip()">Trip quạt đang chạy</button>
+      <label class="flex items-center gap-2 text-[11px] text-slate-300"><input type="checkbox" id="vauto" checked onchange="S.vauto=this.checked"> Tự chạy quạt dự phòng khi quạt chính dừng</label>
+      <p class="text-[10px] text-slate-500">Logic tự chuyển không có trên P&amp;ID, đây là giả định để minh họa.</p>
     </div>
   </div>
   <div>
@@ -233,16 +255,27 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
       <button id="vLbl" class="btn on" onclick="toggleVis('lbl')">Nhãn KKS</button>
       <button id="vFlow" class="btn on" onclick="toggleVis('flow')">Dòng dầu</button>
       <button id="vXray" class="btn" style="grid-column:span 2" onclick="toggleVis('xray')">X-Ray toàn hệ thống (vỏ trong suốt)</button>
+      <div style="grid-column:span 2">
+        <div class="flex justify-between text-[11px]"><span class="text-slate-400">Độ X-Ray</span><span id="xrVal" class="mono text-cyan-300">80%</span></div>
+        <input id="xrS" type="range" min="0" max="100" step="1" value="80" style="min-height:34px;cursor:pointer" aria-label="Độ X-Ray toàn hệ thống">
+        <div class="flex justify-between text-[10px] text-slate-500"><span>Hơi mờ</span><span>Vỏ gần như biến mất</span></div>
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-1.5 mt-1.5">
       <button id="cam-full" class="btn" onclick="cam('full')">Toàn cảnh</button><button id="cam-pump" class="btn" onclick="cam('pump')">Cụm bơm</button>
-      <button id="cam-cool" class="btn" onclick="cam('cool')">Làm mát, lọc</button><button id="cam-heat" class="btn" onclick="cam('heat')">Gia nhiệt</button><button id="cam-tur" class="btn" onclick="cam('tur')">Tuabin</button><button id="cam-cond" class="btn" onclick="cam('cond')">Bình ngưng, FWH</button>
+      <button id="cam-cool" class="btn" onclick="cam('cool')">Làm mát, lọc</button><button id="cam-heat" class="btn" onclick="cam('heat')">Gia nhiệt</button><button id="cam-tur" class="btn" onclick="cam('tur')">Tuabin</button><button id="cam-cond" class="btn" onclick="cam('cond')">Bình ngưng, FWH</button><button id="cam-vx" class="btn" style="grid-column:span 2" onclick="cam('vx')">Quạt hút hơi dầu</button>
     </div>
+    <button id="vRot" class="btn mt-1.5" style="width:100%" onclick="toggleAutoRotate()">Quay tự động: TẮT</button>
+  </div>
+  <div>
+    <button id="vShell" class="btn" style="width:100%" onclick="toggleShellMode()">Vỏ trong suốt toàn hệ thống: TẮT</button>
+    <p class="text-[10px] text-slate-500 mt-1">Chỉ làm trong suốt vỏ/thân ngoài (tuabin, gối đỡ, nóc + thành bể, bình ngưng, FWH, bơm, làm mát, phin lọc), ruột bên trong giữ nguyên đục — khác X-Ray là mờ cả vỏ lẫn cấu trúc.</p>
   </div>
 </div>
 
 <!-- Right: readouts, log, device list -->
 <aside id="panel-right1" class="absolute right-3 top-3 bottom-3 w-80 md:w-96 z-20 glass rounded-2xl flex flex-col overflow-hidden">
+  <button id="hideR1" class="side-hide-btn" style="margin:.45rem .45rem 0 auto" onclick="toggleSidePanel('panel-right1','edgeR1',false)">Ẩn panel ▶</button>
   <div class="p-3 border-b border-slate-700/60"><div class="sec">Thông số mô phỏng</div><div id="rd" class="space-y-1 text-[11px]"></div></div>
   <div class="px-3 py-2 border-b border-slate-700/60"><div class="sec">Nhật ký</div><div id="log" class="text-[10px] text-slate-300 space-y-0.5 h-20 overflow-y-auto mono"></div></div>
   <div class="p-3 flex-1 flex flex-col overflow-hidden">
@@ -256,7 +289,8 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
   </div>
 </aside>
 
-
+<button id="edgeL1" class="edge-tab edge-l" onclick="toggleSidePanel('panel-left1','edgeL1',true)">Panel điều khiển</button>
+<button id="edgeR1" class="edge-tab edge-r" onclick="toggleSidePanel('panel-right1','edgeR1',true)">Panel thông số</button>
 
 </div>
 <div id="view2" class="view" style="display:none">
@@ -283,11 +317,18 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
   <button class="mtool theme-btn" onclick="toggleTheme()">☀ Sáng</button>
 </div>
 <div id="panel-left2" class="absolute left-3 top-20 z-20 flex flex-col gap-3 w-48">
+  <button id="hideL2" class="side-hide-btn" style="margin-bottom:0" onclick="toggleSidePanel('panel-left2','edgeL2',false)">◀ Ẩn panel</button>
   <div class="glass p-2.5 rounded-xl flex flex-col gap-1.5">
     <span class="text-[11px] font-semibold text-slate-400 px-1">Chế độ hiển thị</span>
     <button id="m-solid" onclick="setViewMode('solid')" class="vb sel px-3 py-1.5 rounded-lg text-xs text-left border border-transparent text-slate-300">Toàn phần</button>
     <button id="m-cutaway" onclick="setViewMode('cutaway')" class="vb px-3 py-1.5 rounded-lg text-xs text-left border border-transparent text-slate-300">Cắt bổ nửa bơm</button>
     <button id="m-xray" onclick="setViewMode('xray')" class="vb px-3 py-1.5 rounded-lg text-xs text-left border border-transparent text-slate-300">X-Ray trong suốt</button>
+    <div class="px-1">
+      <div class="flex justify-between text-[11px] mb-1"><span class="text-slate-400">Độ X-Ray</span><span id="pxrVal" class="mono text-cyan-400">75%</span></div>
+      <input id="pxrS" type="range" min="0" max="100" step="1" value="75" class="w-full accent-cyan-400" style="min-height:34px;cursor:pointer" aria-label="Độ X-Ray của bơm">
+      <div class="flex justify-between text-[10px] text-slate-500"><span>Hơi mờ</span><span>Chỉ còn ruột</span></div>
+    </div>
+    <button id="btn-rot" onclick="togglePumpRotate()" class="px-3 py-1.5 rounded-lg text-xs text-left border border-transparent text-slate-300">Quay tự động: TẮT</button>
     <button id="btn-flow" onclick="toggleFlow()" class="px-3 py-1.5 rounded-lg text-xs text-left border border-transparent text-slate-300">Dòng dầu chảy: <span id="flow-s">tắt</span></button>
   </div>
   <div class="glass p-2.5 rounded-xl flex flex-col gap-2">
@@ -310,6 +351,7 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
 </div>
 
 <aside id="panel-right2" class="absolute right-3 top-20 bottom-3 w-80 md:w-96 z-20 flex flex-col glass rounded-2xl overflow-hidden">
+  <button id="hideR2" class="side-hide-btn" style="margin:.45rem .45rem 0 auto" onclick="toggleSidePanel('panel-right2','edgeR2',false)">Ẩn panel ▶</button>
   <div class="flex border-b border-slate-700/60 text-xs font-bold">
     <button id="tb-bom" onclick="tab('bom')" class="flex-1 py-3 text-cyan-400 border-b-2 border-cyan-400">BOM chi tiết</button>
     <button id="tb-specs" onclick="tab('specs')" class="flex-1 py-3 text-slate-400 border-b-2 border-transparent">Thông số</button>
@@ -383,7 +425,8 @@ body.light .border-emerald-500\/40{border-color:rgba(5,150,105,.45)}
   </div>
 </aside>
 
-
+<button id="edgeL2" class="edge-tab edge-l" onclick="toggleSidePanel('panel-left2','edgeL2',true)">Panel hiển thị</button>
+<button id="edgeR2" class="edge-tab edge-r" onclick="toggleSidePanel('panel-right2','edgeR2',true)">Panel BOM · Thông số</button>
 
 </div>
 <nav id="nav" class="glass">
@@ -1460,7 +1503,10 @@ window.toggleTheme=function(){
 const $=id=>document.getElementById(id);
 const V=(x,y,z)=>new THREE.Vector3(x,y,z);
 let scene,camera,renderer,controls,partsGroup,oilVol,tankMeshes={roof:[],walls:[]},showLbl=true,showFlow=true,activeId=null,camF;
-let sysXray=false;const xrSnap=new Map();
+let sysXray=false,sysXrayPct=80;const xrSnap=new Map();
+let shellMode=false;const shSnap=new Map();
+let autoRot=false,rotDrag=false,rotTimer=null;
+function xrCap(){return Math.max(.02,.9-sysXrayPct*(.7/80))}
 const parts={},labels=[],paths=[],parti=[],handles={};
 const S={ac1:'run',ac2:'stby',dc:'off',r:{ac1:1,ac2:0,dc:0},Pd:5.79,Ph:2.0,dp:{A:.15,B:.15},cool:'A',filt:'A',vent:false,water:100,T:34,heater:false,level:0,air:0,Tout:46,t:0,dcPend:null,dcF:0,trip:false};
 const logs=[];
@@ -1539,10 +1585,13 @@ function init(){
   camera=new THREE.PerspectiveCamera(45,c.clientWidth/c.clientHeight,.1,200);camera.position.set(42,26,30);
   renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(c.clientWidth,c.clientHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<=860?1.5:2));c.appendChild(renderer.domElement);
   controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=2;controls.maxDistance=70;controls.target.set(3,2,-10);
+  controls.autoRotateSpeed=.9;
+  controls.addEventListener('start',()=>{rotDrag=true;controls.autoRotate=false;if(rotTimer)clearTimeout(rotTimer)});
+  controls.addEventListener('end',()=>{rotDrag=false;if(rotTimer)clearTimeout(rotTimer);rotTimer=setTimeout(()=>{if(autoRot)controls.autoRotate=true},2500)});
   scene.add(new THREE.AmbientLight(0xffffff,.75));const d=new THREE.DirectionalLight(0x9bd8ff,1.1);d.position.set(15,25,12);scene.add(d);const d2=new THREE.DirectionalLight(0xf59e0b,.35);d2.position.set(-12,-8,-10);scene.add(d2);
   partsGroup=new THREE.Group();scene.add(partsGroup);
   const grid=new THREE.GridHelper(100,100,0x0284c7,0x1e293b);grid.position.set(3,-4.6,-14);scene.add(grid);
-  tank();pumpsBuild();heater();piping();equipment();levelLines();initTurbine();buildList();setupPick(c);
+  tank();pumpsBuild();heater();piping();equipment();levelLines();initTurbine();initVapor();buildList();setupPick(c);
   const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(parti.length*3),3));pg.setAttribute('color',new THREE.BufferAttribute(new Float32Array(parti.length*3),3));
   window.pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.2,vertexColors:true,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));window.pts.frustumCulled=false;scene.add(window.pts);
   parti.forEach(q=>{q.c=new THREE.Color(q.P.col)});
@@ -1647,21 +1696,35 @@ function sel(id){clearSel();activeId=id;const p=parts[id];$('r-'+id).classList.a
   p.g.traverse(o=>{if(o.isMesh){o.userData.m=o.material;o.material=mat.glow}});
   const b=new THREE.Box3().setFromObject(p.g),c=b.getCenter(V(0,0,0)),s=b.getSize(V(0,0,0)).length();camTo(c.clone().add(V(.7,.5,.9).multiplyScalar(Math.max(4,s*1.1))),c)}
 function clearSel(){if(window.TUR&&window.curT!=null){TUR.parts[window.curT].mats.forEach(m=>m.emissive.setHex(0));window.curT=null;$('tsel').value=''}if(activeId)parts[activeId].g.traverse(o=>{if(o.isMesh&&o.userData.m)o.material=o.userData.m});document.querySelectorAll('#view1 .row').forEach(e=>e.classList.remove('on'));$('card').classList.add('hidden');activeId=null}
-function camTo(p,t,dur=800){cancelAnimationFrame(camF);const sp=camera.position.clone(),st=controls.target.clone(),t0=performance.now();const f=n=>{const k=Math.min((n-t0)/dur,1),e=.5-Math.cos(k*Math.PI)/2;camera.position.lerpVectors(sp,p,e);controls.target.lerpVectors(st,t,e);if(k<1)camF=requestAnimationFrame(f)};camF=requestAnimationFrame(f)}
-function cam(v){const T={full:[[42,26,30],[3,2,-10]],pump:[[8,7,11],[0,2,1.5]],cool:[[18,7,12],[9.5,1.5,-.5]],heat:[[-10,4,10],[-3,0,3.4]],tur:[[26,18,0],[2,6,-20]],cond:[[24,8,-6],[3,2,-24]]}[v];camTo(V(...T[0]),V(...T[1]))}
+function camTo(p,t,dur=800){cancelAnimationFrame(camF);if(controls)controls.autoRotate=false;const sp=camera.position.clone(),st=controls.target.clone(),t0=performance.now();const f=n=>{const k=Math.min((n-t0)/dur,1),e=.5-Math.cos(k*Math.PI)/2;camera.position.lerpVectors(sp,p,e);controls.target.lerpVectors(st,t,e);if(k<1)camF=requestAnimationFrame(f);else if(autoRot&&!rotDrag)controls.autoRotate=true};camF=requestAnimationFrame(f)}
+function toggleAutoRotate(){autoRot=!autoRot;if(controls)controls.autoRotate=autoRot;const b=document.getElementById('vRot');if(b){b.classList.toggle('on',autoRot);b.textContent='Quay tự động: '+(autoRot?'BẬT':'TẮT')}log(autoRot?'Bật Quay tự động: camera cảnh chính tự xoay chậm quanh tâm đang xem.':'Tắt Quay tự động camera cảnh chính.')}
+function cam(v){const T={full:[[42,26,30],[3,2,-10]],pump:[[8,7,11],[0,2,1.5]],cool:[[18,7,12],[9.5,1.5,-.5]],heat:[[-10,4,10],[-3,0,3.4]],tur:[[26,18,0],[2,6,-20]],cond:[[24,8,-6],[3,2,-24]],vx:[[9,7.5,-1.5],[.3,3.2,-6.5]]}[v];camTo(V(...T[0]),V(...T[1]))}
+function applyXrMat(m){
+  if(!m||typeof m.opacity!=='number')return;
+  if(!xrSnap.has(m)){const src=shSnap.get(m);xrSnap.set(m,src?{t:src.t,o:src.o,d:src.d}:{t:m.transparent,o:m.opacity,d:m.depthWrite});}
+  const s=xrSnap.get(m);m.transparent=true;m.opacity=Math.min(s.o,xrCap());m.depthWrite=false;m.needsUpdate=true;
+}
+function setXrayLevel(p){
+  sysXrayPct=Math.min(100,Math.max(0,+p||0));
+  const l=document.getElementById('xrVal');if(l)l.innerText=sysXrayPct+'%';
+  const sl=document.getElementById('xrS');if(sl&&+sl.value!==sysXrayPct)sl.value=sysXrayPct;
+  if(sysXray)xrSnap.forEach((s,m)=>applyXrMat(m));
+}
+function shellMats(){const s=new Set();tankMeshes.roof.forEach(m=>s.add(m.material));tankMeshes.walls.forEach(m=>s.add(m.material));[mat.blue,mat.beige,mat.vessel,mat.frame,mat.plate,mat.iron].forEach(m=>s.add(m));return [...s]}
+function applyShellMats(){shellMats().forEach(m=>{if(!m||typeof m.opacity!=='number')return;if(!shSnap.has(m)){const src=xrSnap.get(m);shSnap.set(m,src?{t:src.t,o:src.o,d:src.d}:{t:m.transparent,o:m.opacity,d:m.depthWrite})}const s=shSnap.get(m);m.transparent=true;m.opacity=s.o>=1?.18:Math.max(.04,s.o*.45);m.depthWrite=false;m.needsUpdate=true})}
+function restoreShellMats(){shSnap.forEach((s,m)=>{m.transparent=s.t;m.opacity=s.o;m.depthWrite=s.d;m.needsUpdate=true});shSnap.clear()}
+function syncShellBtns(){const b=document.getElementById('vShell');if(b){b.classList.toggle('on',shellMode);b.textContent='Vỏ trong suốt toàn hệ thống: '+(shellMode?'BẬT':'TẮT')}}
+function setShellMode(v){shellMode=v;if(window.TUR&&window.TUR.setGlass)window.TUR.setGlass(v);if(!sysXray){if(v)applyShellMats();else restoreShellMats()}syncShellBtns();log(v?'Bật Vỏ trong suốt toàn hệ thống: chỉ vỏ/thân ngoài trong suốt, ruột bên trong giữ nguyên đục.':'Tắt Vỏ trong suốt toàn hệ thống: vỏ thiết bị trở lại nguyên trạng.')}
 function setSysXray(on){
   sysXray=on;
-  const apply=m=>{
-    if(!m||typeof m.opacity!=='number')return;
-    if(!xrSnap.has(m))xrSnap.set(m,{t:m.transparent,o:m.opacity,d:m.depthWrite});
-    if(on){const s=xrSnap.get(m);m.transparent=true;m.opacity=Math.min(s.o,.2);m.depthWrite=false;m.needsUpdate=true}
-  };
+  const apply=m=>{if(on)applyXrMat(m);else if(!xrSnap.has(m)&&m&&typeof m.opacity==='number')xrSnap.set(m,{t:m.transparent,o:m.opacity,d:m.depthWrite})};
   if(on){
     if(scene)scene.traverse(o=>{if(o.isMesh){(Array.isArray(o.material)?o.material:[o.material]).forEach(apply)}});
     Object.values(mat).forEach(apply);
     if(window.TUR)window.TUR.parts.forEach(p=>p.mats.forEach(apply));
   }else{
     xrSnap.forEach((s,m)=>{m.transparent=s.t;m.opacity=s.o;m.depthWrite=s.d;m.needsUpdate=true});
+    if(shellMode)applyShellMats();
   }
   const b1=document.getElementById('vXray');if(b1)b1.classList.toggle('on',on);
   const b2=document.getElementById('xrayFab');if(b2)b2.classList.toggle('on',on);
@@ -1677,7 +1740,7 @@ function toggleVis(k){
 // ---------- scenario controls ----------
 function tripAC1(){if(S.ac1!=='run'){log('BOP #1 không ở trạng thái chạy.',1);return}S.ac1='trip';log('BOP #1 trip. Áp đầu đẩy giảm; BOP #2 tự khởi động khi áp ≤ 4,48 bar.',1)}
 function tripBoth(){if(S.ac1==='run')S.ac1='trip';if(S.ac2==='run'||S.ac2==='stby')S.ac2='trip';log('Cả 2 bơm AC trip (mất running 52-BOP-1 và 52-BOP-2).',2)}
-function resetAll(){Object.assign(S,{ac1:'run',ac2:'stby',dc:'off',Pd:5.79,Ph:2.0,air:0,dcPend:null,dcF:0,trip:false});S.r={ac1:1,ac2:0,dc:0};log('Khôi phục: AC #1 chạy, AC #2 dự phòng, EBPM dừng.')}
+function resetAll(){Object.assign(S,{ac1:'run',ac2:'stby',dc:'off',Pd:5.79,Ph:2.0,air:0,dcPend:null,dcF:0,trip:false});S.r={ac1:1,ac2:0,dc:0};vxReset();log('Khôi phục: AC #1 chạy, AC #2 dự phòng, EBPM dừng.')}
 function setCooler(c){if(S.cool===c)return;if(!S.vent){S.air=1;log(`Chuyển sang bình ${c} khi CHƯA đuổi khí DBT2-FV23: khí lọt vào đường dầu, áp tụt!`,2)}else log(`Đã đuổi khí DBT2-FV23, quay DBT1-FV19 sang bình ${c}.`);S.cool=c;$('cA').classList.toggle('on',c==='A');$('cB').classList.toggle('on',c==='B');$('vent').checked=false;S.vent=false}
 function setFilter(f){if(S.filt===f)return;S.filt=f;$('fA').classList.toggle('on',f==='A');$('fB').classList.toggle('on',f==='B');$('dpS').value=Math.round(S.dp[f]*100);setDp($('dpS').value);log(`Chuyển phin lọc kép sang phin ${f}.`)}
 function setDp(v){S.dp[S.filt]=v/100;$('dL').innerText=(v/100).toFixed(2).replace('.',',')+' bar'}
@@ -1694,7 +1757,7 @@ function logic(dt){
   const dpAct=S.dp[S.filt];
   const tgt=nAC>=1?5.79-.25*Math.max(0,dpAct-.2):S.dc==='run'?2.4:S.dc==='start'?1.2:0;
   S.Pd+=(tgt-S.Pd)*(1-Math.exp(-dt*(tgt>S.Pd?1/.7:1/1.4)));
-  S.air=Math.max(0,S.air-dt*.3);
+  S.air=Math.max(0,S.air-dt*.3);vaporLogic(dt);
   let nom,k;if(nAC>=1||S.dc==='off'){nom=2.0-.9*Math.max(0,dpAct-.2);k=3}else{nom=1.9;k=1.5}
   const phT=nom*Math.min(1,Math.max(0,(S.Pd-.3)/k))-.9*S.air;S.Ph+=(Math.max(0,phT)-S.Ph)*(1-Math.exp(-dt*3));
   if(S.Ph<=.41&&!S.trip){S.trip=true;log('PS-270B/C/D: áp ống góp ≤ 0,41 bar, TRIP TUABIN.',2)}if(S.trip&&S.Ph>=1.1)S.trip=false;turbLogic(dt);
@@ -1710,7 +1773,7 @@ function logic(dt){
 const stTxt={run:'Đang chạy',stby:'Dự phòng',trip:'Đã trip',start:'Đang khởi động',off:'Dừng'};
 function readouts(){
   const f=(v,d=2)=>v.toFixed(d).replace('.',','),dpA=S.dp[S.filt],lv=S.level;
-  const rows=[['Tuabin (rotor)',tmTxt()+' · '+Math.round(S.rpm)+' v/ph',S.trip?2:0],
+  const rows=[['Quạt hút hơi dầu A / B',vxTxt(),vxLvl()],['Chân không bể (tương đối)',Math.round(S.vac*100)+' %',S.vac<.3?2:S.vac<.8?1:0],['Tuabin (rotor)',tmTxt()+' · '+Math.round(S.rpm)+' v/ph',S.trip?2:0],
     ['BOP #1 / #2 / EBPM',`${stTxt[S.ac1]} / ${stTxt[S.ac2]} / ${stTxt[S.dc]}`,S.ac1==='trip'||S.ac2==='trip'?2:S.dc!=='off'?1:0],
     ['Áp đầu đẩy bơm (PS-265)',f(S.Pd)+' bar',S.Pd<=.34?2:S.Pd<=4.48?1:0],
     ['Áp ống góp bôi trơn (PS-270)',f(S.Ph)+' bar',S.Ph<=.69?2:S.Ph<1.49?1:0],
@@ -1720,7 +1783,7 @@ function readouts(){
     ['Mức dầu (so với mức 0)',(lv>0?'+':'')+lv+' mm',lv<=-406?2:Math.abs(lv)>=102?1:0]];
   const C=['text-emerald-300','text-amber-300','text-rose-300'];
   $('rd').innerHTML=rows.map(r=>`<div class="flex justify-between gap-2"><span class="text-slate-400">${r[0]}</span><b class="mono ${C[r[2]]} text-right">${r[1]}</b></div>`).join('');
-  const b=$('banner');let m='';if(S.trip)m='TRIP TUABIN: áp ống góp ≤ 0,41 bar (PS-270B/C/D)';else if(S.air>.2)m='Khí lọt vào đường dầu: áp suất tụt';else if(dpA>=.6)m='Cảnh báo ΔP phin lọc cao (PS-271A): chuyển phin dự phòng';b.innerText=m;b.classList.toggle('hidden',!m);
+  const b=$('banner');let m='';if(S.trip)m='TRIP TUABIN: áp ống góp ≤ 0,41 bar (PS-270B/C/D)';else if(S.air>.2)m='Khí lọt vào đường dầu: áp suất tụt';else if(S.vac<.3)m='Mất quạt hút hơi dầu: bể mất chân không, hơi dầu có thể rò theo phớt trục';else if(dpA>=.6)m='Cảnh báo ΔP phin lọc cao (PS-271A): chuyển phin dự phòng';b.innerText=m;b.classList.toggle('hidden',!m);
 }
 function visuals(dt){
   const c={run:0x22c55e,stby:0xeab308,trip:0xef4444,start:0xf97316,off:0x334155};
@@ -1737,14 +1800,14 @@ function flowStep(dt){
   const pos=window.pts.geometry.attributes.position.array,col=window.pts.geometry.attributes.color.array,rate=Math.min(1,Math.max(.15,S.Pd/5.79));
   parti.forEach((q,i)=>{const P=q.P;if(q.act===undefined||(i%7===0))q.act=P.act();
     if(!showFlow||!q.act){pos[i*3+1]=-999;return}
-    q.s+=dt*1.8*(P.col===0x60a5fa?.8:rate);if(q.s>P.len)q.s-=P.len;
+    q.s+=dt*1.8*(P.col===0x60a5fa?.8:P.col===0xbae6fd?1.1:rate);if(q.s>P.len)q.s-=P.len;
     let j=1;while(j<P.cum.length-1&&P.cum[j]<q.s)j++;const t=(q.s-P.cum[j-1])/(P.cum[j]-P.cum[j-1]||1),a=P.pts[j-1],b=P.pts[j];
     offs(P,q,a,b,t,pos,i);col[i*3]=q.c.r;col[i*3+1]=q.c.g;col[i*3+2]=q.c.b});
   window.pts.geometry.attributes.position.needsUpdate=true;window.pts.geometry.attributes.color.needsUpdate=true;
 }
 function placeLabels(){const w=$('cv').clientWidth,h=$('cv').clientHeight,m=4,bot=h>240?h-64:h-m,vis=[];labels.forEach(l=>{const p=l.p.clone().project(camera);const ok=showLbl&&p.z<1&&Math.abs(p.x)<1.05&&Math.abs(p.y)<1.05;l.d.style.display=ok?'block':'none';if(!ok)return;if(l.ck!==l.d.innerText){l.ck=l.d.innerText;l.w=l.d.offsetWidth;l.h=l.d.offsetHeight}const hw=l.w/2;let x=(p.x+1)/2*w,y=(1-p.y)/2*h;x=l.w+2*m>=w?w/2:Math.min(Math.max(x,hw+m),w-hw-m);y=Math.min(Math.max(y,l.h+m),bot);l.px=x;l.py=y;vis.push(l)});const n=vis.length,par=vis.map((_,i)=>i),find=i=>par[i]===i?i:(par[i]=find(par[i]));for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=vis[i],b=vis[j];if(Math.abs(a.px-b.px)*2<a.w+b.w-4){const ri=find(i),rj=find(j);if(ri!==rj)par[ri]=rj}}const groups={};vis.forEach((l,i)=>{const r=find(i);(groups[r]=groups[r]||[]).push(l)});Object.values(groups).forEach(g=>{if(g.length<2)return;g.sort((a,b)=>a.py-b.py);const fwd=()=>{for(let i=1;i<g.length;i++){const a=g[i-1],b=g[i],need=a.py+b.h+1;if(b.py<need)b.py=need}},bwd=()=>{for(let i=g.length-2;i>=0;i--){const a=g[i],b=g[i+1],mx=b.py-b.h-1;if(a.py>mx)a.py=mx}},sh=d=>g.forEach(l=>l.py+=d),clp=()=>g.forEach(l=>{l.py=Math.min(Math.max(l.py,l.h+m),bot)});fwd();if(g[g.length-1].py>bot)sh(bot-g[g.length-1].py);bwd();if(g[0].py-g[0].h<m)sh(m-(g[0].py-g[0].h));fwd();clp()});vis.forEach(l=>{l.d.style.left=l.px+'px';l.d.style.top=l.py+'px'})}
 let last=performance.now(),acc=0;
-function loop(){requestAnimationFrame(loop);if(document.getElementById('view1').offsetParent===null)return;const n=performance.now(),dt=Math.min(.1,(n-last)/1000);last=n;logic(dt);visuals(dt);if(window.TUR)TUR.update(dt,S.rpm);flowStep(dt);acc+=dt;if(acc>.15){acc=0;readouts()}controls.update();renderer.render(scene,camera);if((loop._f=(loop._f||0)+1)%2===0)placeLabels()}
+function loop(){requestAnimationFrame(loop);if(document.getElementById('view1').offsetParent===null)return;const n=performance.now(),dt=Math.min(.1,(n-last)/1000);last=n;logic(dt);visuals(dt);if(window.TUR)TUR.update(dt,S.rpm);vaporVisuals(dt);flowStep(dt);acc+=dt;if(acc>.15){acc=0;readouts()}controls.update();renderer.render(scene,camera);if((loop._f=(loop._f||0)+1)%2===0)placeLabels()}
 /* ================= TUABIN (ghép từ mô hình tuabin) ================= */
 function buildTurbine(sc){
 const T=THREE,V=(x,y,z)=>new T.Vector3(x,y,z),PI=Math.PI;
@@ -1877,14 +1940,14 @@ const act=new Set(),B=document.getElementById('tb');let glass=false;
 function sync(){[...B.children].forEach((e,i)=>{const k=BTN[i]&&BTN[i][1];if(k)e.classList.toggle('on',k.every(c=>act.has(c)))})}
 BTN.forEach(([n,c])=>{const e=document.createElement('button');e.className='btn text-left';e.textContent=n;e.onclick=()=>{const on=!c.every(x=>act.has(x));c.forEach(x=>on?act.add(x):act.delete(x));if(!on&&c[0]=='cover')act.delete('rotor');sync()};B.append(e)});
 const all=['cover','rotor','pipe','bearing','valve','gland','extract','cshell','ctube','cint','cwb','cneck','fwh','fwhin','aux'];
-const add=(t,f)=>{const e=document.createElement('button');e.className='btn text-left';e.textContent=t;e.onclick=()=>f(e);B.append(e)};
+const add=(t,f)=>{const e=document.createElement('button');e.className='btn text-left';e.textContent=t;e.onclick=()=>f(e);B.append(e);return e};
 add('Nổ tung toàn bộ',()=>{all.forEach(c=>act.add(c));sync()});
 add('Khôi phục nguyên trạng',()=>{act.clear();sync()});
-add('Vỏ trong suốt: TẮT',e=>{glass=!glass;e.textContent='Vỏ trong suốt: '+(glass?'BẬT':'TẮT')});
-return {parts,pick,update(dt,rpm){
+const glassBtn=add('Vỏ trong suốt: TẮT',()=>setShellMode(!shellMode));
+return {parts,pick,setGlass:v=>{glass=v;if(glassBtn)glassBtn.textContent='Vỏ trong suốt: '+(v?'BẬT':'TẮT')},getGlass:()=>glass,update(dt,rpm){
   const ang=dt*(rpm<=3?.15*rpm:.45+rpm/3000*14);
   for(const p of parts){const t=act.has(p.cat)?p.off:V(0,0,0);p.g.position.lerp(t,.07);if(p.spin)p.g.rotation.x+=ang;
-    if(p.shell)p.mats.forEach(m=>{const o=(glass||sysXray)?(m.userData.o||.22):1;m.transparent=o<1;m.depthWrite=o>=1;m.opacity+=(o-m.opacity)*.15})}
+    if(p.shell)p.mats.forEach(m=>{const base=(m.userData.o||.22);const o=sysXray?Math.min(1,Math.max(.02,base*(xrCap()/.2))):(glass?base:1);m.transparent=o<1;m.depthWrite=o>=1;m.opacity+=(o-m.opacity)*.15})}
 }};
 }
 
@@ -1938,16 +2001,86 @@ function offs(P,q,a,b,t,pos,i){
     x+=ux*c+vx*s;y+=uy*c+vy*s;z+=uz*c+vz*s}
   pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z}
 
+/* ================= HỆ QUẠT HÚT HƠI DẦU (theo P&ID MD1-0-V-111-21-00010) ================= */
+const VX={a:{x:1.7,z:-4.6},b:{x:-1.1,z:-4.6}},HX=.3,AIR=0xbae6fd;
+S.vx={a:'run',b:'stby'};S.vr={a:1,b:0};S.vac=1;S.vauto=true;
+function initVapor(){
+  const RY=2.1,YC=3.2,mp=mat.pipe,vp=(pts,r)=>pipe(pts,r||.16,mp);
+  const hz=(p,m,rt,h,x,y,z)=>{const o=cyl(p,m,rt,rt,h,0,false,18);o.rotation.z=Math.PI/2;o.position.set(x,y,z);return o};
+  const cz=(p,m,rt,h,x,y,z)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rt,h,24).rotateX(Math.PI/2),m);o.position.set(x,y,z);p.add(o);return o};
+  const dg=new THREE.Group();
+  ['a','b'].forEach(k=>{
+    const f=VX[k],K=k.toUpperCase(),dir=k==='a'?-1:1,g=new THREE.Group();g.position.set(f.x,RY,f.z);
+    // ống hút từ khoang khí trên mặt dầu, loe miệng, van một chiều AA522/AA530
+    cyl(g,mp,.17,.17,1.6,.1,false,16);cyl(g,mp,.3,.17,.25,-.6,true,16);
+    cyl(g,mat.gold,.23,.23,.32,.38,false,16);ring(g,mat.steel,.27,.2,.06,.2);ring(g,mat.steel,.27,.2,.06,.56);
+    // vỏ quạt ly tâm + cửa đẩy tiếp tuyến
+    cyl(g,mat.iron,.55,.55,.38,1.1,false,28);box(g,mat.iron,.7,.3,.34,dir*.5,1.1,0);
+    // giá đỡ + động cơ VXM + cánh quạt làm mát + hộp đầu dây + đèn trạng thái
+    cyl(g,mat.iron,.3,.38,.25,1.42,false,20);cyl(g,mat.blue,.42,.42,.85,2.0,false,24);
+    [1.75,1.95,2.15,2.35].forEach(y=>ring(g,mat.steel,.45,.4,.04,y));cyl(g,mat.iron,.3,.42,.12,2.5,false,20);box(g,mat.iron,.3,.22,.28,.5,2.0,0);
+    const bl=new THREE.Group();bl.position.y=2.62;box(bl,mat.steel,.5,.04,.08,0,0,0);box(bl,mat.steel,.08,.04,.5,0,0,0);g.add(bl);handles['vb'+k]=bl;
+    const lamp=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),M(0x334155,.3,.2,{emissive:0x000000}));lamp.position.set(0,2.85,0);g.add(lamp);handles['vl'+k]=lamp;
+    reg('vx'+K,g,'Quạt hút hơi dầu '+K,'13MAV20AN001'+K,'Quạt ly tâm (2×100%) hút hơi dầu từ khoảng không phía trên mặt dầu trong bể qua ống DN150. Trước quạt có van một chiều '+(k==='a'?'AA522':'AA530')+'. Động cơ VXM '+K+' truyền động trực tiếp. Cửa đẩy tiếp tuyến đi ngang qua van một chiều và ống mềm vào ống chung. Vỏ quạt có đường xả DN15 trả dầu đọng về bể. Hai quạt: một chạy, một dự phòng.');
+    pipe([[f.x,3.0,f.z+.5],[f.x,1.2,f.z+.5]],.05,mp);                // xả DN15 về bể
+    const xs=f.x+dir*.85,s=dir*-1;                                    // s: hướng về ống chung
+    vp([[xs,YC,f.z],[HX,YC,f.z]]);
+    hz(dg,mat.gold,.24,.28,xs+s*.2,YC,f.z);hz(dg,mat.steel,.27,.04,xs+s*.06,YC,f.z);hz(dg,mat.steel,.27,.04,xs+s*.34,YC,f.z);   // van một chiều AA207/AA208
+    [0,1,2].forEach(i=>hz(dg,mat.bronze,.23,.05,xs+s*(.4+i*.06),YC,f.z));                                                       // ống mềm
+  });
+  reg('vxdisc',dg,'Van một chiều đầu đẩy và ống mềm','AA207 · AA208','Mỗi quạt có van một chiều AA207 (quạt A) hoặc AA208 (quạt B) rồi ống mềm giãn nở trước khi vào ống chung DN150. Bản vẽ ghi chú: AA207 và AA208 phải lắp trên đoạn ống nằm ngang.');
+  vp([[HX,YC,-4.6],[HX,YC,-6.55]],.17);
+  // bộ tách sương dầu 13MAV21AT001 (1×100%)
+  const mg=new THREE.Group();mg.position.set(HX,YC,-7.2);
+  cz(mg,mat.beige,.46,1.3,0,0,0);[-.65,.65].forEach(z=>{const c=new THREE.Mesh(new THREE.SphereGeometry(.46,20,14),mat.beige);c.scale.set(1,1,.35);c.position.z=z;mg.add(c);cz(mg,mat.steel,.25,.08,0,0,z*1.07)});
+  [-.35,.35].forEach(z=>box(mg,mat.iron,.16,.6,.16,0,-.76,z));cyl(mg,mat.gold,.09,.09,.3,-.55,false,10);
+  reg('vxmist',mg,'Bộ tách sương dầu','13MAV21AT001 (1×100%)','Đặt sau quạt, trên ống chung DN150. Tách giọt dầu khỏi dòng khí trước khi thải ra khí quyển. Đáy có đường xả trả dầu đã tách về bể.');
+  pipe([[HX,2.74,-7.2],[HX,1.2,-7.2]],.06,mp);
+  // ống thải khí quyển + chụp chắn mưa
+  vp([[HX,YC,-7.85],[HX,YC,-8.8]]);
+  const eg=new THREE.Group();eg.position.set(HX,0,-8.8);cyl(eg,mp,.17,.17,3.0,4.7,false,16);const cn=new THREE.Mesh(new THREE.ConeGeometry(.38,.3,18),mat.steel);cn.position.y=6.5;eg.add(cn);cyl(eg,mat.steel,.04,.04,.25,6.3,false,8);
+  reg('vxexh',eg,'Ống thải khí quyển','AIR EXHAUST · 13MAV22 BR001 DN150','Khí đã tách sương dầu thải ra ngoài khí quyển qua ống DN150, có chụp chắn mưa.');
+  // đồng hồ áp PI-270A/B/C
+  const pg=new THREE.Group(),gauge=(x,y0,y1,z)=>{cyl(pg,mp,.03,.03,y1-y0,(y0+y1)/2,false,8).position.set(x,(y0+y1)/2,z);const d=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.08,20).rotateX(Math.PI/2),mat.pol);d.position.set(x,y1+.12,z);pg.add(d)};
+  gauge(.82,YC+.17,YC+.5,-4.6);gauge(-.22,YC+.17,YC+.5,-4.6);gauge(HX,1.3,2.6,-3.5);
+  reg('vxpi',pg,'Đồng hồ áp PI-270A / B / C','13MAV21CP570A/B/C','PI-270A và PI-270B đặt trên đường đẩy của từng quạt, PI-270C nối vào bể (theo cách nối trên bản vẽ) để theo dõi chân không trong bể.');
+  // dòng khí
+  const on=k=>()=>S.vr[k]>.25,both=()=>S.vr.a+S.vr.b>.25;
+  flowPath([[1.7,1.4,-4.6],[1.7,YC,-4.6],[HX,YC,-4.6]],AIR,on('a'),null);
+  flowPath([[-1.1,1.4,-4.6],[-1.1,YC,-4.6],[HX,YC,-4.6]],AIR,on('b'),null);
+  flowPath([[HX,YC,-4.6],[HX,YC,-8.8],[HX,6.2,-8.8]],AIR,both,null);
+  flowPath([[HX,2.74,-7.2],[HX,1.2,-7.2]],0xfbbf24,both,null);
+  label('Quạt hút hơi dầu A · AN001A',1.7,5.4,-4.6);label('Quạt hút hơi dầu B · AN001B',-1.1,5.4,-4.6);
+  label('AA522 (hút)',2.4,2.6,-4.6);label('AA530 (hút)',-1.8,2.6,-4.6);label('AA207/208 + ống mềm',HX,4.6,-5.6);
+  label('PI-270A',.82,4.2,-4.6);label('PI-270B',-.22,4.2,-4.6);label('PI-270C (bể)',HX,3.3,-3.5);
+  label('Bộ tách sương dầu AT001',HX,4.2,-7.2);label('AIR EXHAUST → khí quyển',HX,7.2,-8.8);
+  vxUI();
+}
+function vxUI(){['a','b'].forEach(k=>{const b=$('vx'+k.toUpperCase());b.textContent='Quạt '+k.toUpperCase()+' · '+stTxt[S.vx[k]];b.classList.toggle('on',S.vx[k]==='run')});$('vauto').checked=S.vauto}
+function vxClick(k){S.vx[k]=S.vx[k]==='run'?'off':'run';log('Quạt hút hơi dầu '+k.toUpperCase()+(S.vx[k]==='run'?' chạy.':' dừng.'));vxUI()}
+function vxTrip(){const k=S.vx.a==='run'?'a':S.vx.b==='run'?'b':null;if(!k){log('Không có quạt hút nào đang chạy.',1);return}S.vx[k]='trip';log('Quạt hút hơi dầu '+k.toUpperCase()+' trip.'+(S.vauto?' Quạt dự phòng tự chạy.':' Chưa bật tự chạy dự phòng: chân không bể sẽ mất.'),S.vauto?1:2);vxUI()}
+function vxReset(){S.vx={a:'run',b:'stby'};S.vr={a:1,b:0};S.vac=1;vxUI()}
+function vxTxt(){return stTxt[S.vx.a]+' / '+stTxt[S.vx.b]}
+function vxLvl(){return S.vac<.3?2:(S.vx.a==='trip'||S.vx.b==='trip')?1:0}
+function vaporLogic(dt){
+  const v=S.vx;
+  if(S.vauto&&v.a!=='run'&&v.b!=='run'){const k=v.a==='stby'?'a':v.b==='stby'?'b':null;if(k){v[k]='run';log('Quạt hút hơi dầu '+k.toUpperCase()+' dự phòng tự chạy.',1);vxUI()}}
+  ['a','b'].forEach(k=>{const t=v[k]==='run'?1:0;S.vr[k]+=(t-S.vr[k])*(1-Math.exp(-dt*(t?2:1)))});
+  S.vac+=(Math.min(1,S.vr.a+S.vr.b)-S.vac)*(1-Math.exp(-dt*.8));
+}
+function vaporVisuals(dt){const c={run:0x22c55e,stby:0xeab308,trip:0xef4444,off:0x334155};
+  ['a','b'].forEach(k=>{const m=handles['vl'+k].material,col=c[S.vx[k]];m.color.setHex(col);m.emissive.setHex(col);handles['vb'+k].rotation.y+=.35*S.vr[k]*dt*60})}
+
 setTimeout(init,30);
 
 ;window.cam=cam;window.clearSel=clearSel;window.resetAll=resetAll;window.setCooler=setCooler;
 window.setFilter=setFilter;window.setTM=setTM;window.toggleVis=toggleVis;window.tripAC1=tripAC1;
-window.tripBoth=tripBoth;window.setDp=setDp;window.S=S;
+window.tripBoth=tripBoth;window.setDp=setDp;window.vxClick=vxClick;window.vxTrip=vxTrip;window.S=S;window.setXrayLevel=setXrayLevel;window.getXrayLevel=function(){return sysXrayPct};window.toggleShellMode=function(){setShellMode(!shellMode)};window.setShellMode=setShellMode;window.toggleAutoRotate=toggleAutoRotate;
  })();
 </script>
 <script>
 (function(){ 
-let scene,camera,renderer,controls,partsGroup,flowPts,flowOn=false,running=false,explode=0,activeId=null;
+let scene,camera,renderer,controls,partsGroup,flowPts,flowOn=false,running=false,explode=0,activeId=null,viewMode='solid',pumpXrayPct=75,pRot=false,pDrag=false,pRotTimer=null;
 const partMeshes={},spinners=[];
 const bomData=[
 {id:'part-motor',num:'Motor AC',name:'Động cơ điện bơm AC',mat:'132 kW · 400 V · 1452 rpm',desc:'Động cơ xoay chiều trục đứng đặt trên nóc bể. Được tháo và cẩu lên sàn tầng 3 trước khi cẩu bơm.',check:'Cách điện ≥ 5 MΩ',y:5.5,o:4},
@@ -1978,6 +2111,9 @@ function init(){
   c.appendChild(renderer.domElement);
   renderer.domElement.addEventListener('webglcontextlost',function(ev){ev.preventDefault();window.__pumpStarted=false;});
   controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=2;controls.maxDistance=28;controls.target.set(0,.5,0);
+  controls.autoRotateSpeed=.9;
+  controls.addEventListener('start',()=>{pDrag=true;controls.autoRotate=false;if(pRotTimer)clearTimeout(pRotTimer)});
+  controls.addEventListener('end',()=>{pDrag=false;if(pRotTimer)clearTimeout(pRotTimer);pRotTimer=setTimeout(()=>{if(pRot)controls.autoRotate=true},2500)});
   scene.add(new THREE.AmbientLight(0xffffff,.7));
   const d=new THREE.DirectionalLight(0x9bd8ff,1.1);d.position.set(12,18,10);scene.add(d);
   const d2=new THREE.DirectionalLight(0xf59e0b,.4);d2.position.set(-12,-8,-10);scene.add(d2);
@@ -2094,9 +2230,13 @@ function clearHl(){
 }
 let camF;
 function camTo(p,t,dur=800){
-  cancelAnimationFrame(camF);const sp=camera.position.clone(),st=controls.target.clone(),t0=performance.now();
-  const f=n=>{const k=Math.min((n-t0)/dur,1),e=.5-Math.cos(k*Math.PI)/2;camera.position.lerpVectors(sp,p,e);controls.target.lerpVectors(st,t,e);if(k<1)camF=requestAnimationFrame(f)};
+  cancelAnimationFrame(camF);if(controls)controls.autoRotate=false;const sp=camera.position.clone(),st=controls.target.clone(),t0=performance.now();
+  const f=n=>{const k=Math.min((n-t0)/dur,1),e=.5-Math.cos(k*Math.PI)/2;camera.position.lerpVectors(sp,p,e);controls.target.lerpVectors(st,t,e);if(k<1)camF=requestAnimationFrame(f);else if(pRot&&!pDrag)controls.autoRotate=true};
   camF=requestAnimationFrame(f);
+}
+function togglePumpRotate(){
+  pRot=!pRot;if(controls)controls.autoRotate=pRot;
+  const b=document.getElementById('btn-rot');if(b){b.classList.toggle('sel',pRot);b.textContent='Quay tự động: '+(pRot?'BẬT':'TẮT');}
 }
 function pCam(v){
   const V=THREE.Vector3;
@@ -2111,12 +2251,19 @@ function setExplode(v){
 // Cutaway uses a real clipping plane (removes the z>0 half so the interior is visible)
 const clip=new THREE.Plane(new THREE.Vector3(0,0,-1),0);
 function setViewMode(m){
+  viewMode=m;
   document.querySelectorAll('.vb').forEach(b=>b.classList.remove('sel'));document.getElementById('m-'+m).classList.add('sel');
   Object.values(mat).forEach(x=>{
     x.clippingPlanes=m==='cutaway'?[clip]:[];
     const solid=x===mat.pol||x===mat.bronze||x===mat.gold;
-    x.transparent=m==='xray';x.opacity=m==='xray'?(solid ? .95 : .25):1;x.needsUpdate=true;
+    x.transparent=m==='xray';x.opacity=m==='xray'?(solid ? .95 : Math.max(.02,.9-pumpXrayPct*(.65/75))):1;x.needsUpdate=true;
   });
+}
+function setPumpXrayLevel(p){
+  pumpXrayPct=Math.min(100,Math.max(0,+p||0));
+  const l=document.getElementById('pxrVal');if(l)l.innerText=pumpXrayPct+'%';
+  const sl=document.getElementById('pxrS');if(sl&&+sl.value!==pumpXrayPct)sl.value=pumpXrayPct;
+  if(viewMode==='xray')setViewMode('xray');
 }
 function toggleFlow(){flowOn=!flowOn;flowPts.visible=flowOn;flow_s.innerText=flowOn?'bật':'tắt';btn_flow.classList.toggle('sel',flowOn)}
 function toggleRun(){
@@ -2136,7 +2283,7 @@ window.__startPump=function(){if(window.__pumpStarted)return;try{init();window._
 window.__pumpResize=function(){if(!renderer||!camera)return;var c=document.getElementById('p-cv');if(!c||!c.clientWidth||!c.clientHeight)return;camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix();renderer.setSize(c.clientWidth,c.clientHeight);};
 
 ;window.pCam=pCam;window.clearHl=clearHl;window.setViewMode=setViewMode;window.tab=tab;
-window.toggleFlow=toggleFlow;window.toggleRun=toggleRun;window.setExplode=setExplode;
+window.toggleFlow=toggleFlow;window.toggleRun=toggleRun;window.setExplode=setExplode;window.setPumpXrayLevel=setPumpXrayLevel;window.getPumpXrayLevel=function(){return pumpXrayPct};window.togglePumpRotate=togglePumpRotate;
  })();
 </script>
 <script>
@@ -2212,6 +2359,7 @@ window.showView = showView;
     byId('m-xray',function(){if(window.setViewMode)window.setViewMode('xray');});
     byId('btn-flow',function(){if(window.toggleFlow)window.toggleFlow();});
     byId('btn-run',function(){if(window.toggleRun)window.toggleRun();});
+    byId('btn-rot',function(){if(window.togglePumpRotate)window.togglePumpRotate();});
     byId('pcam-full',function(){if(window.pCam)window.pCam('full');});
     byId('pcam-motor',function(){if(window.pCam)window.pCam('motor');});
     byId('pcam-imp',function(){if(window.pCam)window.pCam('imp');});
@@ -2241,20 +2389,32 @@ window.showView = showView;
     byId('vLbl',function(){if(window.toggleVis)window.toggleVis('lbl');});
     byId('vFlow',function(){if(window.toggleVis)window.toggleVis('flow');});
     byId('vXray',function(){if(window.toggleVis)window.toggleVis('xray');});
+    byId('vShell',function(){if(window.toggleShellMode)window.toggleShellMode();});
+    byId('vRot',function(){if(window.toggleAutoRotate)window.toggleAutoRotate();});
     byId('cam-full',function(){if(window.cam)window.cam('full');});
     byId('cam-pump',function(){if(window.cam)window.cam('pump');});
     byId('cam-cool',function(){if(window.cam)window.cam('cool');});
     byId('cam-heat',function(){if(window.cam)window.cam('heat');});
     byId('cam-tur',function(){if(window.cam)window.cam('tur');});
     byId('cam-cond',function(){if(window.cam)window.cam('cond');});
+    byId('cam-vx',function(){if(window.cam)window.cam('vx');});
+    byId('vxA',function(){if(window.vxClick)window.vxClick('a');});
+    byId('vxB',function(){if(window.vxClick)window.vxClick('b');});
+    byId('vxTrip',function(){if(window.vxTrip)window.vxTrip();});
     byId('btn-clear',function(){if(window.clearSel)window.clearSel();});
     /* Sliders + vent checkbox: mirror listeners (idempotent with the inline ones). */
     function bindVar(id,ev,fn){var el=document.getElementById(id);if(!el||el.__wired)return;el.__wired=true;el.addEventListener(ev,function(){fn(el);});}
     bindVar('vent','change',function(el){if(window.S)window.S.vent=el.checked;});
+    bindVar('vauto','change',function(el){if(window.S)window.S.vauto=el.checked;});
     bindVar('wS','input',function(el){if(window.S)window.S.water=+el.value;var l=document.getElementById('wL');if(l)l.innerText=el.value+'%';});
     bindVar('dpS','input',function(el){if(window.setDp)window.setDp(el.value);});
     bindVar('tS','input',function(el){if(window.S)window.S.T=+el.value;});
     bindVar('lvlS','input',function(el){if(window.S)window.S.level=+el.value;var l=document.getElementById('lL');if(l)l.innerText=el.value+' mm';});
+    /* X-Ray level sliders: real input+change listeners, handler looked up on
+       window at interaction time (same independent layer as the buttons). */
+    function bindRange(id,fn){var el=document.getElementById(id);if(!el||el.__wired)return;el.__wired=true;el.addEventListener('input',function(){fn(el);});el.addEventListener('change',function(){fn(el);});}
+    bindRange('xrS',function(el){if(window.setXrayLevel)window.setXrayLevel(el.value);});
+    bindRange('pxrS',function(el){if(window.setPumpXrayLevel)window.setPumpXrayLevel(el.value);});
   }
   /* Convert a property-assigned onclick (disassembly buttons in #tb, device
      rows in #list, sheet close buttons) into a real addEventListener binding
@@ -2274,6 +2434,41 @@ window.showView = showView;
   function wireAll(){wire();wireDynamic();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireAll);
   setTimeout(wireAll,400);setTimeout(wireAll,1500);setTimeout(wireAll,3500);
+})();
+</script>
+<script>
+/* Hide/show side panels (desktop): toggling only adds/removes a CSS class on
+   the panel and its edge tab — scene state (X-Ray level, theme, simulation)
+   is untouched. After each toggle a resize event is fired so both WebGL
+   canvases re-fit their containers. Buttons are bound through the same
+   independent layer as the other controls: real listeners that look the
+   handler up on window at click time. */
+(function(){
+  window.toggleSidePanel=function(panelId,tabId,show){
+    var p=document.getElementById(panelId);if(!p)return;
+    var hide=(typeof show==='boolean')?!show:!p.classList.contains('side-hidden');
+    p.classList.toggle('side-hidden',hide);
+    var t=tabId?document.getElementById(tabId):null;if(t)t.classList.toggle('show',hide);
+    var fire=function(){window.dispatchEvent(new Event('resize'));if(window.__pumpResize)window.__pumpResize();};
+    fire();setTimeout(fire,60);
+  };
+  function bind(id,panelId,tabId,show){
+    var el=document.getElementById(id);if(!el||el.__wired)return;el.__wired=true;
+    el.removeAttribute('onclick');
+    el.addEventListener('click',function(ev){ev.preventDefault();if(window.toggleSidePanel)window.toggleSidePanel(panelId,tabId,show);});
+  }
+  function wire(){
+    bind('hideL1','panel-left1','edgeL1',false);
+    bind('edgeL1','panel-left1','edgeL1',true);
+    bind('hideR1','panel-right1','edgeR1',false);
+    bind('edgeR1','panel-right1','edgeR1',true);
+    bind('hideL2','panel-left2','edgeL2',false);
+    bind('edgeL2','panel-left2','edgeL2',true);
+    bind('hideR2','panel-right2','edgeR2',false);
+    bind('edgeR2','panel-right2','edgeR2',true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
+  setTimeout(wire,400);setTimeout(wire,1500);setTimeout(wire,3500);
 })();
 </script>
 </body>
