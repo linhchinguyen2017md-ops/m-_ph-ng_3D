@@ -3,263 +3,640 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Đào Tạo & Vận Hành</title>
+    <title>Hệ Thống Ôn Thi Tổng Hợp Bậc 3 - Nhiệt Điện Mông Dương 1</title>
     <style>
-        :root {
-            --primary-color: #0d47a1; 
-            --primary-light: #1976d2;
-            --text-color: #333;
-            --card-bg: rgba(255, 255, 255, 0.95); 
-            --hover-color: #e3f2fd;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-
+        /* Phông nền lưới kỹ thuật (Blueprint/Grid) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+            background-color: #f4f7fa;
+            background-image: 
+                linear-gradient(rgba(0, 86, 179, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 86, 179, 0.07) 1px, transparent 1px);
+            background-size: 25px 25px;
+            color: #333;
             line-height: 1.6;
-            color: var(--text-color);
-            background: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
-            min-height: 100vh;
+            margin: 0;
+            padding: 30px 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+        }
+        
+        #main-wrapper {
+            max-width: 1100px; 
+            width: 100%;
         }
 
-        body::before {
-            content: '';
+        /* Tiêu đề chung */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #004d99 0%, #0073e6 100%);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0, 86, 179, 0.2);
+            border-bottom: 5px solid #ff8c00; 
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::after {
+            content: "⚙️";
+            font-size: 140px;
+            position: absolute;
+            right: -25px;
+            top: -40px;
+            opacity: 0.15;
+            transform: rotate(20deg);
+        }
+
+        .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; }
+        .header p { margin: 10px 0 0 0; font-size: 16px; font-weight: 500; color: #e6f2ff; position: relative; z-index: 2; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        /* MÀN HÌNH 1: GIAO DIỆN CHỌN THƯ MỤC */
+        #screen-home {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        @media (min-width: 768px) {
+            #screen-home { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
+        }
+
+        .folder-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none; 
+            display: block; 
+            color: inherit;
+        }
+        
+        .folder-maytruong { border-bottom: 8px solid #0056b3; }
+        .folder-maypho { border-bottom: 8px solid #00838f; }
+        .folder-safety { border-bottom: 8px solid #2e7d32; }
+        .folder-quiz { border-bottom: 8px solid #6a1b9a; }
+        .folder-drive { border-bottom: 8px solid #f4511e; } 
+        .folder-3d { border-bottom: 8px solid #e91e63; }
+        
+        .folder-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .folder-maytruong:hover { border-color: #0056b3; }
+        .folder-maypho:hover { border-color: #00838f; }
+        .folder-safety:hover { border-color: #2e7d32; }
+        .folder-quiz:hover { border-color: #6a1b9a; }
+        .folder-drive:hover { border-color: #f4511e; }
+        .folder-3d:hover { border-color: #e91e63; }
+
+        .folder-icon { font-size: 60px; margin-bottom: 20px; }
+        .folder-title { font-size: 22px; font-weight: bold; margin: 0 0 10px 0; color: #1a252f; text-transform: uppercase; }
+        .folder-desc { font-size: 14px; color: #666; margin: 0; }
+
+        /* MÀN HÌNH 2: GIAO DIỆN BÊN TRONG THƯ MỤC */
+        .list-section {
+            display: none; 
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-top: 6px solid;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #screen-maytruong { border-top-color: #0056b3; }
+        #screen-maypho { border-top-color: #00838f; }
+        #screen-safety { border-top-color: #2e7d32; }
+        #screen-quiz { border-top-color: #6a1b9a; }
+        #screen-3d { border-top-color: #e91e63; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #ccc;
+        }
+        
+        .section-title { font-size: 22px; font-weight: bold; margin: 0; text-transform: uppercase; }
+        #screen-maytruong .section-title { color: #0056b3; }
+        #screen-maypho .section-title { color: #00838f; }
+        #screen-safety .section-title { color: #2e7d32; }
+        #screen-quiz .section-title { color: #6a1b9a; }
+        #screen-3d .section-title { color: #e91e63; }
+
+        .back-btn {
+            background-color: #e53935;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .back-btn:hover { background-color: #c62828; }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-left: 5px solid;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        #screen-maytruong .file-link { border-left-color: #0056b3; }
+        #screen-maypho .file-link { border-left-color: #00838f; }
+        #screen-safety .file-link { border-left-color: #2e7d32; }
+        #screen-quiz .file-link { border-left-color: #6a1b9a; }
+        #screen-3d .file-link { border-left-color: #e91e63; }
+        
+        .file-link:hover {
+            background-color: #e9ecef;
+            border-left-color: #ff8c00 !important; 
+            transform: translateX(8px);
+        }
+        .file-link::before { content: "📄"; margin-right: 15px; font-size: 18px; opacity: 0.8; }
+        
+        #screen-3d .file-link::before { content: "🖥️"; }
+
+        /* ===== CSS ĐẶC BIỆT CHO FILE SỰ CỐ NHÀ MÁY ===== */
+        .file-link.highlight-incident {
+            color: #d32f2f !important;
+            font-weight: 900 !important;
+            border-left-color: #d32f2f !important;
+            background-color: #fff5f5;
+        }
+        .file-link.highlight-incident:hover {
+            background-color: #ffebee !important;
+        }
+        .file-link.highlight-incident::before {
+            content: "🏭" !important;
+        }
+
+        /* MÀN HÌNH 3: KHUNG ĐỌC TÀI LIỆU */
+        #screen-content {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: white;
+            z-index: 1000;
+        }
+
+        #doc-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding-top: 64px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        /* ===== THANH CÔNG CỤ ĐỌC TÀI LIỆU ===== */
+        #doc-toolbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.65); 
-            z-index: -1;
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 3px solid #ff8c00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            box-sizing: border-box;
+            z-index: 1001;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
         }
 
-        /* Nút Quay lại */
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: rgba(255, 255, 255, 0.15); 
+        .tool-btn {
             color: white;
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: all 0.25s ease;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.25s, opacity 0.25s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            z-index: 10;
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            cursor: pointer;
-            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            flex: 0 0 auto;
         }
+        .tool-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-        .back-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            transform: translateX(-3px);
-        }
+        #btn-close-doc { background-color: #e53935; }
+        #btn-close-doc:hover { background-color: #c62828; }
 
-        header {
-            color: white;
-            padding: 3.5rem 1rem 2.5rem;
-            text-align: center;
-            border-bottom: 4px solid var(--primary-light);
-            background: linear-gradient(135deg, rgba(13, 71, 161, 0.85), rgba(255, 255, 255, 0) 100%), linear-gradient(135deg, rgba(13, 71, 161, 0.85), rgba(25, 118, 210, 0.85));
-            backdrop-filter: blur(4px);
-        }
+        #btn-read-doc { background-color: #0073e6; }
+        #btn-read-doc:hover:not(:disabled) { background-color: #0056b3; }
+        #btn-read-doc.reading { background-color: #f39c12; }
+        #btn-read-doc.reading:hover { background-color: #d68910; }
 
-        header h1 {
-            margin: 0;
-            font-size: 2.4rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-        }
+        #btn-stop-read { background-color: #616161; }
+        #btn-stop-read:hover:not(:disabled) { background-color: #424242; }
 
-        header p {
-            margin: 12px 0 0;
-            font-size: 1.15rem;
-            opacity: 0.92;
-            font-weight: 300;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            flex: 1;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            padding: 26px;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.4);
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 32px rgba(0,0,0,0.35);
-            border-bottom: 4px solid var(--primary-light);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid #edf2f7;
-            padding-bottom: 12px;
-            margin-bottom: 18px;
-        }
-
-        .card-header h2 {
-            margin: 0;
-            font-size: 1.45rem;
-            color: var(--primary-color);
-        }
-
-        .icon {
-            font-size: 1.8rem;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .link-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .link-list li {
-            margin-bottom: 10px;
-        }
-
-        .link-list a {
-            text-decoration: none;
-            color: #2d3748;
-            font-size: 1.05rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            padding: 11px 16px;
-            background-color: #f8fafc;
-            border-radius: 7px;
-            transition: all 0.2s ease;
-            border-left: 4px solid #cbd5e1;
-        }
-
-        .link-list a::before {
-            content: '▹';
-            margin-right: 10px;
-            color: var(--primary-color);
+        /* Chọn Tốc độ đọc & Chọn Giọng đọc */
+        #read-rate, #voice-select {
+            padding: 9px 10px;
+            border: 2px solid #0073e6;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
             font-weight: bold;
+            font-size: 14px;
+            color: #0056b3;
+            background: #fff;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+        
+        #voice-select {
+            max-width: 180px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
-        .link-list a:hover {
-            background-color: var(--hover-color);
-            color: var(--primary-color);
-            border-left-color: var(--primary-color);
-            padding-left: 22px;
+        #read-status {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0073e6;
+            margin-left: auto;
+            padding-left: 10px;
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
 
-        footer {
-            text-align: center;
-            padding: 18px;
-            color: #cbd5e1;
-            background: rgba(10, 15, 30, 0.85);
-            font-size: 0.88rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        @media (max-width: 600px) {
-            header h1 { font-size: 1.8rem; }
-            .back-btn { top: 12px; left: 12px; padding: 6px 12px; font-size: 0.85rem; }
-            .container { margin: 20px auto; gap: 20px; }
+        @media (max-width: 700px) {
+            .tool-btn { padding: 9px 11px; font-size: 12.5px; }
+            #read-rate, #voice-select { padding: 9px 6px; font-size: 12.5px; }
+            #read-status { display: none; }
+            #doc-iframe { padding-top: 60px; }
+            #doc-toolbar { height: 60px; gap: 6px;}
         }
     </style>
 </head>
 <body>
 
-    <button onclick="window.history.length > 1 ? history.back() : window.location.href='index.html'" class="back-btn" title="Quay lại">
-        ⬅ Quay lại
-    </button>
+<div id="main-wrapper">
+    <div class="header">
+        <h1>Hệ Thống Ôn Thi Tổng Hợp Bậc 3</h1>
+        <p>Chuyên Đề Máy Nhiệt Điện Mông Dương 1</p>
+    </div>
 
-    <header>
-        <h1>Hệ Thống Đào Tạo & Quản Lý Vận Hành</h1>
-        <p>Tài liệu mô tả thiết bị, hướng dẫn vận hành an toàn và xử lý sự cố</p>
-    </header>
-
-    <main class="container">
+    <!-- MÀN HÌNH 1: HIỂN THỊ 6 THƯ MỤC -->
+    <div id="screen-home">
+        <div class="folder-card folder-maytruong" onclick="openFolder('screen-maytruong')">
+            <div class="folder-icon">📚</div>
+            <h2 class="folder-title">Máy Trưởng</h2>
+            <p class="folder-desc">Đáp án chuyên môn Máy trưởng (16 bài + Tổng hợp)</p>
+        </div>
         
-        <!-- Cột 1: Thiết Bị -->
-        <section class="card">
-            <div class="card-header">
-                <span class="icon">⚙️</span>
-                <h2>Thiết Bị & Hệ Thống</h2>
-            </div>
-            <ul class="link-list">
-                <li><a href="binhngung.html">Mô tả Bình ngưng</a></li>
-                <li><a href="binhgianhiet.html">Mô tả Bình gia nhiệt</a></li>
-                <li><a href="ZR630.html">Mô phỏng Máy nén khí ZR 630</a></li>
-                <li><a href="vale.html">Mô tả Van (Vale)</a></li>
-                <li><a href="pump.html">Mô tả Bơm</a></li>
-                <li><a href="scada_pump.html">SCADA Bơm</a></li>
-                <li><a href="daubt.html">Hệ thống Dầu bôi trơn (daubt.html)</a></li>
-            </ul>
-        </section>
+        <div class="folder-card folder-maypho" onclick="openFolder('screen-maypho')">
+            <div class="folder-icon">👨‍🔧</div>
+            <h2 class="folder-title">Máy Phó</h2>
+            <p class="folder-desc">Đáp án chuyên môn Máy phó (23 câu tự động đọc)</p>
+        </div>
 
-        <!-- Cột 2: Vận Hành -->
-        <section class="card">
-            <div class="card-header">
-                <span class="icon">📊</span>
-                <h2>Quá Trình Vận Hành</h2>
-            </div>
-            <ul class="link-list">
-                <li><a href="khopthuyluc.html">Khớp thủy lực</a></li>
-                <li><a href="sss.html">SSS</a></li>
-                <li><a href="bkk.html">Vận hành bình khử khí</a></li>
-                <li><a href="tb.html">Vận hành tuabin</a></li>
-                <li><a href="mp3.html">Tài liệu vận hành</a></li>
-                <li><a href="tuabinth.html">Tài liệu Tuabin Tổng Hợp</a></li>
-                
-                <!-- ĐÃ BỔ SUNG FILE BYPASSVH.HTML VÀO ĐÂY -->
-                <li><a href="bypassvh.html">Vận hành hệ thống Bypass</a></li>
-            </ul>
-        </section>
+        <div class="folder-card folder-safety" onclick="openFolder('screen-safety')">
+            <div class="folder-icon">🛡️</div>
+            <h2 class="folder-title">An Toàn</h2>
+            <p class="folder-desc">Quy định, thủ tục PCT, BPTC an toàn (12 bài)</p>
+        </div>
 
-        <!-- Cột 3: Sự Cố -->
-        <section class="card">
-            <div class="card-header">
-                <span class="icon">⚠️</span>
-                <h2>Mô Phỏng Sự Cố</h2>
-            </div>
-            <ul class="link-list">
-                <li><a href="anhhuongchankhong.html">Ảnh hưởng của độ chân không</a></li>
-                <li><a href="PTthaydoi.html">Phương thức thay đổi</a></li>
-                <li><a href="thuykichtuabin.html">Thủy kích Tuabin</a></li>
-            </ul>
-        </section>
+        <div class="folder-card folder-3d" onclick="openFolder('screen-3d')">
+            <div class="folder-icon">🖥️</div>
+            <h2 class="folder-title">Mô Phỏng 3D</h2>
+            <p class="folder-desc">Mô hình thiết bị, SCADA và sự cố tương tác</p>
+        </div>
+        
+        <div class="folder-card folder-quiz" onclick="openFolder('screen-quiz')">
+            <div class="folder-icon">📝</div>
+            <h2 class="folder-title">Trắc Nghiệm</h2>
+            <p class="folder-desc">Luyện thi trắc nghiệm các chuyên đề tổng hợp</p>
+        </div>
 
-    </main>
+        <a class="folder-card folder-drive" href="https://drive.google.com/drive/folders/1RNLyJO_PgKzgML6FNUyuJBboSq7ypu6F?usp=drive_link" target="_blank" rel="noopener noreferrer">
+            <div class="folder-icon">☁️</div>
+            <h2 class="folder-title">Thư Viện Drive</h2>
+            <p class="folder-desc">Truy cập toàn bộ tài liệu dùng chung trên Google Drive</p>
+        </a>
+    </div>
 
-    <footer>
-        <p>&copy; 2026 Hệ thống tài liệu nội bộ. Vận hành an toàn - Hiệu quả.</p>
-    </footer>
+    <!-- MÀN HÌNH 2A: THƯ MỤC MÁY TRƯỞNG -->
+    <div id="screen-maytruong" class="list-section">
+        <div class="section-header">
+            <h2 class="section-title">📚 Mục: Chuyên Môn Máy Trưởng</h2>
+            <button class="back-btn" onclick="goBackToHome()">⬅ QUAY LẠI TỔNG</button>
+        </div>
+        <div class="list-container">
+            <a class="file-link" onclick="openDoc('tonghopmaytruong.html')">📌 Tổng hợp toàn bộ đáp án chuyên môn Máy trưởng</a>
+            <a class="file-link" onclick="openDoc('lythuyet.html')">📖 Tài liệu Lý thuyết chung (lythuyet.html)</a>
+            <a class="file-link highlight-incident" onclick="openDoc('sc201725.html')">Tài liệu Sự cố Nhà máy (sc201725.html)</a>
+            <a class="file-link" onclick="openDoc('Ảnhhưởngchânkhôngbìnhngưng.html')">Ảnh hưởng chân không bình ngưng</a>
+            <a class="file-link" onclick="openDoc('aplucnhiet.html')">Ảnh hưởng của áp lực, nhiệt độ hơi mới và chân không bình ngưng đến quá trình vận hành và hiệu suất của tuabin</a>
+            <a class="file-link" onclick="openDoc('Ảnhhưởngcủanhiệtđộhơichínhtớithiếtbịvàhiệusuấttuabin.html')">Ảnh hưởng của nhiệt độ hơi chính tới thiết bị và hiệu suất tuabin</a>
+            <a class="file-link" onclick="openDoc('bìnhkhửkhíxửlýsựcốmứcnướcgiảmnhanh.html')">Tác dụng bình khử khí - Tại sao phải khử khí và xử lý sự cố mức nước giảm nhanh</a>
+            <a class="file-link" onclick="openDoc('CácbảovệchínhcủaTuabinvàliênđộngsaukhiTrip.html')">Các bảo vệ chính của Tuabin và liên động sau khi Trip</a>
+            <a class="file-link" onclick="openDoc('CácloạitổnthấttronghệthốngTuabinBìnhngưng.html')">Các loại tổn thất trong hệ thống Tuabin - Bình ngưng</a>
+            <a class="file-link" onclick="openDoc('caoápCấutạotácdụngvàsựcốthườnggặp.html')">Hệ thống bình gia nhiệt cao áp - Cấu tạo, tác dụng và sự cố thường gặp</a>
+            <a class="file-link" onclick="openDoc('Cấutạobìnhngưngvàxửlýsựcốmứcnướcgiảmnhanh.html')">Cấu tạo, tác dụng bình ngưng và xử lý sự cố mức nước giảm nhanh</a>
+            <a class="file-link" onclick="openDoc('chatluonghoi.html')">Chất lượng hơi nước và chỉ tiêu môi trường chu trình tuabin</a>
+            <a class="file-link" onclick="openDoc('Hyddro.html')">Hiện tượng, nguyên nhân, biện pháp xử lý sự chênh áp dầu chèn - Hydro dao động</a>
+            <a class="file-link" onclick="openDoc('khởi động lạnh.html')">Các bước chuẩn bị, kiểm tra và trình tự khởi động Tuabin từ trạng thái lạnh tới đầy tải</a>
+            <a class="file-link" onclick="openDoc('Quytrìnhxửlýkhẩncấpmấtđiệntoànnhàmáy(Blackout).html')">Quy trình xử lý sự cố khẩn cấp mất điện toàn nhà máy (Blackout)</a>
+            <a class="file-link" onclick="openDoc('RunbackhệthốngTuabinvàBOPliênđộng.html')">Các trường hợp Runback của hệ thống Tuabin và BOP - Tín hiệu liên động</a>
+            <a class="file-link" onclick="openDoc('Sựcốáplựcdầubôitrơntuabingiảmthấp.html')">Sự cố áp lực dầu bôi trơn tuabin giảm thấp</a>
+            <a class="file-link" onclick="openDoc('ThủykíchTuabintáchạinguyênnhânvàxửlý.html')">Thủy kích Tuabin - Khái niệm, tác hại, nguyên nhân và xử lý</a>
+            <a class="file-link" onclick="openDoc('Tínhiệucảnhbáobảovệbơmcấpvàxửlýsựcốrungkhitổmáy540MW.html')">Tín hiệu cảnh báo - bảo vệ bơm cấp và xử lý sự cố rung khi tổ máy 540 MW</a>
+            <a class="file-link" onclick="openDoc('runback.html')">Tài liệu Runback (File runback.html)</a>
+            <a class="file-link" onclick="openDoc('chenh_vach.html')">Chênh vách - Hiện tượng, nguyên nhân và biện pháp xử lý (chenh_vach.html)</a>
+        </div>
+    </div>
 
-</body>
-</html>
+    <!-- MÀN HÌNH 2B: THƯ MỤC AN TOÀN -->
+    <div id="screen-safety" class="list-section">
+        <div class="section-header">
+            <h2 class="section-title">🛡️ Mục: An Toàn</h2>
+            <button class="back-btn" onclick="goBackToHome()">⬅ QUAY LẠI TỔNG</button>
+        </div>
+        <div class="list-container">
+            <a class="file-link" onclick="openDoc('atbuongdot.html')">Quy định về An toàn khi làm việc bên trong buồng đốt và đường khói</a>
+            <a class="file-link" onclick="openDoc('atcongtac.html')">Biện pháp kỹ thuật về an toàn trước khi thực hiện công tác</a>
+            <a class="file-link" onclick="openDoc('athydro.html')">An toàn khi làm việc tại khu vực máy phát làm mát bằng khí hydro</a>
+            <a class="file-link" onclick="openDoc('atlan.html')">Các qui định về an toàn khi lặn</a>
+            <a class="file-link" onclick="openDoc('atongtuanhoan.html')">Quy định về an toàn khi làm việc trên đường ống nước tuần hoàn</a>
+            <a class="file-link" onclick="openDoc('attbquay.html')">Quy định về an toàn khi làm việc với thiết bị quay</a>
+            <a class="file-link" onclick="openDoc('atthoibui.html')">Quy định về an toàn khi vận hành lò hơi và trong quá trình thổi bụi</a>
+            <a class="file-link" onclick="openDoc('attrencao.html')">Quy định về an toàn khi làm việc trên cao</a>
+            <a class="file-link" onclick="openDoc('cachlyvanhanh.html')">Các yêu cầu về việc cách ly an toàn thiết bị và Kiểm tra thiết bị</a>
+            <a class="file-link" onclick="openDoc('chihuytt.html')">Trách nhiệm của người cho phép và người Chỉ huy trực tiếp trong PCT</a>
+            <a class="file-link" onclick="openDoc('khonggianhanche.html')">Quy định về an toàn trong không gian hạn chế và làm việc bên trong bao hơi</a>
+            <a class="file-link" onclick="openDoc('pct.html')">Thủ tục Cho phép làm việc và bàn giao tại hiện trường theo PCT</a>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH 2C: THƯ MỤC MÁY PHÓ -->
+    <div id="screen-maypho" class="list-section">
+        <div class="section-header">
+            <h2 class="section-title">👨‍🔧 Mục: Chuyên Môn Máy Phó</h2>
+            <button class="back-btn" onclick="goBackToHome()">⬅ QUAY LẠI TỔNG</button>
+        </div>
+        <div class="list-container" id="maypho-list-container">
+            <!-- Tự động điền dữ liệu -->
+        </div>
+    </div>
+    
+    <!-- MÀN HÌNH 2E: THƯ MỤC 3D -->
+    <div id="screen-3d" class="list-section">
+        <div class="section-header">
+            <h2 class="section-title">🖥️ Mục: Mô Phỏng 3D</h2>
+            <button class="back-btn" onclick="goBackToHome()">⬅ QUAY LẠI TỔNG</button>
+        </div>
+        <div class="list-container">
+            <!-- Đường link dẫn sang bộ mô phỏng 3D mới, mở ở tab mới -->
+            <a class="file-link highlight-incident" href="https://github.com/linhchinguyen2017md-ops/m-_ph-ng_3D" target="_blank" rel="noopener noreferrer">
+                🚀 Hệ thống Mô Phỏng 3D Mới (Click để chuyển trang)
+            </a>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH 2D: THƯ MỤC TRẮC NGHIỆM -->
+    <div id="screen-quiz" class="list-section">
+        <div class="section-header">
+            <h2 class="section-title">📝 Mục: Trắc Nghiệm</h2>
+            <button class="back-btn" onclick="goBackToHome()">⬅ QUAY LẠI TỔNG</button>
+        </div>
+        <div class="list-container">
+            <!-- Đường link dẫn sang bộ thi mới chính xác, mở ở tab mới -->
+            <a class="file-link highlight-incident" href="https://linhchinguyen2017md-ops.github.io/-n-luy-n-l-/" target="_blank" rel="noopener noreferrer">
+                🔥 Hệ thống Luyện Thi Trắc Nghiệm Mới (Click để chuyển trang)
+            </a>
+            
+            <!-- Giữ lại các đề thi ngoài chuyên môn -->
+            <a class="file-link" onclick="openDoc('antoandien.html')">Đề thi Trắc nghiệm An toàn điện</a>
+            <a class="file-link" onclick="openDoc('OnTap_QTNV_VHDN_49_Cau.html')">Bộ Đề thi QTNV & VHDN (49 câu)</a>
+        </div>
+    </div>
+
+</div>
+
+<!-- MÀN HÌNH 3: KHUNG ĐỌC TÀI LIỆU -->
+<div id="screen-content">
+    <div id="doc-toolbar">
+        <button id="btn-close-doc" class="tool-btn" onclick="closeDoc()">⬅ ĐÓNG TÀI LIỆU</button>
+        <button id="btn-read-doc" class="tool-btn" onclick="toggleReadDoc()">🔊 ĐỌC VĂN BẢN</button>
+        <button id="btn-stop-read" class="tool-btn" onclick="stopReadDoc()" disabled>⏹ DỪNG ĐỌC</button>
+        
+        <!-- BỔ SUNG: KHUNG CHỌN GIỌNG ĐỌC -->
+        <select id="voice-select" title="Chọn giọng đọc">
+            <option value="">Đang tải giọng...</option>
+        </select>
+
+        <select id="read-rate" title="Tốc độ đọc">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="1.75">1.75x</option>
+            <option value="2">2.0x</option>
+        </select>
+        <span id="read-status"></span>
+    </div>
+    <iframe id="doc-iframe" src=""></iframe>
+</div>
+
+<!-- JAVASCRIPT ĐIỀU KHIỂN -->
+<script>
+    /* =========================================================
+       PHẦN 1: ĐIỀU HƯỚNG THƯ MỤC / MỞ TÀI LIỆU
+       ========================================================= */
+    let currentFolderId = '';
+    let isMayPhoLoaded = false;
+    let currentDocFile = '';   
+
+    function openFolder(folderId) {
+        currentFolderId = folderId;
+        document.getElementById('screen-home').style.display = 'none';
+        document.getElementById('screen-maytruong').style.display = 'none';
+        document.getElementById('screen-maypho').style.display = 'none';
+        document.getElementById('screen-safety').style.display = 'none';
+        document.getElementById('screen-quiz').style.display = 'none';
+        document.getElementById('screen-3d').style.display = 'none';
+        
+        document.getElementById(folderId).style.display = 'block';
+        window.scrollTo(0, 0); 
+
+        if(folderId === 'screen-maypho') {
+            loadMayPhoQuestionsAutomatically();
+        }
+    }
+
+    function goBackToHome() {
+        document.getElementById('screen-maytruong').style.display = 'none';
+        document.getElementById('screen-maypho').style.display = 'none';
+        document.getElementById('screen-safety').style.display = 'none';
+        document.getElementById('screen-quiz').style.display = 'none';
+        document.getElementById('screen-3d').style.display = 'none';
+        
+        document.getElementById('screen-home').style.display = 'grid'; 
+    }
+
+    function openDoc(filename) {
+        fetch(filename, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    stopReadDoc();                     
+                    currentDocFile = filename;         
+                    document.getElementById('doc-iframe').src = filename;
+                    document.getElementById('main-wrapper').style.display = 'none';
+                    document.getElementById('screen-content').style.display = 'block';
+                } else {
+                    throw new Error(`File "${filename}" không tồn tại hoặc chưa được tải lên (Lỗi ${response.status}).`);
+                }
+            })
+            .catch(error => {
+                if (error.message.includes('File')) {
+                    alert(`⚠️ LỖI MỞ TÀI LIỆU!\n\n${error.message}\n\nVui lòng kiểm tra lại tên file hoặc đảm bảo file đã được upload lên hệ thống.`);
+                } else {
+                     alert(`⚠️ KHÔNG THỂ KẾT NỐI!\n\nVui lòng kiểm tra lại kết nối mạng của bạn.\nChi tiết: ${error.message}`);
+                }
+            });
+    }
+
+    function closeDoc() {
+        stopReadDoc();                                 
+        document.getElementById('doc-iframe').src = "";
+        document.getElementById('screen-content').style.display = 'none';
+        document.getElementById('main-wrapper').style.display = 'block';
+        openFolder(currentFolderId);
+    }
+
+    function loadMayPhoQuestionsAutomatically() {
+        if (isMayPhoLoaded) return;
+        isMayPhoLoaded = true;
+
+        const container = document.getElementById('maypho-list-container');
+        
+        container.innerHTML = `<a class="file-link" onclick="openDoc('tonghopmp.html')">📌 Tổng hợp toàn bộ đáp án chuyên môn Máy phó</a>`;
+
+        for (let i = 1; i <= 23; i++) {
+            let filename = `cau${i}.html`;
+            
+            let link = document.createElement('a');
+            link.className = 'file-link';
+            link.onclick = () => openDoc(filename);
+            link.innerHTML = `⏳ Đang phân tích Câu ${i}...`;
+            container.appendChild(link);
+
+            fetch(filename)
+                .then(response => {
+                    if (!response.ok) throw new Error("File missing");
+                    return response.text();
+                })
+                .then(html => {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(html, 'text/html');
+                    
+                    let textContent = doc.body.innerText.replace(/\s+/g, ' ').trim();
+                    
+                    if (textContent.length > 5) {
+                        textContent = textContent.replace(/\(?\d+[.,]?\d*\s*điểm\)?/gi, '');
+                        textContent = textContent.replace(/Anh\s*[\(\/]?\s*Chị\s*[\)\/]?\s*hãy\s*(trình\s*bày|cho\s*biết|nêu|giải\s*thích|phân\s*tích|nói\s*về)?/gi, '');
+                        textContent = textContent.replace(/Anh\s*\/\s*chị\s*hãy/gi, '');
+                        textContent = textContent.replace(/^Câu\s*\d+\s*[:\-]?\s*/i, '');
+                        textContent = textContent.replace(/^Câu\s*hỏi\s*\d+\s*[:\-]?\s*/i, '');
+                        textContent = textContent.replace(/^[\s:\,\-\.]+/g, '').trim();
+                        
+                        if(textContent.length > 0) {
+                            textContent = textContent.charAt(0).toUpperCase() + textContent.slice(1);
+                        }
+                        if (textContent.length > 85) {
+                            textContent = textContent.substring(0, 85).trim() + '...';
+                        }
+                        
+                        link.innerHTML = `<b>Câu ${i}:</b> &nbsp; ${textContent}`;
+                    } else {
+                        link.innerHTML = `Câu ${i} - Chuyên môn Máy phó`;
+                    }
+                })
+                .catch(err => {
+                    link.innerHTML = `Câu ${i} - Chuyên môn Máy phó`;
+                });
+        }
+    }
+
+    /* =========================================================
+       PHẦN 2: ĐỌC VĂN BẢN (TEXT-TO-SPEECH) CÓ THỂ CHỌN GIỌNG ĐỌC
+       ========================================================= */
+    const synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+    let readState = 'idle';      
+    let readQueue = [];          
+    let cachedVoices = [];
+
+    /* --- Nạp danh sách giọng đọc và đưa vào Dropdown --- */
+    function loadVoices() {
+        if (!synth) return;
+        cachedVoices = synth.getVoices() || [];
+        populateVoiceList();
+    }
+    
+    if (synth) {
+        loadVoices();
+        if (typeof synth.onvoiceschanged !== 'undefined') {
+            synth.onvoiceschanged = loadVoices;
+        }
+    }
+
+    /* Hàm đưa danh sách giọng lên giao diện */
+    function populateVoiceList() {
+        const voiceSelect = document.getElementById('voice-select');
+        if (!voiceSelect || cachedVoices.length === 0) return;
+        
+        let viVoices = cachedVoices.filter(v => v.lang.toLowerCase().includes('vi'));
+        let otherVoices = cachedVoices.filter(v => !v.lang.toLowerCase().includes('vi'));
+        let allVoices = [...viVoices, ...otherVoices]; // Ưu tiên xếp Tiếng Việt lên trên
+
+        let currentVal = voiceSelect.value;
+        voiceSelect.innerHTML = '';
+
+        allVoices.forEach(voice => {
+            let option = document.createElement('option');
+            // Cắt bớt tên quá dài cho thanh Menu nhìn gọn gàng
+            let shortName = voice.name.
